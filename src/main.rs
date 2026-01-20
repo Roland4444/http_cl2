@@ -37,22 +37,63 @@ pub fn update_second_name(second_name: &str, ID: i32) -> String{
 }
 
 
-pub fn update_param_(param_name: &str, value: &str, ID: i32) -> String{
+async fn update_param_( params: &[(&str, &str)])-> Result<String, Box<dyn std::error::Error>>{
+    let client = reqwest:: Client::new();
+    let url = get_webhook()+"user.update";
+    println!("Resulted url{}", url);
+    let responce = client
+        .post(url)
+        .form(params)
+        .send()
+        .await?;
+    println!("Status:{}", responce.status());
+    println!("Headers: {:#?}", responce.headers());
 
+    let body = responce.text().await?;
+    Ok(body)
 
-    "SUCCESS".to_string()
 }
+
+
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let FOMINA = [("SECOND_NAME", "Александровна"), ("ID", "292")]; 
+    let z1 = [("SECOND_NAME", "Вячеславовна"), ("ID", "225")]; 
 
-    let param_name = "SECOND_NAME";
-    let body = reqwest::get(TARGET_ADDRESS)
-        .await?
-        .text()
-        .await?;
-    println!("body = {body:?}");
+    let z11 = [("SECOND_NAME", "Викторовна"), ("ID", "233")]; 
+    let z12 = [("SECOND_NAME", "Юрьевна"), ("ID", "235")]; 
+    let z13 = [("SECOND_NAME", "Алексеевна"), ("ID", "241")]; 
+    let z14 = [("SECOND_NAME", "Ахмеднадырович"), ("ID", "247")]; 
+    let z15 = [("SECOND_NAME", "Владимирович"), ("ID", "255")]; 
+    let z16 = [("SECOND_NAME", "Мураткалиевич"), ("ID", "259")]; 
+    let z17 = [("SECOND_NAME", "Магарамовна"), ("ID", "267")]; 
+    let z18 = [("SECOND_NAME", "Сергеевна"), ("ID", "283")]; 
+    let z19 = [("SECOND_NAME", "Петрович"), ("ID", "285")]; 
+
+
+    let arr = vec! [z1, z11, z12, z13, z14, z15, z16, z17, z18, z19];
+
+    for item in arr.iter(){        
+        let result = update_param_(item).await?;
+        println!("Response body: {}", result);
+    };
+      
+    
+    let result = update_param_(&FOMINA).await?;
+    println!("Response body: {}", result);
+    
     Ok(())
+    // let param_name = "SECOND_NAME";
+    // let body = reqwest::get(TARGET_ADDRESS)
+    //     .await?
+    //     .text()
+    //     .await?;
+    // println!("body = {body:?}");
+    // Ok(())
+
+    
 }
 
 
