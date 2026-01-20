@@ -5,8 +5,6 @@ use std::fs;
 fn read_bytes(filename: &str)-> Vec<u8> {
     fs::read(filename).expect("Cant read files")
 }
-
-
 const TARGET_ADDRESS: &str = "http://localhost:11111/custom";
 const WEBHOOK_FILENAME: &str = "webhook";
 const WEBHOOK_FILENAME_TEST: &str = "webhook_test";
@@ -14,13 +12,10 @@ const WEBHOOK_FILENAME_TEST: &str = "webhook_test";
 fn read_lines(filename: &str) -> Vec<String>{
     let bytes = read_bytes(filename);
     let (decoded, _, had_errors) = WINDOWS_1251.decode(&bytes);
-
     if had_errors{
         println!("Some characters not decoded")
     }
-
-    decoded.to_string().lines().map(|line| line.to_string()).collect()
-    
+    decoded.to_string().lines().map(|line| line.to_string()).collect()    
 }
 
 fn get_first_line(filename: &str) -> String{
@@ -28,7 +23,6 @@ fn get_first_line(filename: &str) -> String{
     for line in read_to_string(filename).unwrap().lines(){
         result.push(line.to_string());
     }
-
     result[0].clone()
 }
 
@@ -54,9 +48,6 @@ async fn update_param_( params: &[(&str, &str)])-> Result<String, Box<dyn std::e
 
 }
 
-
-
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let FOMINA = [("SECOND_NAME", "Александровна"), ("ID", "292")]; 
@@ -73,16 +64,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let z19 = [("SECOND_NAME", "Петрович"), ("ID", "285")]; 
 
 
+    let z20 = [ ("ID", "283"), ("PERSONAL_MOBILE", "+7927581-68-51")]; 
+    let z22 = [ ("ID", "283"), ("WORK_POSITION", "Ведущий инженер-конструктор")];   
+    let z21 = [ ("ID", "285"), ("WORK_POSITION", "Специалист по корпоративной безопасности")]; 
+
+   
     let arr = vec! [z1, z11, z12, z13, z14, z15, z16, z17, z18, z19];
 
-    for item in arr.iter(){        
+    let arr2: Vec<[(&str, &str); 2]> = vec! [z20, z21, z22];
+
+    // for item in arr.iter(){        
+    //     let result = update_param_(item).await?;
+    //     println!("Response body: {}", result);
+    // };
+      
+    for item in arr2.iter(){        
         let result = update_param_(item).await?;
         println!("Response body: {}", result);
     };
       
     
-    let result = update_param_(&FOMINA).await?;
-    println!("Response body: {}", result);
+    // let result = update_param_(&FOMINA).await?;
+    // println!("Response body: {}", result);
     
     Ok(())
     // let param_name = "SECOND_NAME";
