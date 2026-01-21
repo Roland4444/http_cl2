@@ -1,6 +1,7 @@
 use reqwest::Client;
-pub mod http_test;
-
+pub mod http_Test;
+use reqwest;
+use serde_json::Value;
 async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Error>> {
     let FOMINA = [("SECOND_NAME", "Александровна"), ("ID", "292")]; 
     let z1 = [("SECOND_NAME", "Вячеславовна"), ("ID", "225")]; 
@@ -30,24 +31,66 @@ async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Err
     //     println!("Response body: {}", result);
     // };
         for item in arr.iter(){        
-        let result = http_test::update_param_(client_reqwest.clone(), item).await?;
+        let result = http_Test::update_param_(client_reqwest.clone(), item).await?;
         println!("Response body: {}", result);
     };
       
     for item in arr2.iter(){        
-        let result =  http_test::update_param_(client_reqwest.clone(), item).await?;
+        let result =  http_Test::update_param_(client_reqwest.clone(), item).await?;
         println!("Response body: {}", result);
     };
     Ok(())
 }
 
 
+async fn getting_users(client_reqwest: Client) -> (){
+    println!("=== Получение пользователя по ID 111111111111111111111===");
+    match http_Test::get_user_by_id(client_reqwest.clone(), 1).await {
+        Ok(data) => {
+            if let Some(users) = data.get("result") {
+                if users.is_array() {
+                    for user in users.as_array().unwrap() {
+                        println!("ID: {}", user.get("ID").unwrap_or(&Value::Null));
+                        println!("Имя: {}", user.get("NAME").unwrap_or(&Value::Null));
+                        println!("Фамилия: {}", user.get("LAST_NAME").unwrap_or(&Value::Null));
+                        println!("Отчество: {}", user.get("SECOND_NAME").unwrap_or(&Value::Null));
+
+                       /// println!("Email: {}", user.get("EMAIL").unwrap_or(&Value::Null));
+                        println!("---");
+                    }
+                }
+            }
+        }
+        Err(e) => println!("Ошибка: {}", e),
+    }
+    
+    // Пример 2: Получаем пользователя с определенными полями
+    println!("\n=== Получение пользователя с определенными полями    222222222222222222 ===");
+    let fields = vec!["ID", "NAME", "LAST_NAME", "EMAIL", "PERSONAL_MOBILE"];
+    match http_Test::get_user_with_fields(client_reqwest.clone(), 1, &fields).await {
+        Ok(data) => println!("{:#?}", data),
+        Err(e) => println!("Ошибка: {}", e),
+    }
+    
+    // Пример 3: Получаем несколько пользователей
+    println!("\n=== Получение нескольких пользователей 333333333333333333333333333333===");
+    let user_ids = vec![1, 2, 3];
+    match http_Test::get_multiple_users(client_reqwest.clone(), &user_ids).await {
+        Ok(data) => {
+            if let Some(result) = data.get("result") {
+                println!("Найдено пользователей: {}", result.as_array().unwrap().len());
+            }
+        }
+        Err(e) => println!("Ошибка: {}", e),
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_reqwest: Client = reqwest::Client::new();
     //process(client_reqwest).await
    // proc2();
-
+    getting_users(client_reqwest).await;
     
     Ok(())
 
@@ -86,7 +129,7 @@ mod tests {
     fn test_read_str(){
         let filename = "lstdata.csv";
         let etalon = ";ФИО;Должность;;;;телефон;юр. лицо";
-        let vect = http_test::read_lines(filename);
+        let vect = http_Test::read_lines(filename);
         let line0 = vect[0].clone();
         assert_eq!(etalon, line0);
     }
@@ -94,7 +137,7 @@ mod tests {
     #[test]
     fn test_read_webbhook(){
         const WEBHOOK_FILENAME_TEST: &str = "webhook_test";
-        let test_webhook = http_test::get_webhook_(WEBHOOK_FILENAME_TEST);
+        let test_webhook = http_Test::get_webhook_(WEBHOOK_FILENAME_TEST);
         let etalon = "http://google.com";
         assert_eq!(etalon, test_webhook);
 
