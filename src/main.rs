@@ -1,6 +1,10 @@
 use std::fs::read_to_string;
 use encoding_rs::WINDOWS_1251;
+use reqwest::Client;
 use std::fs;
+pub mod http_test;
+
+
 
 fn read_bytes(filename: &str)-> Vec<u8> {
     fs::read(filename).expect("Cant read files")
@@ -8,7 +12,6 @@ fn read_bytes(filename: &str)-> Vec<u8> {
 const TARGET_ADDRESS: &str = "http://localhost:11111/custom";
 const WEBHOOK_FILENAME: &str = "webhook";
 const WEBHOOK_FILENAME_TEST: &str = "webhook_test";
-
 fn read_lines(filename: &str) -> Vec<String>{
     let bytes = read_bytes(filename);
     let (decoded, _, had_errors) = WINDOWS_1251.decode(&bytes);
@@ -30,26 +33,14 @@ pub fn update_second_name(second_name: &str, ID: i32) -> String{
     "SUCCESS".to_string()
 }
 
+// async fn get_user_by_id(id: i32) -> Result<Value, Box<dyn Error>>{
+//     let webhook = get_webhook();
+//     let client = reqwest::Client::new();
+// }>
 
-async fn update_param_( params: &[(&str, &str)])-> Result<String, Box<dyn std::error::Error>>{
-    let client = reqwest:: Client::new();
-    let url = get_webhook()+"user.update";
-    println!("Resulted url{}", url);
-    let responce = client
-        .post(url)
-        .form(params)
-        .send()
-        .await?;
-    println!("Status:{}", responce.status());
-    println!("Headers: {:#?}", responce.headers());
 
-    let body = responce.text().await?;
-    Ok(body)
 
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Error>> {
     let FOMINA = [("SECOND_NAME", "Александровна"), ("ID", "292")]; 
     let z1 = [("SECOND_NAME", "Вячеславовна"), ("ID", "225")]; 
 
@@ -77,24 +68,48 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     let result = update_param_(item).await?;
     //     println!("Response body: {}", result);
     // };
-      
-    for item in arr2.iter(){        
-        let result = update_param_(item).await?;
+        for item in arr.iter(){        
+        let result = http_test::update_param_(client_reqwest.clone(), item).await?;
         println!("Response body: {}", result);
     };
       
-    
-    // let result = update_param_(&FOMINA).await?;
-    // println!("Response body: {}", result);
-    
+    for item in arr2.iter(){        
+        let result =  http_test::update_param_(client_reqwest.clone(), item).await?;
+        println!("Response body: {}", result);
+    };
     Ok(())
-    // let param_name = "SECOND_NAME";
-    // let body = reqwest::get(TARGET_ADDRESS)
-    //     .await?
-    //     .text()
-    //     .await?;
-    // println!("body = {body:?}");
-    // Ok(())
+}
+
+
+
+fn proc2() -> (){
+    let mut x = 42;
+
+    unsafe {
+        let ref1: *mut i32 = &mut x;
+        let ref2: *mut i32 = &mut x; // Нарушение!
+    
+        *ref1 = 10;
+        *ref2 = 20; // Что здесь происходит с памятью?
+    
+         print!("X {}", x);
+    // Компилятор не может гарантировать порядок операций
+    // Это может привести к:
+    // 1. Некорректным данным
+    // 2. Падению программы
+    // 3. Уязвимостям безопасности
+}
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client_reqwest: Client = reqwest::Client::new();
+    process(client_reqwest).await
+   // proc2();
+
+    
+    //Ok(())
+
 
     
 }
