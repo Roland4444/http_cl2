@@ -4,10 +4,10 @@ use std::fs;
 
 const WEBHOOK_FILENAME: &str = "webhook";
 
-fn read_bytes(filename: &str)-> Vec<u8> {
+pub fn read_bytes(filename: &str)-> Vec<u8> {
     fs::read(filename).expect("Cant read files")
 }
-fn read_lines(filename: &str) -> Vec<String>{
+pub fn read_lines(filename: &str) -> Vec<String>{
     let bytes = read_bytes(filename);
     let (decoded, _, had_errors) = WINDOWS_1251.decode(&bytes);
     if had_errors{

@@ -86,13 +86,14 @@ mod tests {
     fn test_read_str(){
         let filename = "lstdata.csv";
         let etalon = ";ФИО;Должность;;;;телефон;юр. лицо";
-        let vect = read_lines(filename);
+        let vect = http_test::read_lines(filename);
         let line0 = vect[0].clone();
         assert_eq!(etalon, line0);
     }
 
     #[test]
     fn test_read_webbhook(){
+        const WEBHOOK_FILENAME_TEST: &str = "webhook_test";
         let test_webhook = http_test::get_webhook_(WEBHOOK_FILENAME_TEST);
         let etalon = "http://google.com";
         assert_eq!(etalon, test_webhook);
