@@ -17,11 +17,11 @@ fn read_lines(filename: &str) -> Vec<String>{
 }
 
 
-fn get_webhook() -> String{
+pub fn get_webhook() -> String{
     get_webhook_(WEBHOOK_FILENAME)
 }
 
-fn get_webhook_(filename: &str) -> String{
+pub fn get_webhook_(filename: &str) -> String{
     let vec = read_lines(filename);
     let elem = vec[0].clone();
     elem
