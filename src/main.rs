@@ -5,6 +5,7 @@ use serde::{Serialize, Deserialize};
 use bincode;
 use std::fs::File;
 use std::io::{Read, Write};
+use std::process::id;
 use serde::de::DeserializeOwned;
 
 pub mod http_Test;
@@ -49,7 +50,10 @@ impl Pack{
     }
 
     fn push_and_update(&mut self, entry: Employee) -> (){
-        let pck =  &self.pack;  
+        if (self.is_contains(&entry)){
+            self.remove(&entry);
+        }
+        self.pack.push(entry);
         
     }
 
@@ -119,6 +123,56 @@ impl Employee {
      fn _to_string(&self) -> String{
         format!("{} {} {} {}", self.id, self.name, self.middle_name, self.last_name)
      } 
+}
+
+fn get_i32_from_value(value: &Value) -> Option<i32> {
+    match value {
+        Value::Number(n) => n.as_i64().map(|x| x as i32),
+        Value::String(s) => s.parse::<i32>().ok(),
+        _ => None,
+    }
+}
+
+async fn grub_data(index_start: i32, index_stop: i32, filename_to_dump: &str)->   Result<(), Box<dyn std::error::Error>> {
+    let mut init_buffer: Vec<Employee> = Vec::new();
+    let mut pack = Pack::new(init_buffer);
+    let client_reqwest: Client = reqwest::Client::new();
+    for _i in index_start..index_stop{
+        match http_Test::get_user_by_id(client_reqwest.clone(), _i).await {
+        Ok(data) => {
+            if let Some(users) = data.get("result") {
+                if users.is_array() {
+                    for user in users.as_array().unwrap() {
+                        let id =  user.get("ID").unwrap_or(&Value::Null);
+                        let name = user.get("NAME").unwrap_or(&Value::Null);
+                        let last_name =   user.get("LAST_NAME").unwrap_or(&Value::Null);
+                        let second_name = user.get("SECOND_NAME").unwrap_or(&Value::Null);
+                        println!("ID: {}", id);
+                        println!("Имя: {}", name);
+                        println!("Фамилия: {}", last_name);
+                        println!("Отчество: {}", second_name);
+
+                        println!("---");
+                        let number_id = get_i32_from_value(id).expect("shit");
+                        let emp = Employee::new(number_id, name.to_string(), 
+                        last_name.to_string(), second_name.to_string());
+                        pack.push_and_update(emp);
+                    }
+                }
+            }
+        }
+        Err(e) => println!("Ошибка: {}", e),
+        }
+
+    }
+    println!("RESULT:: {}", pack.to_string("\n".to_string()));
+    pack.serialize_to_file(filename_to_dump);
+    Ok(())
+}
+
+
+async fn try_grub() ->   Result<(), Box<dyn std::error::Error>> {
+    grub_data(1, 400, "all_dump.bin").await
 }
 
 async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Error>> {
@@ -209,8 +263,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_reqwest: Client = reqwest::Client::new();
     //process(client_reqwest).await
    // proc2();
-    getting_users(client_reqwest).await;
-    Ok(())
+   // getting_users(client_reqwest).await;
+   try_grub().await
+    //Ok(())
 
 
     
