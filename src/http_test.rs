@@ -6,6 +6,7 @@ use std::error::Error;
 
 const WEBHOOK_FILENAME: &str = "webhook";
 
+
 pub fn read_bytes(filename: &str)-> Vec<u8> {
     fs::read(filename).expect("Cant read files")
 }

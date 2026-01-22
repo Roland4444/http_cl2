@@ -1,7 +1,71 @@
 use reqwest::Client;
-pub mod http_Test;
 use reqwest;
 use serde_json::Value;
+use serde::{Serialize, Deserialize};
+use bincode;
+use std::fs::File;
+use std::io::{Read, Write};
+use serde::de::DeserializeOwned;
+
+pub mod http_Test;
+
+
+fn deserialize_from_file<T: DeserializeOwned>(filename: &str) -> Result<T, Box<dyn std::error::Error>>{
+    let mut file: File = File::open(filename)?;
+    let mut buffer: Vec<u8> = Vec::new();
+    file.read_to_end(&mut buffer)?;
+    let decoded: T = bincode::deserialize(&buffer)?;
+    Ok(decoded)
+}
+
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+struct Employee{
+    id: i32,
+    name: String,
+    last_name: String,
+    middle_name: String,    
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+struct Pack{
+    pack: Vec<Employee>
+}
+
+impl Pack{
+    fn new(pack: Vec<Employee>) -> Self{
+        Pack {pack}
+    }
+
+    fn serialize_to_file(&self, filename: &str) -> Result<(), Box<dyn std::error::Error>>{
+        let encoded: Vec<u8> = bincode::serialize(self)?;
+        let mut file = File::create(filename)?;
+        file.write_all(&encoded)?;
+        Ok(())
+    }
+
+    fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>>{
+        deserialize_from_file(filename)
+    }
+}
+
+impl Employee {
+     fn new(id:i32, name: String, last_name: String, middle_name: String) -> Self {
+         Employee {id, name, last_name, middle_name}
+     }
+
+     fn serialize_to_file(&self, filename: &str) -> Result<(), Box<dyn std::error::Error>>{
+         let encoded: Vec<u8> = bincode::serialize(self)?;
+         let mut file = File::create(filename)?;
+         file.write_all(&encoded)?;
+         Ok(())    
+     }
+
+     fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>>{
+         deserialize_from_file(filename)
+     }
+}
+
 async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Error>> {
     let FOMINA = [("SECOND_NAME", "Александровна"), ("ID", "292")]; 
     let z1 = [("SECOND_NAME", "Вячеславовна"), ("ID", "225")]; 
