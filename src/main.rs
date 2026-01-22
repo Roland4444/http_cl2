@@ -47,6 +47,32 @@ impl Pack{
     fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>>{
         deserialize_from_file(filename)
     }
+
+    fn push_and_update(&mut self, entry: Employee) -> (){
+        let pck =  &self.pack;        
+    }
+
+    fn is_contains(&mut self, entry: Employee) -> bool {
+        let entry_id = entry.id;
+        let entry_name = entry.name;
+        let entry_last_name = entry.last_name;
+
+
+        for z in &self.pack{
+            let cur_id = z.id;
+            let cur_name = &z.name;
+            let cur_last_name = &z.last_name;
+
+            if (cur_id == entry_id){
+                return true;
+            }
+
+            if (cur_name .eq(&entry_name)) && (cur_last_name .eq(&entry_last_name)){
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 impl Employee {
@@ -155,7 +181,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //process(client_reqwest).await
    // proc2();
     getting_users(client_reqwest).await;
-    
     Ok(())
 
 
@@ -204,6 +229,59 @@ mod tests {
         let test_webhook = http_Test::get_webhook_(WEBHOOK_FILENAME_TEST);
         let etalon = "http://google.com";
         assert_eq!(etalon, test_webhook);
+
+    }
+
+
+    #[test]
+    fn test_ser(){
+        let emp = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string());
+        emp.serialize_to_file("employee.bin");
+        println!("Data serialized to employee.bin");
+        let emp2 = Employee::deserialize_from_file("employee.bin").expect("shit");
+        println!("Deserialized data: {:?}", emp2);
+        assert_eq!(emp, emp2);
+    }
+
+    #[test]
+    fn test_sr_dsr(){
+        let emp1 = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string());
+        let emp2 = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string());
+        let pack_filename = "pack.bin";
+        let emp_Vecs = vec![emp1, emp2];
+        let pack = Pack::new(emp_Vecs);
+        pack.serialize_to_file( pack_filename);
+        let restored = Pack::deserialize_from_file(pack_filename).expect("shit");
+        assert_eq!(pack, restored);
+
+        assert_eq!(2, 2);
+    }
+
+    #[test]
+    fn test_contains_pack(){
+        let emp1 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
+        let emp2 = Employee::new(2, "Roman".to_string(), "Pastushkov".to_string(), "DOE".to_string());
+        let pack_filename = "pack.bin";
+        let emp_Vecs = vec![emp1, emp2];
+        let mut pack = Pack::new(emp_Vecs);
+        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
+        let emp4 = Employee::new(99, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
+        let emp5 = Employee::new(99, "Michael2".to_string(), "Snoyman".to_string(), "".to_string());
+        let emp6 = Employee::new(1, "Michael2".to_string(), "Snoyman".to_string(), "".to_string());
+
+        let res = pack.is_contains(emp3);
+        assert_eq!(true,  res);
+
+        
+        let res2 = pack.is_contains(emp4);
+        assert_eq!(true,  res2);
+
+        let res3 = pack.is_contains(emp5);
+        assert_eq!(false,  res3);
+
+        let res4 = pack.is_contains(emp6);
+        assert_eq!(true,  res4);
+
 
     }
 }
