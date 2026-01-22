@@ -104,7 +104,7 @@ impl Pack{
     }
 
     fn get_id_by_fi(&self, fi: String)-> Option<i32>{
-         let normalized = fi.trim().to_lowercase();
+         let normalized = fi.trim();
         let parts: Vec<&str> = normalized.split_whitespace().collect();
     
         if parts.len() >= 2 {
@@ -112,8 +112,8 @@ impl Pack{
             let first_name = parts[1];
         
         for employee in &self.pack {
-            if employee.last_name.to_lowercase() == last_name && 
-               employee.name.to_lowercase() == first_name {
+            if employee.last_name == last_name && 
+               employee.name == first_name {
                 return Some(employee.id);
             }
         }
@@ -415,6 +415,14 @@ mod tests {
         let emp_Vecs = vec![emp1, emp2, emp3];
         let mut pack = Pack::new(emp_Vecs);
         assert_eq!(2, pack.get_id_by_fi("Пастушков Роман".to_string()).expect("shit"));
+    }
+
+
+    #[test]
+    fn test_get_id2(){
+        let mut pack = Pack::deserialize_from_file("all_dump.bin").expect("msg");
+        println!("{}", pack.to_string("\n".to_string()));
+        assert_eq!(1, pack.get_id_by_fi("Цыбульский Сергей".to_string()).expect("shit"));
     }
 }
 
