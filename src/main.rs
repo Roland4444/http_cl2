@@ -102,6 +102,24 @@ impl Pack{
         }
         result
     }
+
+    fn get_id_by_fi(&self, fi: String)-> Option<i32>{
+         let normalized = fi.trim().to_lowercase();
+        let parts: Vec<&str> = normalized.split_whitespace().collect();
+    
+        if parts.len() >= 2 {
+            let last_name = parts[0];
+            let first_name = parts[1];
+        
+        for employee in &self.pack {
+            if employee.last_name.to_lowercase() == last_name && 
+               employee.name.to_lowercase() == first_name {
+                return Some(employee.id);
+            }
+        }
+    }
+    None
+    }
 }
 
 impl Employee {
@@ -387,6 +405,16 @@ mod tests {
 
          let res2 = pack.is_contains(&emp3);
         assert_eq!(false,  res2);     
+    }
+
+    #[test]
+    fn test_get_id(){
+        let emp1 = Employee::new(1, "Michaelen".to_string(), "Snoyman".to_string(), "".to_string());
+        let emp2 = Employee::new(2, "Роман".to_string(), "Пастушков".to_string(), "DOE".to_string());
+        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
+        let emp_Vecs = vec![emp1, emp2, emp3];
+        let mut pack = Pack::new(emp_Vecs);
+        assert_eq!(2, pack.get_id_by_fi("Пастушков Роман".to_string()).expect("shit"));
     }
 }
 
