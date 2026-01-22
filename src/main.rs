@@ -49,30 +49,44 @@ impl Pack{
     }
 
     fn push_and_update(&mut self, entry: Employee) -> (){
-        let pck =  &self.pack;        
+        let pck =  &self.pack;  
+        
     }
 
-    fn is_contains(&mut self, entry: Employee) -> bool {
+    fn is_contains(&self, entry: &Employee) -> bool {
         let entry_id = entry.id;
-        let entry_name = entry.name;
-        let entry_last_name = entry.last_name;
+        let entry_name = &entry.name;
+        let entry_last_name = &entry.last_name;
 
+        for emp in &self.pack {
+            let cur_id = emp.id;
+            let cur_name = &emp.name;
+            let cur_last_name = &emp.last_name;
 
-        for z in &self.pack{
-            let cur_id = z.id;
-            let cur_name = &z.name;
-            let cur_last_name = &z.last_name;
-
-            if (cur_id == entry_id){
+            if cur_id == entry_id {
                 return true;
             }
 
-            if (cur_name .eq(&entry_name)) && (cur_last_name .eq(&entry_last_name)){
+            if (cur_name == entry_name) && (cur_last_name == entry_last_name) {
                 return true;
             }
         }
-        return false;
+        false
     }
+
+    fn remove(&mut self, entry: &Employee) -> bool {
+        let index = self.pack.iter().position(|emp| {
+            emp.id == entry.id || 
+            (emp.name == entry.name && emp.last_name == entry.last_name)
+        });
+        
+        if let Some(idx) = index {
+            self.pack.remove(idx);
+            true
+        } else {
+            false
+        }
+    }  
 }
 
 impl Employee {
@@ -269,20 +283,38 @@ mod tests {
         let emp5 = Employee::new(99, "Michael2".to_string(), "Snoyman".to_string(), "".to_string());
         let emp6 = Employee::new(1, "Michael2".to_string(), "Snoyman".to_string(), "".to_string());
 
-        let res = pack.is_contains(emp3);
+        let res = pack.is_contains(&emp3);
         assert_eq!(true,  res);
 
         
-        let res2 = pack.is_contains(emp4);
+        let res2 = pack.is_contains(&emp4);
         assert_eq!(true,  res2);
 
-        let res3 = pack.is_contains(emp5);
+        let res3 = pack.is_contains(&emp5);
         assert_eq!(false,  res3);
 
-        let res4 = pack.is_contains(emp6);
+        let res4 = pack.is_contains(&emp6);
         assert_eq!(true,  res4);
 
 
+    }
+
+
+     #[test]
+    fn test_delete_pack(){
+        let emp1 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
+        let emp2 = Employee::new(2, "Roman".to_string(), "Pastushkov".to_string(), "DOE".to_string());
+        let emp_Vecs = vec![emp1, emp2];
+        let mut pack = Pack::new(emp_Vecs);
+        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
+      
+        let res = pack.is_contains(&emp3);
+        assert_eq!(true,  res);
+
+        pack.remove(&emp3);
+
+         let res2 = pack.is_contains(&emp3);
+        assert_eq!(false,  res2);     
     }
 }
 
