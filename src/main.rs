@@ -87,6 +87,17 @@ impl Pack{
             false
         }
     }  
+
+
+    fn to_string(&self, ender: String) -> String{
+        let mut result = String::from("");
+        for emp in &self.pack {
+            result.push_str(&emp._to_string());
+            result.push_str(&ender);
+
+        }
+        result
+    }
 }
 
 impl Employee {
@@ -299,6 +310,8 @@ mod tests {
 
         let res4 = pack.is_contains(&emp6);
         assert_eq!(true,  res4);
+
+        println!("{}", pack.to_string("\n".to_string()))
 
 
     }
