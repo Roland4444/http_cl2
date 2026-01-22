@@ -104,6 +104,10 @@ impl Employee {
      fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>>{
          deserialize_from_file(filename)
      }
+
+     fn _to_string(&self) -> String{
+        format!("{} {} {} {}", self.id, self.name, self.middle_name, self.last_name)
+     } 
 }
 
 async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Error>> {
