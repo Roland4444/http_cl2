@@ -104,21 +104,27 @@ impl Pack{
     }
 
     fn get_id_by_fi(&self, fi: String)-> Option<i32>{
-         let normalized = fi.trim();
-        let parts: Vec<&str> = normalized.split_whitespace().collect();
-    
-        if parts.len() >= 2 {
-            let last_name = parts[0];
-            let first_name = parts[1];
+        let splitted: Vec<String> = split_to_fi(fi);
+        if (splitted.len()<3){
+            return None
+        }
+            
+        let last_name  = &splitted[0];
+        let first_name = &splitted[1];
+
+        println!("F:{}", last_name.to_string());
+        println!("I:{}", first_name.to_string());
+
         
         for employee in &self.pack {
-            if employee.last_name == last_name && 
-               employee.name == first_name {
+
+            println!("EMPLOYEE    F:{}", employee.last_name.to_string());
+            println!("EMPLOYEE    I:{}", employee.name.to_string());
+            if employee.last_name == last_name.to_string() && employee.name == first_name.to_string() {
                 return Some(employee.id);
             }
-        }
-    }
-    None
+        }    
+        None
     }
 }
 
@@ -172,8 +178,8 @@ async fn grub_data(index_start: i32, index_stop: i32, filename_to_dump: &str)-> 
 
                         println!("---");
                         let number_id = get_i32_from_value(id).expect("shit");
-                        let emp = Employee::new(number_id, name.to_string(), 
-                        last_name.to_string(), second_name.to_string());
+                        let emp = Employee::new(number_id, name.to_string().replace("\"", ""), 
+                        last_name.to_string().replace("\"", ""), second_name.to_string().replace("\"", ""));
                         pack.push_and_update(emp);
                     }
                 }
@@ -300,6 +306,16 @@ pub fn bad_add(a: i32, b: i32) -> i32{
 
 
 
+pub fn split_to_fi(input: String)->Vec<String>{
+    let mut res: Vec<String> = Vec::new();
+    let splitted = input.split_whitespace();
+    for _i in splitted{
+        res.push(_i.to_string());
+    }
+    res.push(input);
+    res
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -418,11 +434,20 @@ mod tests {
     }
 
 
+
+
     #[test]
     fn test_get_id2(){
         let mut pack = Pack::deserialize_from_file("all_dump.bin").expect("msg");
         println!("{}", pack.to_string("\n".to_string()));
         assert_eq!(1, pack.get_id_by_fi("Цыбульский Сергей".to_string()).expect("shit"));
+    }
+
+    #[test]
+    fn test_fi(){
+        let mut fi = "Roman Pastushkov";
+        assert_eq!(3, split_to_fi(fi.to_string()).len());
+
     }
 }
 
