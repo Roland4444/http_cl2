@@ -3,6 +3,8 @@ use reqwest::Client;
 use std::fs;
 use serde_json::Value;
 use std::error::Error;
+use serde_json::json;
+
 
 const WEBHOOK_FILENAME: &str = "webhook";
 
@@ -76,6 +78,42 @@ pub async fn update_param_(client_reqwest: Client, params: &[(&str, &str)])-> Re
     let body = responce.text().await?;
     Ok(body)
 }
+
+
+
+//  curl -X POST   "https://relits.bitrix24.ru/rest/336/9xuqnmbu879m3zg3/im.message.add"   -H "Content-Type: application/json"   -d '{
+//     "DIALOG_ID": "296",
+//     "MESSAGE": "ghghghghghghghghgghgggghgg"
+//   }'
+
+
+pub async fn send_notification_to_user(client_reqwest: Client, id: &str, message: &str) -> Result<String, Box<dyn std::error::Error>>{
+ let base_url = get_webhook(); // Предполагается, что эта функция возвращает базовый URL
+    let url = format!("{}im.message.add", base_url);
+    println!("Resulted url: {}", url);
+
+    // Формируем JSON тело запроса
+    let request_body = json!({
+        "DIALOG_ID": id,
+        "MESSAGE": message
+    });
+
+    // Отправляем POST запрос с JSON телом
+    let response = client_reqwest
+        .post(&url)
+        .header("Content-Type", "application/json")
+        .json(&request_body)
+        .send()
+        .await?;
+
+    println!("Status: {}", response.status());
+    println!("Headers: {:#?}", response.headers());
+
+    let body = response.text().await?;
+    Ok(body)
+
+    
+};
 
 
 pub async fn get_multiple_users(client_reqwest: Client, user_ids: &[i32]) -> Result<Value, Box<dyn Error>> {
