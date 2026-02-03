@@ -211,9 +211,10 @@ async fn send_message(msg: &str, id_to_send: i32) -> Result <(), Box<dyn std::er
 
 async fn process_packed_no_mobile(filename: String) -> Result <(), Box<dyn std::error::Error>>{
     let lines = read_lines_utf8(&filename);
-    let direct_message = "Здравствуйте! В связи с переносом рабочих чатов из WhatsUp в Bitrix требуется установить мобильную версию Битрикс24 на мобильное устройство. Пожалуйста обратитесь в ИТ отдел компании для данных действий";
+    let direct_message = "Здравствуйте! В связи с нестабильной работой WhatsUp, рабочие чаты будут переноситься из WhatsApp в Bitrix24. 
+    Необходимо установить Bitrix24 на телефон. 
+    При возникновении трудностей можете написать ко мне в личку или обратиться в ИТ отдел";
 
-    //let direct_message = "Здравствуйте! В связи с переносом рабочих чатов из WhatsUp в Bitrix требуется установить мобильную версию Битрикс24 на мобильное устройство. Пожалуйста обратитесь в ИТ отдел компании для данных действий";
     for item in lines.iter(){
         let v: Vec<String> = item.split_whitespace().map(|s| s.to_string()).collect();
         let id3 = get_index_via_fio_result(v.clone(), "USERS.init");
@@ -332,7 +333,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //process(client_reqwest).await
    // proc2();
    // getting_users(client_reqwest).await;
-    process_packed_no_mobile("TEST_NO".to_string()).await
+    process_packed_no_mobile("MOBILE_NO.txt".to_string()).await
 // send_message(direct_message, 296).await
     //  try_grub().await
     // Ok(())
