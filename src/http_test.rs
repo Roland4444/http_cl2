@@ -4,14 +4,30 @@ use std::fs;
 use serde_json::Value;
 use std::error::Error;
 use serde_json::json;
-
+use std::fs::File;
+use std::io::{BufRead};
+use std::path::Path;
 
 const WEBHOOK_FILENAME: &str = "webhook";
+
+
 
 
 pub fn read_bytes(filename: &str)-> Vec<u8> {
     fs::read(filename).expect("Cant read files")
 }
+
+pub fn read_lines_utf8(filename: &str) ->Vec<String> {
+    match fs::read_to_string(filename) {
+        Ok(content) => content.lines().map(|s| s.to_string()).collect(),
+        Err(e) => {
+            eprintln!("Ошибка чтения файла {}: {}", filename, e);
+            Vec::new() // Возвращаем пустой вектор при ошибке
+        }
+    }
+}
+
+
 
 pub fn read_lines(filename: &str) -> Vec<String>{
     let bytes = read_bytes(filename);
@@ -24,31 +40,23 @@ pub fn read_lines(filename: &str) -> Vec<String>{
 
 
 pub async fn get_user_by_id(client_reqwest: Client, user_id: i32) -> Result<Value, Box<dyn Error>> {
-    let webhook = get_webhook();
-    
-    
+    let webhook = get_webhook();  
     let params = [
         ("ID", user_id.to_string()),
-    ];
-    
-    let url = format!("{}/user.get", webhook.trim_end_matches('/'));
-    
+    ];    
+    let url = format!("{}/user.get", webhook.trim_end_matches('/'));    
     let response = client_reqwest
         .post(&url)
         .form(&params)
         .send()
-        .await?;
-    
+        .await?;    
     if !response.status().is_success() {
         return Err(format!("HTTP error: {}", response.status()).into());
-    }
-    
-    let json: Value = response.json().await?;
-    
+    }    
+    let json: Value = response.json().await?;    
     if let Some(error) = json.get("error") {
         return Err(format!("Bitrix24 error: {}", error).into());
-    }
-    
+    }    
     Ok(json)
 }
 
@@ -63,8 +71,8 @@ pub fn get_webhook_(filename: &str) -> String{
     let elem = vec[0].clone();
     elem
 }
+
 pub async fn update_param_(client_reqwest: Client, params: &[(&str, &str)])-> Result<String, Box<dyn std::error::Error>>{
-    // let client = reqwest:: Client::new();
     let url = get_webhook()+"user.update";
     println!("Resulted url{}", url);
     let responce = client_reqwest
@@ -74,7 +82,6 @@ pub async fn update_param_(client_reqwest: Client, params: &[(&str, &str)])-> Re
         .await?;
     println!("Status:{}", responce.status());
     println!("Headers: {:#?}", responce.headers());
-
     let body = responce.text().await?;
     Ok(body)
 }
@@ -88,86 +95,64 @@ pub async fn update_param_(client_reqwest: Client, params: &[(&str, &str)])-> Re
 
 
 pub async fn send_notification_to_user(client_reqwest: Client, id: &str, message: &str) -> Result<String, Box<dyn std::error::Error>>{
- let base_url = get_webhook(); // Предполагается, что эта функция возвращает базовый URL
+    let base_url = get_webhook(); 
     let url = format!("{}im.message.add", base_url);
     println!("Resulted url: {}", url);
-
-    // Формируем JSON тело запроса
     let request_body = json!({
         "DIALOG_ID": id,
         "MESSAGE": message
     });
 
-    // Отправляем POST запрос с JSON телом
+    println!("IN SEND NOTIFICATION {}", request_body.to_string());
     let response = client_reqwest
         .post(&url)
         .header("Content-Type", "application/json")
         .json(&request_body)
         .send()
         .await?;
-
     println!("Status: {}", response.status());
     println!("Headers: {:#?}", response.headers());
-
     let body = response.text().await?;
-    Ok(body)
-
-    
-};
-
+    Ok(body)    
+}
 
 pub async fn get_multiple_users(client_reqwest: Client, user_ids: &[i32]) -> Result<Value, Box<dyn Error>> {
-    let webhook = get_webhook();
-    
-    let mut params = vec![];
-    
-    // Формируем массив ID
+    let webhook = get_webhook();    
+    let mut params = vec![];    
     for (i, &id) in user_ids.iter().enumerate() {
         let param: String = format!("ID[{}]", i);
         params.push((param, id.to_string()));
-    }
-    
-    let url = format!("{}/user.get", webhook.trim_end_matches('/'));
-    
+    }    
+    let url = format!("{}/user.get", webhook.trim_end_matches('/'));    
     let response = client_reqwest
         .post(&url)
         .form(&params)
         .send()
-        .await?;
-    
-    let json: Value = response.json().await?;
-    
+        .await?;    
+    let json: Value = response.json().await?;    
     if let Some(error) = json.get("error") {
         return Err(format!("Bitrix24 error: {}", error).into());
     }
-    
     Ok(json)
 }
 
 
 pub async fn get_user_with_fields(client_reqwest: Client, user_id: i32, fields: &[&str]) -> Result<Value, Box<dyn Error>> {
     let webhook = get_webhook();
-    
-    // Создаем параметры в одну строку
     let params: Vec<(String, String)> = std::iter::once(("ID".to_string(), user_id.to_string()))
         .chain(fields.iter().enumerate().map(|(i, field)| {
             (format!("SELECT[{}]", i), field.to_string())
         }))
-        .collect();
-    
-    let url = format!("{}/user.get", webhook.trim_end_matches('/'));
-    
+        .collect();    
+    let url = format!("{}/user.get", webhook.trim_end_matches('/'));    
     let response = client_reqwest
         .post(&url)
         .form(&params)
         .send()
-        .await?;
-    
-    let json: Value = response.json().await?;
-    
+        .await?;    
+    let json: Value = response.json().await?;    
     if let Some(error) = json.get("error") {
         return Err(format!("Bitrix24 error: {}", error).into());
-    }
-    
+    }    
     Ok(json)
 }

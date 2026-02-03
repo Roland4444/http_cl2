@@ -7,7 +7,8 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::process::id;
 use serde::de::DeserializeOwned;
-
+use std::io::BufReader;
+use crate::http_Test::{read_lines, read_lines_utf8};
 pub mod http_Test;
 
 
@@ -50,7 +51,7 @@ impl Pack{
     }
 
     fn push_and_update(&mut self, entry: Employee) -> (){
-        if (self.is_contains(&entry)){
+        if self.is_contains(&entry){
             self.remove(&entry);
         }
         self.pack.push(entry);
@@ -105,7 +106,7 @@ impl Pack{
 
     fn get_id_by_fi(&self, fi: String)-> Option<i32>{
         let splitted: Vec<String> = split_to_fi(fi);
-        if (splitted.len()<3){
+        if splitted.len()<3{
             return None
         }
             
@@ -199,6 +200,44 @@ async fn try_grub() ->   Result<(), Box<dyn std::error::Error>> {
     grub_data(1, 400, "all_dump.bin").await
 }
 
+async fn send_message(msg: &str, id_to_send: i32) -> Result <(), Box<dyn std::error::Error>>{
+    http_Test::send_notification_to_user(reqwest::Client::new(), &id_to_send.to_string(), msg).await?;
+    Ok(())
+}
+
+
+
+
+
+async fn process_packed_no_mobile(filename: String) -> Result <(), Box<dyn std::error::Error>>{
+    let lines = read_lines_utf8(&filename);
+    let direct_message = "Здравствуйте! В связи с переносом рабочих чатов из WhatsUp в Bitrix требуется установить мобильную версию Битрикс24 на мобильное устройство. Пожалуйста обратитесь в ИТ отдел компании для данных действий";
+
+    //let direct_message = "Здравствуйте! В связи с переносом рабочих чатов из WhatsUp в Bitrix требуется установить мобильную версию Битрикс24 на мобильное устройство. Пожалуйста обратитесь в ИТ отдел компании для данных действий";
+    for item in lines.iter(){
+        let v: Vec<String> = item.split_whitespace().map(|s| s.to_string()).collect();
+        let id3 = get_index_via_fio_result(v.clone(), "USERS.init");
+        let id = get_index_via_fio_result(v.clone(), "USERS.init").expect("error");
+
+        if id3 == None{
+            panic!("ID is null");
+        }
+
+        println!("ID as string: '{}'", &id.to_string());
+        println!("ID as string trimmed: '{}'", &id.to_string().trim());
+
+        send_message(direct_message, id3.unwrap()).await;
+        println!("\n\n\n\n\nID::{}", id3.unwrap());
+        //send_message_str(direct_message, &id.to_string()).await;
+        // send_message(direct_message, 296).await;
+
+
+        //send_message("direct_message", id.unwrap()).await?;
+     }
+    Ok(())
+}
+
+
 async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Error>> {
     let FOMINA = [("SECOND_NAME", "Александровна"), ("ID", "292")]; 
     let z1 = [("SECOND_NAME", "Вячеславовна"), ("ID", "225")]; 
@@ -227,7 +266,7 @@ async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Err
     //     let result = update_param_(item).await?;
     //     println!("Response body: {}", result);
     // };
-        for item in arr.iter(){        
+    for item in arr.iter(){        
         let result = http_Test::update_param_(client_reqwest.clone(), item).await?;
         println!("Response body: {}", result);
     };
@@ -282,14 +321,21 @@ async fn getting_users(client_reqwest: Client) -> (){
     }
 }
 
+
+
+
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_reqwest: Client = reqwest::Client::new();
+
     //process(client_reqwest).await
    // proc2();
    // getting_users(client_reqwest).await;
-   try_grub().await
-    //Ok(())
+    process_packed_no_mobile("TEST_NO".to_string()).await
+// send_message(direct_message, 296).await
+    //  try_grub().await
+    // Ok(())
 
 
     
@@ -317,10 +363,44 @@ pub fn split_to_fi(input: String)->Vec<String>{
 }
 
 
+
+fn get_index_via_fio_result(fio: Vec<String>, filename: &str) ->Option<i32> {
+    let lines = read_lines_utf8(filename);
+    for item in lines.iter(){
+       println!("current string {}", item);
+       if fio.iter().all(|s| item.contains(s)){
+           if let Some(space_index) = item.find(' '){
+               if space_index > 0 {
+                   if let Ok(num) = item[..space_index].parse::<i32>(){
+                       return Some(num);
+                   }
+               }
+           }            
+       }
+    }
+    None
+}
+
+    // public void testGetIndexViaFIO() {
+    //     java.util.List<String> javaList = java.util.Arrays.asList("Тестов","Тест");
+    //     // Используем asScala из scala.jdk.javaapi.CollectionConverters
+    //     List<String> scalaList = JavaConverters.asScalaIteratorConverter(javaList.iterator())
+    //             .asScala()
+    //             .toList();        assertEquals(Integer.valueOf(298), Integer.valueOf(Bitrix.getIndexViaFIO(scalaList, "USERS.init" )));
+    // }
 #[cfg(test)]
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn test_getindx(){
+        let fio = vec!["Тест".to_string(), "Тестер".to_string()];
+        let id = get_index_via_fio_result(fio, "USERS.init").expect("error");
+        assert_eq!(296, id);
+    }
+
+
 
     #[test]
     fn test_add(){
