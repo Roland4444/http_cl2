@@ -251,8 +251,7 @@ async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Err
     let z16 = [("SECOND_NAME", "Мураткалиевич"), ("ID", "259")]; 
     let z17 = [("SECOND_NAME", "Магарамовна"), ("ID", "267")]; 
     let z18 = [("SECOND_NAME", "Сергеевна"), ("ID", "283")]; 
-    let z19 = [("SECOND_NAME", "Петрович"), ("ID", "285")]; 
-
+    let z19 = [("SECOND_NAME", "Петрович"), ("ID", "285")];
 
     let z20 = [ ("ID", "283"), ("PERSONAL_MOBILE", "+7927581-68-51")]; 
     let z22 = [ ("ID", "283"), ("WORK_POSITION", "Ведущий инженер-конструктор")];   
@@ -263,10 +262,6 @@ async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Err
 
     let arr2: Vec<[(&str, &str); 2]> = vec! [z20, z21, z22];
 
-    // for item in arr.iter(){        
-    //     let result = update_param_(item).await?;
-    //     println!("Response body: {}", result);
-    // };
     for item in arr.iter(){        
         let result = http_Test::update_param_(client_reqwest.clone(), item).await?;
         println!("Response body: {}", result);
@@ -333,7 +328,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //process(client_reqwest).await
    // proc2();
    // getting_users(client_reqwest).await;
-    process_packed_no_mobile("MOBILE_NO.txt".to_string()).await
+   // process_packed_no_mobile("MOBILE_NO.txt".to_string()).await
+   get_tasks_to_file().await
 // send_message(direct_message, 296).await
     //  try_grub().await
     // Ok(())
@@ -363,6 +359,19 @@ pub fn split_to_fi(input: String)->Vec<String>{
     res
 }
 
+
+fn write_js_to_file(filename: &str, json: Value) -> Result<(), Box<dyn std::error::Error>> {
+    let file = File::create(filename)?;
+    serde_json::to_writer_pretty(file, &json)?;
+    Ok(())
+}
+
+async fn get_tasks_to_file()-> Result<(), Box<dyn std::error::Error>>{
+    let client_reqwest: Client = reqwest::Client::new();
+    //let value = http_Test::read_tasks2(&client_reqwest).await?;
+    let value = http_Test::read_tasks2(&client_reqwest ).await?;
+    write_js_to_file("dump2.js", value )   
+}
 
 
 fn get_index_via_fio_result(fio: Vec<String>, filename: &str) ->Option<i32> {

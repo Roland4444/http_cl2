@@ -29,6 +29,84 @@ pub fn read_lines_utf8(filename: &str) ->Vec<String> {
 
 
 
+
+
+pub async fn read_tasks2(client_reqwest: &Client) -> Result<Value, Box<dyn Error>> {
+    let webhook = get_webhook();    
+    let url = format!("{}/tasks.task.list", webhook.trim_end_matches('/'));    
+
+    // Создаем тело запроса как в curl примере
+    let mut body = json!({
+        "order": {
+            "DEADLINE": "asc",
+            "PRIORITY": "desc"
+        },
+
+//  "select": [
+//             "ID", "TITLE", "DESCRIPTION", "STATUS", "subStatus", 
+//             "DEADLINE", "CREATED_DATE", "RESPONSIBLE_ID", 
+//             "ACCOMPLICES", "AUDITORS", "TAGS", "COUNTERS", 
+//             "PRIORITY", "MARK", "COMMENTS"
+//         ],
+
+
+        "select": [
+            "ID", "TITLE",  "COMMENTS"
+        ],
+        "params": {
+            "WITH_TIMER_INFO": true,
+            "WITH_RESULT_INFO": true,
+            "WITH_PARSED_DESCRIPTION": true
+        }, "start":150
+    });
+    
+    
+    let response = client_reqwest
+        .post(&url)
+        .header("Content-Type", "application/json")
+        .header("Accept", "application/json")
+        .json(&body)  // Автоматически сериализует в JSON и устанавливает Content-Type
+        .send()
+        .await?;
+    
+    // Проверяем статус ответа
+    if !response.status().is_success() {
+        return Err(format!("HTTP error: {}", response.status()).into());
+    }
+    
+    let json: Value = response.json().await?;
+    
+    // Проверяем наличие ошибки в ответе Bitrix24
+    if let Some(error) = json.get("error") {
+        return Err(format!("Bitrix24 error: {}", error).into());
+    }
+    
+    // Также проверяем наличие поля "error" в result, если Bitrix24 так возвращает ошибки
+    if let Some(result) = json.get("result") {
+        if let Some(error) = result.get("error") {
+            return Err(format!("Bitrix24 result error: {}", error).into());
+        }
+    }
+    
+    Ok(json)
+}
+
+
+pub async fn read_tasks(client_reqwest: Client) -> Result<Value, Box<dyn Error>> {
+    let webhook = get_webhook();    
+    let url = format!("{}/tasks.task.list", webhook.trim_end_matches('/'));    
+    let response = client_reqwest
+        .post(&url)
+        .send()
+        .await?;    
+    let json: Value = response.json().await?;    
+    if let Some(error) = json.get("error") {
+        return Err(format!("Bitrix24 error: {}", error).into());
+    }
+    Ok(json)
+}
+
+
 pub fn read_lines(filename: &str) -> Vec<String>{
     let bytes = read_bytes(filename);
     let (decoded, _, had_errors) = WINDOWS_1251.decode(&bytes);
