@@ -11,6 +11,9 @@ use std::io::BufReader;
 use crate::http_Test::{read_lines, read_lines_utf8};
 pub mod http_Test;
 
+const DEFAULT_DUMP: &str = "all_dump.bin";
+const ADD_DUMP: &str = "snoyman.bin";
+
 
 fn deserialize_from_file<T: DeserializeOwned>(filename: &str) -> Result<T, Box<dyn std::error::Error>>{
     let mut file: File = File::open(filename)?;
@@ -27,6 +30,7 @@ struct Employee{
     name: String,
     last_name: String,
     middle_name: String,    
+    work_position: String, 
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -130,8 +134,8 @@ impl Pack{
 }
 
 impl Employee {
-     fn new(id:i32, name: String, last_name: String, middle_name: String) -> Self {
-         Employee {id, name, last_name, middle_name}
+     fn new(id:i32, name: String, last_name: String, middle_name: String, work_position: String) -> Self {
+         Employee {id, name, last_name, middle_name, work_position}
      }
 
      fn serialize_to_file(&self, filename: &str) -> Result<(), Box<dyn std::error::Error>>{
@@ -146,7 +150,7 @@ impl Employee {
      }
 
      fn _to_string(&self) -> String{
-        format!("{} {} {} {}", self.id, self.name, self.middle_name, self.last_name)
+        format!("{} {} {} {} {}", self.id, self.name, self.middle_name, self.last_name, self.work_position)
      } 
 }
 
@@ -156,6 +160,10 @@ fn get_i32_from_value(value: &Value) -> Option<i32> {
         Value::String(s) => s.parse::<i32>().ok(),
         _ => None,
     }
+}
+
+fn p(s: &Value) -> String {
+    s.to_string().replace("\"", "")
 }
 
 async fn grub_data(index_start: i32, index_stop: i32, filename_to_dump: &str)->   Result<(), Box<dyn std::error::Error>> {
@@ -168,19 +176,21 @@ async fn grub_data(index_start: i32, index_stop: i32, filename_to_dump: &str)-> 
             if let Some(users) = data.get("result") {
                 if users.is_array() {
                     for user in users.as_array().unwrap() {
+                        println!("------------------------------------------");
+                        println! ("USER:: {}", user);
                         let id =  user.get("ID").unwrap_or(&Value::Null);
                         let name = user.get("NAME").unwrap_or(&Value::Null);
                         let last_name =   user.get("LAST_NAME").unwrap_or(&Value::Null);
                         let second_name = user.get("SECOND_NAME").unwrap_or(&Value::Null);
+                        let work_position = user.get("WORK_POSITION").unwrap_or(&Value::Null);
                         println!("ID: {}", id);
                         println!("Имя: {}", name);
                         println!("Фамилия: {}", last_name);
                         println!("Отчество: {}", second_name);
-
+                        println!("Должность: {}", work_position);
                         println!("---");
                         let number_id = get_i32_from_value(id).expect("shit");
-                        let emp = Employee::new(number_id, name.to_string().replace("\"", ""), 
-                        last_name.to_string().replace("\"", ""), second_name.to_string().replace("\"", ""));
+                        let emp = Employee::new(number_id, p(name), p(last_name), p( second_name), work_position.to_string());
                         pack.push_and_update(emp);
                     }
                 }
@@ -197,7 +207,7 @@ async fn grub_data(index_start: i32, index_stop: i32, filename_to_dump: &str)-> 
 
 
 async fn try_grub() ->   Result<(), Box<dyn std::error::Error>> {
-    grub_data(1, 400, "all_dump.bin").await
+    grub_data(1, 400, ADD_DUMP).await//DEFAULT_DUMP).await
 }
 
 async fn send_message(msg: &str, id_to_send: i32) -> Result <(), Box<dyn std::error::Error>>{
@@ -329,9 +339,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
    // proc2();
    // getting_users(client_reqwest).await;
    // process_packed_no_mobile("MOBILE_NO.txt".to_string()).await
-   get_tasks_to_file().await
+   //get_tasks_to_file().await
 // send_message(direct_message, 296).await
-    //  try_grub().await
+     try_grub().await
     // Ok(())
 
 
@@ -443,7 +453,7 @@ mod tests {
 
     #[test]
     fn test_ser(){
-        let emp = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string());
+        let emp = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string(), "".to_string());
         emp.serialize_to_file("employee.bin");
         println!("Data serialized to employee.bin");
         let emp2 = Employee::deserialize_from_file("employee.bin").expect("shit");
@@ -453,8 +463,8 @@ mod tests {
 
     #[test]
     fn test_sr_dsr(){
-        let emp1 = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string());
-        let emp2 = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string());
+        let emp1 = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string(), "".to_string());
+        let emp2 = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string(),"".to_string());
         let pack_filename = "pack.bin";
         let emp_Vecs = vec![emp1, emp2];
         let pack = Pack::new(emp_Vecs);
@@ -467,15 +477,15 @@ mod tests {
 
     #[test]
     fn test_contains_pack(){
-        let emp1 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
-        let emp2 = Employee::new(2, "Roman".to_string(), "Pastushkov".to_string(), "DOE".to_string());
+        let emp1 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
+        let emp2 = Employee::new(2, "Roman".to_string(), "Pastushkov".to_string(), "DOE".to_string(),  "".to_string());
         let pack_filename = "pack.bin";
         let emp_Vecs = vec![emp1, emp2];
         let mut pack = Pack::new(emp_Vecs);
-        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
-        let emp4 = Employee::new(99, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
-        let emp5 = Employee::new(99, "Michael2".to_string(), "Snoyman".to_string(), "".to_string());
-        let emp6 = Employee::new(1, "Michael2".to_string(), "Snoyman".to_string(), "".to_string());
+        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
+        let emp4 = Employee::new(99, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
+        let emp5 = Employee::new(99, "Michael2".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
+        let emp6 = Employee::new(1, "Michael2".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
 
         let res = pack.is_contains(&emp3);
         assert_eq!(true,  res);
@@ -498,11 +508,11 @@ mod tests {
 
      #[test]
     fn test_delete_pack(){
-        let emp1 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
-        let emp2 = Employee::new(2, "Roman".to_string(), "Pastushkov".to_string(), "DOE".to_string());
+        let emp1 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
+        let emp2 = Employee::new(2, "Roman".to_string(), "Pastushkov".to_string(), "DOE".to_string(), "".to_string());
         let emp_Vecs = vec![emp1, emp2];
         let mut pack = Pack::new(emp_Vecs);
-        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
+        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
       
         let res = pack.is_contains(&emp3);
         assert_eq!(true,  res);
@@ -515,9 +525,9 @@ mod tests {
 
     #[test]
     fn test_get_id(){
-        let emp1 = Employee::new(1, "Michaelen".to_string(), "Snoyman".to_string(), "".to_string());
-        let emp2 = Employee::new(2, "Роман".to_string(), "Пастушков".to_string(), "DOE".to_string());
-        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string());
+        let emp1 = Employee::new(1, "Michaelen".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
+        let emp2 = Employee::new(2, "Роман".to_string(), "Пастушков".to_string(), "DOE".to_string(), "".to_string());
+        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
         let emp_Vecs = vec![emp1, emp2, emp3];
         let mut pack = Pack::new(emp_Vecs);
         assert_eq!(2, pack.get_id_by_fi("Пастушков Роман".to_string()).expect("shit"));
@@ -528,7 +538,7 @@ mod tests {
 
     #[test]
     fn test_get_id2(){
-        let mut pack = Pack::deserialize_from_file("all_dump.bin").expect("msg");
+        let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
         println!("{}", pack.to_string("\n".to_string()));
         assert_eq!(1, pack.get_id_by_fi("Цыбульский Сергей".to_string()).expect("shit"));
     }

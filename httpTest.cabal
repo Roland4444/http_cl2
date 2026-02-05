@@ -12,68 +12,42 @@ cabal-version:      3.0
 --
 -- The name of the package.
 name:               httpTest
-
--- The package version.
--- See the Haskell package versioning policy (PVP) for standards
--- guiding when and how versions should be incremented.
--- https://pvp.haskell.org
--- PVP summary:     +-+------- breaking API changes
---                  | | +----- non-breaking API additions
---                  | | | +--- code changes with no API change
 version:            0.1.0.0
-
--- A short (one-line) description of the package.
--- synopsis:
-
--- A longer description of the package.
--- description:
-
--- The license under which the package is released.
 license:            BSD-2-Clause
-
--- The file containing the license text.
 license-file:       LICENSE
-
--- The package author(s).
--- author:
-
--- An email address to which users can send suggestions, bug reports, and patches.
--- maintainer:
-
--- A copyright notice.
--- copyright:
 build-type:         Simple
-
--- Extra doc files to be distributed with the package, such as a CHANGELOG or a README.
 extra-doc-files:    CHANGELOG.md
-
--- Extra source files to be distributed with the package, such as examples, or a tutorial module.
--- extra-source-files:
 
 common warnings
     ghc-options: -Wall
 
-executable httpTest
-    -- Import common warning flags.
+-- Библиотека с основной логикой
+library
     import:           warnings
-
-    -- .hs or .lhs file containing the Main module.
-    main-is:          Main.hs
-
-    -- Modules included in this executable, other than Main.
-    -- other-modules:
-
-    -- LANGUAGE extensions used by modules in this package.
-    -- other-extensions:
-
-    -- Other library packages from which modules are imported.
+    hs-source-dirs:   haskell          # изменили с src на haskell
+    exposed-modules:  HttpTest
     build-depends:    base ^>=4.21.1.0
-                      ,bytestring
-                      ,http-client
-                      ,HTTP
+                    , bytestring
+                    , http-client
+                    , HTTP
+    default-language: Haskell2010
 
-    -- Directories containing source files.
+-- Исполняемый файл
+executable httpTest
+    import:           warnings
+    main-is:          Main.hs
     hs-source-dirs:   app
+    build-depends:    base ^>=4.21.1.0
+                    , httpTest      
+    default-language: Haskell2010
 
-    -- Base language which the package is written in.
+-- Тесты
+test-suite httpTest-tests
+    import:           warnings
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Spec.hs
+    build-depends:    base
+                    , httpTest        
+                    , hspec
     default-language: Haskell2010
