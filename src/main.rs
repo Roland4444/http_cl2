@@ -17,19 +17,21 @@ const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 enum ADDITIONAL_FIELDS {
-    WORK_POSITION
+    WORK_POSITION, PERSONAL_BIRTHDAY
 }
 
 
 impl ADDITIONAL_FIELDS {
     fn all_values() -> Vec<Self> {
         vec![
-            ADDITIONAL_FIELDS::WORK_POSITION]
+            ADDITIONAL_FIELDS::WORK_POSITION,
+            ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY]
     }
     
     fn to_string(&self) -> String {
         match self {
             ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",
+            ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => "PERSONAL_BIRTHDAY"
         }.to_string()
     }
     
@@ -47,7 +49,8 @@ fn get_enum__by_string(target: &str) -> ADDITIONAL_FIELDS {
 impl std::fmt::Display for ADDITIONAL_FIELDS {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность")
+            ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность"),
+            ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения")            
         }
     }
 }
@@ -304,11 +307,18 @@ async fn grub_data_with_add_params(index_start: i32, index_stop: i32, filename_t
     Ok(())
 }
 
-
-
 async fn try_grub() ->   Result<(), Box<dyn std::error::Error>> {
    // grub_data(1, 400, ADD_DUMP).await//DEFAULT_DUMP).await
-   grub_data_with_add_params(1, 400, ADD_DUMP, vec![ADDITIONAL_FIELDS::WORK_POSITION.to_string()]).await//DEFAULT_DUMP).await
+   let res = grub_data_with_add_params(1, 400, ADD_DUMP, vec![ADDITIONAL_FIELDS::WORK_POSITION.to_string(), 
+                                                                                                  ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY.to_string()])
+                                                                                                  .await;//DEFAULT_DUMP).await;
+
+    let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+    println!("RESULT:: {}", pack.to_string("\n".to_string()));
+    let filename = "lastdump.txt";
+    std::fs::write(filename, pack.to_string("\n".to_string()))  ;
+    res
+                                                                                              
 }
 
 async fn send_message(msg: &str, id_to_send: i32) -> Result <(), Box<dyn std::error::Error>>{
@@ -429,12 +439,27 @@ async fn getting_users(client_reqwest: Client) -> (){
 }
 
 
+fn compare(fromVik: String, fromDump: String)-> bool{
+    return false;
+//FROM VIK
+// 6 Цыбульский Сергей Александрович Директор по информационным технологиям 01.04.2024 01.09.1984
+// 1984-09-01T03:00:00+04:00    01.04.2024                PERSONAL_BIRTHDAY
+// WORK_POSITION   PERSONAL_BIRTHDAY
 
+// TYPE":"employee","WORK_PHONE":"","WORK_POSITION":"Директор по ИТ","XML_ID":"49915858"}
+// ID: "1"
+// Имя: "Сергей"
+// Фамилия: "Цыбульский"
+// Отчество: "Александрович"
+// ДОП ПАРАМЕТРЫ: Должность: "Директор по ИТ"
+
+} 
 
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_reqwest: Client = reqwest::Client::new();
+ 
 
     //process(client_reqwest).await
    // proc2();
@@ -660,6 +685,19 @@ mod tests {
     fn test_fi(){
         let mut fi = "Roman Pastushkov";
         assert_eq!(3, split_to_fi(fi.to_string()).len());
+
+    }
+
+    #[test]
+    fn suspend_to_file_dump(){
+        let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+        println!("RESULT:: {}", pack.to_string("\n".to_string()));
+        let filename = "lastdump.txt";
+        let file = File::create(filename);
+        let res = std::fs::write(filename, pack.to_string("\n".to_string()));
+       // assert_eq!(res., Ok(()))
+
+        
 
     }
 }
