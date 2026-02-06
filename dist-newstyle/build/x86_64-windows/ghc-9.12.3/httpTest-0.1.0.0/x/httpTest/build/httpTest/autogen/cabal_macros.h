@@ -10,16 +10,16 @@
   (major1) == 0 && (major2) <  1 || \
   (major1) == 0 && (major2) == 1 && (minor) <= 0)
 #endif /* MIN_VERSION_httpTest */
-/* package HTTP-4000.5.0 */
-#ifndef VERSION_HTTP
-#define VERSION_HTTP "4000.5.0"
-#endif /* VERSION_HTTP */
-#ifndef MIN_VERSION_HTTP
-#define MIN_VERSION_HTTP(major1,major2,minor) (\
-  (major1) <  4000 || \
-  (major1) == 4000 && (major2) <  5 || \
-  (major1) == 4000 && (major2) == 5 && (minor) <= 0)
-#endif /* MIN_VERSION_HTTP */
+/* package aeson-2.2.3.0 */
+#ifndef VERSION_aeson
+#define VERSION_aeson "2.2.3.0"
+#endif /* VERSION_aeson */
+#ifndef MIN_VERSION_aeson
+#define MIN_VERSION_aeson(major1,major2,minor) (\
+  (major1) <  2 || \
+  (major1) == 2 && (major2) <  2 || \
+  (major1) == 2 && (major2) == 2 && (minor) <= 3)
+#endif /* MIN_VERSION_aeson */
 /* package base-4.21.1.0 */
 #ifndef VERSION_base
 #define VERSION_base "4.21.1.0"
@@ -30,6 +30,16 @@
   (major1) == 4 && (major2) <  21 || \
   (major1) == 4 && (major2) == 21 && (minor) <= 1)
 #endif /* MIN_VERSION_base */
+/* package binary-0.8.9.3 */
+#ifndef VERSION_binary
+#define VERSION_binary "0.8.9.3"
+#endif /* VERSION_binary */
+#ifndef MIN_VERSION_binary
+#define MIN_VERSION_binary(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  8 || \
+  (major1) == 0 && (major2) == 8 && (minor) <= 9)
+#endif /* MIN_VERSION_binary */
 /* package bytestring-0.12.2.0 */
 #ifndef VERSION_bytestring
 #define VERSION_bytestring "0.12.2.0"
@@ -40,16 +50,26 @@
   (major1) == 0 && (major2) <  12 || \
   (major1) == 0 && (major2) == 12 && (minor) <= 2)
 #endif /* MIN_VERSION_bytestring */
-/* package http-client-0.7.19 */
-#ifndef VERSION_http_client
-#define VERSION_http_client "0.7.19"
-#endif /* VERSION_http_client */
-#ifndef MIN_VERSION_http_client
-#define MIN_VERSION_http_client(major1,major2,minor) (\
+/* package directory-1.3.9.0 */
+#ifndef VERSION_directory
+#define VERSION_directory "1.3.9.0"
+#endif /* VERSION_directory */
+#ifndef MIN_VERSION_directory
+#define MIN_VERSION_directory(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  3 || \
+  (major1) == 1 && (major2) == 3 && (minor) <= 9)
+#endif /* MIN_VERSION_directory */
+/* package httpTest-0.1.0.0 */
+#ifndef VERSION_httpTest
+#define VERSION_httpTest "0.1.0.0"
+#endif /* VERSION_httpTest */
+#ifndef MIN_VERSION_httpTest
+#define MIN_VERSION_httpTest(major1,major2,minor) (\
   (major1) <  0 || \
-  (major1) == 0 && (major2) <  7 || \
-  (major1) == 0 && (major2) == 7 && (minor) <= 19)
-#endif /* MIN_VERSION_http_client */
+  (major1) == 0 && (major2) <  1 || \
+  (major1) == 0 && (major2) == 1 && (minor) <= 0)
+#endif /* MIN_VERSION_httpTest */
 
 /* tool gcc-14.0.6 */
 #ifndef TOOL_VERSION_gcc

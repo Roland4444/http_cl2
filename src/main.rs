@@ -8,11 +8,24 @@ use std::io::{Read, Write};
 use std::process::id;
 use serde::de::DeserializeOwned;
 use std::io::BufReader;
+use std::collections::HashMap;
 use crate::http_Test::{read_lines, read_lines_utf8};
 pub mod http_Test;
 
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+enum ADDITIONAL_FIELDS {
+    WORK_POSITION
+}
+
+impl std::fmt::Display for ADDITIONAL_FIELDS {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность")
+        }
+    }
+}
 
 
 fn deserialize_from_file<T: DeserializeOwned>(filename: &str) -> Result<T, Box<dyn std::error::Error>>{
@@ -30,7 +43,7 @@ struct Employee{
     name: String,
     last_name: String,
     middle_name: String,    
-    work_position: String, 
+    map_add: HashMap<ADDITIONAL_FIELDS, String>
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -134,8 +147,8 @@ impl Pack{
 }
 
 impl Employee {
-     fn new(id:i32, name: String, last_name: String, middle_name: String, work_position: String) -> Self {
-         Employee {id, name, last_name, middle_name, work_position}
+     fn new(id:i32, name: String, last_name: String, middle_name: String, map_add: HashMap<ADDITIONAL_FIELDS, String>) -> Self {
+         Employee {id, name, last_name, middle_name, map_add}
      }
 
      fn serialize_to_file(&self, filename: &str) -> Result<(), Box<dyn std::error::Error>>{
@@ -150,8 +163,16 @@ impl Employee {
      }
 
      fn _to_string(&self) -> String{
-        format!("{} {} {} {} {}", self.id, self.name, self.middle_name, self.last_name, self.work_position)
+        format!("{} {} {} {} {}", self.id, self.name, self.middle_name, self.last_name, Employee::map_to_string(self.map_add.clone()))
      } 
+
+     fn map_to_string(m: HashMap<ADDITIONAL_FIELDS, String>) -> String {
+        m.iter()
+        .map(|(key, value)| format!("{}: {}", key, value))
+        .collect::<Vec<String>>()
+        .join(", ")
+    }
+     
 }
 
 fn get_i32_from_value(value: &Value) -> Option<i32> {
@@ -190,7 +211,8 @@ async fn grub_data(index_start: i32, index_stop: i32, filename_to_dump: &str)-> 
                         println!("Должность: {}", work_position);
                         println!("---");
                         let number_id = get_i32_from_value(id).expect("shit");
-                        let emp = Employee::new(number_id, p(name), p(last_name), p( second_name), work_position.to_string());
+                        let emp = Employee::new(number_id, p(name), p(last_name), p( second_name),  
+                                                HashMap::from([(ADDITIONAL_FIELDS::WORK_POSITION, work_position.to_string())]));
                         pack.push_and_update(emp);
                     }
                 }
@@ -414,6 +436,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_map(){
+        let mut  m: HashMap<ADDITIONAL_FIELDS, String> = HashMap::new();
+        m.insert(ADDITIONAL_FIELDS::WORK_POSITION, "seller".to_string());
+        assert_eq!("seller", m.get(&ADDITIONAL_FIELDS::WORK_POSITION).unwrap());
+    }
+
+    #[test]
     fn test_getindx(){
         let fio = vec!["Тест".to_string(), "Тестер".to_string()];
         let id = get_index_via_fio_result(fio, "USERS.init").expect("error");
@@ -453,7 +482,7 @@ mod tests {
 
     #[test]
     fn test_ser(){
-        let emp = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string(), "".to_string());
+        let emp = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string(), HashMap::new());
         emp.serialize_to_file("employee.bin");
         println!("Data serialized to employee.bin");
         let emp2 = Employee::deserialize_from_file("employee.bin").expect("shit");
@@ -463,8 +492,8 @@ mod tests {
 
     #[test]
     fn test_sr_dsr(){
-        let emp1 = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string(), "".to_string());
-        let emp2 = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string(),"".to_string());
+        let emp1 = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string(), HashMap::new());
+        let emp2 = Employee::new(1, "John Doe".to_string(), "DOE".to_string(), "DOE".to_string(),HashMap::new());
         let pack_filename = "pack.bin";
         let emp_Vecs = vec![emp1, emp2];
         let pack = Pack::new(emp_Vecs);
@@ -477,15 +506,15 @@ mod tests {
 
     #[test]
     fn test_contains_pack(){
-        let emp1 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
-        let emp2 = Employee::new(2, "Roman".to_string(), "Pastushkov".to_string(), "DOE".to_string(),  "".to_string());
+        let emp1 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), HashMap::new());
+        let emp2 = Employee::new(2, "Roman".to_string(), "Pastushkov".to_string(), "DOE".to_string(),  HashMap::new());
         let pack_filename = "pack.bin";
         let emp_Vecs = vec![emp1, emp2];
         let mut pack = Pack::new(emp_Vecs);
-        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
-        let emp4 = Employee::new(99, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
-        let emp5 = Employee::new(99, "Michael2".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
-        let emp6 = Employee::new(1, "Michael2".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
+        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), HashMap::new());
+        let emp4 = Employee::new(99, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), HashMap::new());
+        let emp5 = Employee::new(99, "Michael2".to_string(), "Snoyman".to_string(), "".to_string(), HashMap::new());
+        let emp6 = Employee::new(1, "Michael2".to_string(), "Snoyman".to_string(), "".to_string(), HashMap::new());
 
         let res = pack.is_contains(&emp3);
         assert_eq!(true,  res);
@@ -508,11 +537,11 @@ mod tests {
 
      #[test]
     fn test_delete_pack(){
-        let emp1 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
-        let emp2 = Employee::new(2, "Roman".to_string(), "Pastushkov".to_string(), "DOE".to_string(), "".to_string());
+        let emp1 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), HashMap::new());
+        let emp2 = Employee::new(2, "Roman".to_string(), "Pastushkov".to_string(), "DOE".to_string(), HashMap::new());
         let emp_Vecs = vec![emp1, emp2];
         let mut pack = Pack::new(emp_Vecs);
-        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
+        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), HashMap::new());
       
         let res = pack.is_contains(&emp3);
         assert_eq!(true,  res);
@@ -525,9 +554,9 @@ mod tests {
 
     #[test]
     fn test_get_id(){
-        let emp1 = Employee::new(1, "Michaelen".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
-        let emp2 = Employee::new(2, "Роман".to_string(), "Пастушков".to_string(), "DOE".to_string(), "".to_string());
-        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), "".to_string());
+        let emp1 = Employee::new(1, "Michaelen".to_string(), "Snoyman".to_string(), "".to_string(), HashMap::new());
+        let emp2 = Employee::new(2, "Роман".to_string(), "Пастушков".to_string(), "DOE".to_string(), HashMap::new());
+        let emp3 = Employee::new(1, "Michael".to_string(), "Snoyman".to_string(), "".to_string(), HashMap::new());
         let emp_Vecs = vec![emp1, emp2, emp3];
         let mut pack = Pack::new(emp_Vecs);
         assert_eq!(2, pack.get_id_by_fi("Пастушков Роман".to_string()).expect("shit"));
