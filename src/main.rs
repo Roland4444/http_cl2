@@ -163,7 +163,7 @@ impl Employee {
      }
 
      fn _to_string(&self) -> String{
-        format!("{} {} {} {} {}", self.id, self.name, self.middle_name, self.last_name, Employee::map_to_string(self.map_add.clone()))
+        format!("{} {} {} {} {}", self.id, self.name, self.middle_name, self.last_name, format!("<{}>", Employee::map_to_string(self.map_add.clone())))
      } 
 
      fn map_to_string(m: HashMap<ADDITIONAL_FIELDS, String>) -> String {
@@ -172,6 +172,8 @@ impl Employee {
         .collect::<Vec<String>>()
         .join(", ")
     }
+
+
      
 }
 
