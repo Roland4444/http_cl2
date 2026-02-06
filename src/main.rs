@@ -6,6 +6,7 @@ use bincode;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::process::id;
+use std::ptr::hash;
 use serde::de::DeserializeOwned;
 use std::io::BufReader;
 use std::collections::HashMap;
@@ -17,6 +18,30 @@ const ADD_DUMP: &str = "snoyman.bin";
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 enum ADDITIONAL_FIELDS {
     WORK_POSITION
+}
+
+
+impl ADDITIONAL_FIELDS {
+    fn all_values() -> Vec<Self> {
+        vec![
+            ADDITIONAL_FIELDS::WORK_POSITION]
+    }
+    
+    fn to_string(&self) -> String {
+        match self {
+            ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",
+        }.to_string()
+    }
+    
+}
+
+
+fn get_enum__by_string(target: &str) -> ADDITIONAL_FIELDS {
+    ADDITIONAL_FIELDS::all_values()
+        .iter()
+        .find(|&field| field.to_string() == target)
+        .cloned()
+        .unwrap_or_else(|| panic!("No field found with string: {}", target))
 }
 
 impl std::fmt::Display for ADDITIONAL_FIELDS {
@@ -230,8 +255,60 @@ async fn grub_data(index_start: i32, index_stop: i32, filename_to_dump: &str)-> 
 }
 
 
+async fn grub_data_with_add_params(index_start: i32, index_stop: i32, filename_to_dump: &str, params: Vec<String>)->   Result<(), Box<dyn std::error::Error>> {
+    let mut init_buffer: Vec<Employee> = Vec::new();
+    let mut pack = Pack::new(init_buffer);
+    let client_reqwest: Client = reqwest::Client::new();
+    for _i in index_start..index_stop{
+        match http_Test::get_user_by_id(client_reqwest.clone(), _i).await {
+        Ok(data) => {
+            if let Some(users) = data.get("result") {
+                if users.is_array() {
+                    for user in users.as_array().unwrap() {
+                        println!("------------------------------------------");
+                        println! ("USER:: {}", user);
+                        let id =  user.get("ID").unwrap_or(&Value::Null);
+                        let name = user.get("NAME").unwrap_or(&Value::Null);
+                        let last_name =   user.get("LAST_NAME").unwrap_or(&Value::Null);
+                        let second_name = user.get("SECOND_NAME").unwrap_or(&Value::Null);
+
+                        let  mut  map22: HashMap<ADDITIONAL_FIELDS, String> = HashMap:: new();
+
+                        for item in params.iter(){
+                            let enum_ = get_enum__by_string(item);
+                            let value  =  user.get(enum_.to_string()).unwrap_or(&Value::Null);
+                            map22.insert(enum_, value.to_string());
+                        }
+
+
+                        println!("ID: {}", id);
+                        println!("Имя: {}", name);
+                        println!("Фамилия: {}", last_name);
+                        println!("Отчество: {}", second_name);
+                        println!("ДОП ПАРАМЕТРЫ: {}", Employee::map_to_string(map22.clone()));
+
+                        println!("---");
+                        let number_id = get_i32_from_value(id).expect("shit");
+                        let emp = Employee::new(number_id, p(name), p(last_name), p( second_name),  map22);
+                        pack.push_and_update(emp);
+                    }
+                }
+            }
+        }
+        Err(e) => println!("Ошибка: {}", e),
+        }
+
+    }
+    println!("RESULT:: {}", pack.to_string("\n".to_string()));
+    pack.serialize_to_file(filename_to_dump);
+    Ok(())
+}
+
+
+
 async fn try_grub() ->   Result<(), Box<dyn std::error::Error>> {
-    grub_data(1, 400, ADD_DUMP).await//DEFAULT_DUMP).await
+   // grub_data(1, 400, ADD_DUMP).await//DEFAULT_DUMP).await
+   grub_data_with_add_params(1, 400, ADD_DUMP, vec![ADDITIONAL_FIELDS::WORK_POSITION.to_string()]).await//DEFAULT_DUMP).await
 }
 
 async fn send_message(msg: &str, id_to_send: i32) -> Result <(), Box<dyn std::error::Error>>{
@@ -436,6 +513,11 @@ fn get_index_via_fio_result(fio: Vec<String>, filename: &str) ->Option<i32> {
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn test_get_enum(){
+        assert_eq!( get_enum__by_string("WORK_POSITION"), ADDITIONAL_FIELDS::WORK_POSITION)
+    }
 
     #[test]
     fn test_map(){
