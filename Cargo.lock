@@ -425,6 +425,7 @@ dependencies = [
  "anyhow",
  "axum",
  "bincode",
+ "bytes",
  "chrono",
  "encoding_rs",
  "reqwest",
