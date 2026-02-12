@@ -12,6 +12,11 @@ use std::io::BufReader;
 use std::collections::HashMap;
 use crate::http_Test::{read_lines, read_lines_utf8};
 pub mod http_Test;
+pub mod http_Proc;
+use std::thread;
+use std::time::Duration;
+
+
 
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
@@ -313,7 +318,7 @@ async fn grub_data_with_add_params(index_start: i32, index_stop: i32, filename_t
 
 async fn try_grub() ->   Result<(), Box<dyn std::error::Error>> {
    // grub_data(1, 400, ADD_DUMP).await//DEFAULT_DUMP).await
-   let res = grub_data_with_add_params(1, 400, ADD_DUMP, vec![ADDITIONAL_FIELDS::WORK_POSITION.to_string(), 
+   let res = grub_data_with_add_params(1, 450, ADD_DUMP, vec![ADDITIONAL_FIELDS::WORK_POSITION.to_string(), 
                                                                                                   ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY.to_string()])
                                                                                                   .await;//DEFAULT_DUMP).await;
 
@@ -399,6 +404,14 @@ async fn process(client_reqwest: Client) ->   Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
+// async fn  batch_update(client_reqwest: Client) -> Result<(), Box<dyn std::error::Error>>{
+
+// }
+
+fn gen_batch_str(input: String, pack: Pack, _1c_info_file: String) -> String{
+    return "".to_string()
+}
+
 
 async fn getting_users(client_reqwest: Client) -> (){
     println!("=== Получение пользователя по ID 111111111111111111111===");
@@ -471,8 +484,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
    // process_packed_no_mobile("MOBILE_NO.txt".to_string()).await
    //get_tasks_to_file().await
 // send_message(direct_message, 296).await
-     try_grub().await
-    // Ok(())
+
+
+    let server_handle = tokio::spawn(async {
+        if let Err(e) = http_Proc::spawn().await {
+            eprintln!("Server error: {}", e);
+        }
+    });
+
+
+     loop {
+        println!("Main thread works...");
+        thread::sleep(Duration::from_secs(1));
+     }
+
+
+     //try_grub().await
+     Ok(())
 
 
     
@@ -542,6 +570,11 @@ fn get_index_via_fio_result(fio: Vec<String>, filename: &str) ->Option<i32> {
 mod tests {
 
     use super::*;
+
+    #[test]
+    fn test_batch_func_gen(){
+        let input = "Курьянов Владимир Владимирович: должность сделать как в 1С";
+    }
 
     #[test]
     fn test_get_enum(){
