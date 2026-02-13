@@ -98,9 +98,15 @@ use axum::{
     body::Bytes,
 };
 use std::net::SocketAddr;
-use tokio::net::TcpListener;
+use reqwest::Client;
+use std::error::Error;
 
-// ----- НАША СТРУКТУРА БЕЗ PROST -----
+use tokio::net::TcpListener;
+use crate::http_Test::{read_lines, read_lines_utf8, update_param_};
+
+
+const WEBHOOK_FILENAME: &str = "webhook";
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyValueMessage {
     pub id: i32,
@@ -108,7 +114,6 @@ pub struct KeyValueMessage {
     pub value: String,
 }
 
-// ----- РУЧНОЙ ДЕКОДЕР PROTOBUF -----
 fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
     let mut bytes = buf;
     let mut id = None;
@@ -116,7 +121,6 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
     let mut value = None;
 
     while !bytes.is_empty() {
-        // 1. Читаем ключ (varint) — содержит tag и wire type
         let (key_val, rest) = read_varint(bytes).map_err(|e| format!("Ошибка чтения ключа: {}", e))?;
         bytes = rest;
 
@@ -124,12 +128,12 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
         let wire_type = key_val & 0x07;
 
         match (tag, wire_type) {
-            (1, 0) => { // поле id, varint
+            (1, 0) => {
                 let (val, rest) = read_varint(bytes).map_err(|e| format!("Ошибка чтения id: {}", e))?;
                 id = Some(val as i32);
                 bytes = rest;
             }
-            (2, 2) => { // поле key, length-delimited
+            (2, 2) => { 
                 let (len, rest) = read_varint(bytes).map_err(|e| format!("Ошибка чтения длины key: {}", e))?;
                 if rest.len() < len as usize {
                     return Err("Недостаточно байт для key".into());
@@ -140,7 +144,7 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
                 key = Some(s);
                 bytes = &rest[len as usize..];
             }
-            (3, 2) => { // поле value, length-delimited
+            (3, 2) => { 
                 let (len, rest) = read_varint(bytes).map_err(|e| format!("Ошибка чтения длины value: {}", e))?;
                 if rest.len() < len as usize {
                     return Err("Недостаточно байт для value".into());
@@ -152,8 +156,6 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
                 bytes = &rest[len as usize..];
             }
             _ => {
-                // Неизвестное поле — пропускаем (protobuf-spec)
-                // Для wire type 0,1,5 — размер фиксированный, для 2 — читаем длину
                 match wire_type {
                     0 => { // varint
                         let (_, rest) = read_varint(bytes).map_err(|e| format!("Ошибка пропуска varint: {}", e))?;
@@ -181,8 +183,7 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
     })
 }
 
-/// Читает varint из байтового слайса.
-/// Возвращает (число, оставшиеся байты) или ошибку.
+
 fn read_varint(buf: &[u8]) -> Result<(u64, &[u8]), &'static str> {
     let mut result = 0u64;
     let mut shift = 0;
@@ -203,15 +204,60 @@ fn read_varint(buf: &[u8]) -> Result<(u64, &[u8]), &'static str> {
     Err("неожиданный конец varint")
 }
 
-// ----- ОБРАБОТЧИКИ -----
 async fn hello_handler() -> &'static str {
     "hello world"
+}
+
+pub fn get_webhook() -> String{
+    get_webhook_(WEBHOOK_FILENAME)
+}
+
+pub fn get_webhook_(filename: &str) -> String{
+    let vec = read_lines(filename);
+    let elem = vec[0].clone();
+    elem
+}
+
+pub async fn update_param_2(client_reqwest: Client, params: &[(&str, &str)]) -> Result<String, Box<dyn Error>> {
+    let url = get_webhook() + "user.update";
+    println!("Resulted url: {}", url);
+    let response = client_reqwest
+        .post(url)
+        .form(params)
+        .send()
+        .await?;
+    println!("Status: {}", response.status());
+    println!("Headers: {:#?}", response.headers());
+    let body = response.text().await?;
+    Ok(body)
+}
+
+async fn processmsg(msg: KeyValueMessage) -> Result<(), Box<dyn Error>> {
+    println!("✅ Получено сообщение: {:?}", msg);
+
+    let client_reqwest = Client::new();
+
+    let id_str = msg.id.to_string();
+    let key_str = msg.key.as_str();          
+    let value_str = msg.value.as_str();      
+
+    let item = [
+        ("ID", id_str.as_str()),
+        (key_str, value_str),
+    ];
+
+    let result = update_param_2(client_reqwest.clone(), &item).await?;
+    
+    println!("Результат обновления: {}", result);
+    Ok(())
 }
 
 async fn post_handler(body: Bytes) -> impl IntoResponse {
     match decode_key_value_message(&body) {
         Ok(msg) => {
             println!("✅ Получено сообщение: {:?}", msg);
+
+            processmsg(msg).await;
             (StatusCode::OK, "OK")
         }
         Err(e) => {
