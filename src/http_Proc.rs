@@ -1,87 +1,3 @@
-// use axum::{
-//     routing::{get, post},
-//     Router,
-//     response::IntoResponse,
-//     http::StatusCode,
-//     extract::Request,
-//     body::Bytes,
-// };
-// use std::net::SocketAddr;
-// use tokio::net::TcpListener;
-// use prost::Message;
-
-// #[derive(Message, Clone, PartialEq)]  // <- Debug убран из derives
-// pub struct KeyValueMessage {
-//     #[prost(int32, tag = "1")]
-//     pub id: i32,
-
-//     #[prost(string, tag = "2")]
-//     pub key: String,
-
-//     #[prost(string, tag = "3")]
-//     pub value: String,
-// }
-
-// // Ручная реализация Debug — без конфликтов
-// impl std::fmt::Debug for KeyValueMessage {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         f.debug_struct("KeyValueMessage")
-//             .field("id", &self.id)
-//             .field("key", &self.key)
-//             .field("value", &self.value)
-//             .finish()
-//     }
-// }
-
-// pub async fn spawn() -> anyhow::Result<()> {
-//     let app = Router::new()
-//         .route("/test", get(hello_handler))
-//         .route("/test", post(post_handler)) // ← добавили
-//         .fallback(fallback_handler);
-
-//     let PORT = 3000;
-
-//     let addr = SocketAddr::from(([0, 0, 0, 0], PORT));
-//     println!(          "*********************************************************");
-//     println!(          "*********************************************************");
-//     println!(          "***  ***************************************    ****  ***");
-//     println!(          "***  *******                           *****  ** ***  ***");
-//     println!(          "***  *******STARTUP SERVER AT PORT {}*****  *** **  ***", PORT);
-//     println!(          "***  *******                           *****  **** *  ***");
-//     println!(          "***  ***************************************  *****   ***");
-//     println!(          "***       **********************************  ******  ***");
-//     println!(          "*********************************************************");
-//     println!(" Опрос доступен на русском и фарси");
-
-//     let listener = TcpListener::bind(addr).await?;
-//     axum::serve(listener, app).await?;
-//     print!("WORKING!!!!");
-//     Ok(())
-// }
-
-// async fn hello_handler() -> &'static str {
-//     "hello world"
-// }
-
-// async fn post_handler(body: Bytes) -> impl IntoResponse {
-//     match KeyValueMessage::decode(body) {
-//         Ok(msg) => {
-//             println!(
-//                 " Получено сообщение: id = {}, key = {}, value = {}",
-//                 msg.id, msg.key, msg.value
-//             );
-//             (StatusCode::OK, "OK")
-//         }
-//         Err(e) => {
-//             eprintln!(" Ошибка декодирования protobuf: {}", e);
-//             (StatusCode::BAD_REQUEST, "Invalid protobuf")
-//         }
-//     }
-// }
-
-// async fn fallback_handler() -> impl IntoResponse {
-//     (StatusCode::NOT_FOUND, "Страница не найдена")
-// }
 use futures::stream::{self, StreamExt, TryStreamExt}; // в начало файла
 
 use axum::{
@@ -94,8 +10,8 @@ use axum::{
 use reqwest::Client;
 use std::error::Error;
 use std::net::SocketAddr;
-use std::sync::Arc; // для Arc
-use tokio::sync::Mutex; // для асинхронного Mutex
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 use axum::extract::State;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -265,9 +181,9 @@ async fn processmsg(
         }
 
         if key_str == RUN_QUEUE {
-            if vec.len() == 0{
+            if vec.len() == 0 {
                 println!("\n\n\n\nאפס\n\n\n\n!!");
-                return Ok(())
+                return Ok(());
             }
             let threads = match value_str.parse::<usize>() {
                 Ok(n) => n,
@@ -302,25 +218,7 @@ async fn processmsg(
             IS_PENDING.store(false, Ordering::SeqCst);
         }
 
-        // for item3 in vec.iter() {
-
-        //     let id_str2 = item3.id.to_string();
-        //     let key_str2 = item3.key.as_str();
-        //     let value_str2 = item3.value.as_str();
-
-        //     let item2 = [
-        //     ("ID", id_str2.as_str()),
-        //     (key_str2, value_str2),
-        //     ];
-
-        //     let result = update_param_2(client_reqwest.clone(), &item2).await?;
-        //     println!("Response body: {}", result);
-        // }
-        //END PARALLEL
-
-        //}
-        return Ok(())
-
+        return Ok(());
     }
 
     if !IS_PENDING.load(Ordering::SeqCst) {
