@@ -41,23 +41,30 @@ impl ADDITIONAL_FIELDS {
     }
 }
 
-
-
 struct Operation {
     id_for_item: i32,
-    map_params: HashMap<String, String>
+    map_params: HashMap<String, String>,
 }
 
-struct Operations{
-    data: Vec<Operation>
+struct Operations {
+    data: Vec<Operation>,
 }
 
-impl Operation{
-    fn new(id: i32, m: HashMap<String, String>)  -> Self {Operation { id_for_item: id,  map_params: m }}
+impl Operation {
+    fn new(id: i32, m: HashMap<String, String>) -> Self {
+        Operation {
+            id_for_item: id,
+            map_params: m,
+        }
+    }
 
     fn to_string(&self) -> String {
-        return format!("Struct Operation::\nid::{}, params::{}", self.id_for_item, Operation::map_to_string(self.map_params.clone()));   }
-
+        return format!(
+            "Struct Operation::\nid::{}, params::{}",
+            self.id_for_item,
+            Operation::map_to_string(self.map_params.clone())
+        );
+    }
 
     fn map_to_string(m: HashMap<String, String>) -> String {
         m.iter()
@@ -65,11 +72,7 @@ impl Operation{
             .collect::<Vec<String>>()
             .join(", ")
     }
-
-
 }
-
-
 
 fn get_enum__by_string(target: &str) -> ADDITIONAL_FIELDS {
     ADDITIONAL_FIELDS::all_values()
@@ -627,14 +630,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_pperation(){
-        let operation: Operation = Operation::new(12, Some((ADDITIONAL_FIELDS::WORK_POSITION.to_string(), "Главный гитарист".to_string())).into_iter().collect());
+    fn test_pperation() {
+        let operation: Operation = Operation::new(
+            12,
+            Some((
+                ADDITIONAL_FIELDS::WORK_POSITION.to_string(),
+                "Главный гитарист".to_string(),
+            ))
+            .into_iter()
+            .collect(),
+        );
         let to_str = operation.to_string();
         println!("{}", to_str);
         assert_eq!(true, to_str.contains("id::12, params:"));
     }
-
-
 
     #[test]
     fn test_batch_func_gen() {

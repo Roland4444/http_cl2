@@ -82,6 +82,7 @@
 // async fn fallback_handler() -> impl IntoResponse {
 //     (StatusCode::NOT_FOUND, "Страница не найдена")
 // }
+use futures::stream::{self, StreamExt, TryStreamExt}; // в начало файла
 
 use axum::{
     Router,
@@ -93,11 +94,18 @@ use axum::{
 use reqwest::Client;
 use std::error::Error;
 use std::net::SocketAddr;
+use std::sync::Arc; // для Arc
+use tokio::sync::Mutex; // для асинхронного Mutex
+
+use axum::extract::State;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::http_Test::{read_lines, read_lines_utf8, update_param_};
 use tokio::net::TcpListener;
 
 const WEBHOOK_FILENAME: &str = "webhook";
+
+static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyValueMessage {
@@ -151,32 +159,27 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
                 value = Some(s);
                 bytes = &rest[len as usize..];
             }
-            _ => {
-                match wire_type {
-                    0 => {
-                        // varint
-                        let (_, rest) = read_varint(bytes)
-                            .map_err(|e| format!("Ошибка пропуска varint: {}", e))?;
-                        bytes = rest;
-                    }
-                    2 => {
-                        // length-delimited
-                        let (len, rest) = read_varint(bytes)
-                            .map_err(|e| format!("Ошибка чтения длины для пропуска: {}", e))?;
-                        if rest.len() < len as usize {
-                            return Err("Недостаточно байт для пропуска поля".into());
-                        }
-                        bytes = &rest[len as usize..];
-                    }
-                    _ => {
-                        // wire type 1,5 — фиксированная длина 8/4 байт — но нам не встретятся
-                        return Err(format!(
-                            "Неподдерживаемый wire type {} для пропуска",
-                            wire_type
-                        ));
-                    }
+            _ => match wire_type {
+                0 => {
+                    let (_, rest) =
+                        read_varint(bytes).map_err(|e| format!("Ошибка пропуска varint: {}", e))?;
+                    bytes = rest;
                 }
-            }
+                2 => {
+                    let (len, rest) = read_varint(bytes)
+                        .map_err(|e| format!("Ошибка чтения длины для пропуска: {}", e))?;
+                    if rest.len() < len as usize {
+                        return Err("Недостаточно байт для пропуска поля".into());
+                    }
+                    bytes = &rest[len as usize..];
+                }
+                _ => {
+                    return Err(format!(
+                        "Неподдерживаемый wire type {} для пропуска",
+                        wire_type
+                    ));
+                }
+            },
         }
     }
 
@@ -234,50 +237,152 @@ pub async fn update_param_2(
     Ok(body)
 }
 
-async fn processmsg(msg: KeyValueMessage) -> Result<(), Box<dyn Error>> {
+const SYSTEM_MESSAGE: &str = "0";
+
+const CREATE_QUEUE: &str = "CREATE_QUEUE";
+
+const RUN_QUEUE: &str = "RUN_QUEUE";
+
+async fn processmsg(
+    msg: KeyValueMessage,
+    vec: &mut Vec<KeyValueMessage>,
+) -> Result<(), Box<dyn Error>> {
     println!("✅ Получено сообщение: {:?}", msg);
 
-    // let client_reqwest = Client::new();
+    let client_reqwest = Client::new();
 
-    // let id_str = msg.id.to_string();
-    // let key_str = msg.key.as_str();
-    // let value_str = msg.value.as_str();
+    let id_str = msg.id.to_string();
+    let key_str = msg.key.as_str();
+    let value_str = msg.value.as_str();
 
-    // let item = [
-    //     ("ID", id_str.as_str()),
-    //     (key_str, value_str),
-    // ];
+    let item = [("ID", id_str.as_str()), (key_str, value_str)];
 
-    // let result = update_param_2(client_reqwest.clone(), &item).await?;
+    if id_str == SYSTEM_MESSAGE.to_string() {
+        println!("SYSTEM MESSAGE: {}", id_str);
+        println!("VALUE MESSAGE: {}", key_str);
+        if key_str == CREATE_QUEUE {
+            IS_PENDING.store(true, Ordering::SeqCst);
+        }
 
-    // println!("Результат обновления: {}", result);
+        if key_str == RUN_QUEUE {
+            if vec.len() == 0{
+                println!("\n\n\n\nאפס\n\n\n\n!!");
+                return Ok(())
+            }
+            let threads = match value_str.parse::<usize>() {
+                Ok(n) => n,
+                Err(_) => {
+                    eprintln!("Неверное число потоков: {}", value_str);
+                    return Ok(());
+                }
+            };
+
+            let items: Vec<(i32, String, String)> = vec
+                .iter()
+                .map(|kv| (kv.id, kv.key.clone(), kv.value.clone()))
+                .collect();
+
+            let mut stream = stream::iter(items)
+                .map(|(id, key, value)| {
+                    let client = client_reqwest.clone();
+                    async move {
+                        let id_str = id.to_string();
+                        let params = [("ID", id_str.as_str()), (key.as_str(), value.as_str())];
+                        update_param_2(client, &params).await
+                    }
+                })
+                .buffer_unordered(threads);
+
+            while let Some(result) = stream.next().await {
+                match result {
+                    Ok(body) => println!("Response body: {}", body),
+                    Err(e) => eprintln!("Ошибка запроса: {}", e),
+                }
+            }
+            IS_PENDING.store(false, Ordering::SeqCst);
+        }
+
+        // for item3 in vec.iter() {
+
+        //     let id_str2 = item3.id.to_string();
+        //     let key_str2 = item3.key.as_str();
+        //     let value_str2 = item3.value.as_str();
+
+        //     let item2 = [
+        //     ("ID", id_str2.as_str()),
+        //     (key_str2, value_str2),
+        //     ];
+
+        //     let result = update_param_2(client_reqwest.clone(), &item2).await?;
+        //     println!("Response body: {}", result);
+        // }
+        //END PARALLEL
+
+        //}
+        return Ok(())
+
+    }
+
+    if !IS_PENDING.load(Ordering::SeqCst) {
+        let result = update_param_2(client_reqwest.clone(), &item).await?;
+        println!("Результат обновления: {}", result);
+    }
+
+    if IS_PENDING.load(Ordering::SeqCst) {
+        vec.push(msg.clone());
+        let result = 5;
+        println!("WAITING RUN.......: {}", result);
+    }
+
     Ok(())
 }
 
-async fn post_handler(body: Bytes) -> impl IntoResponse {
+type SharedState = Arc<Mutex<Vec<KeyValueMessage>>>;
+
+async fn post_handler(State(state): State<SharedState>, body: Bytes) -> impl IntoResponse {
     match decode_key_value_message(&body) {
         Ok(msg) => {
             println!("✅ Получено сообщение: {:?}", msg);
+            let mut vec: tokio::sync::MutexGuard<'_, Vec<KeyValueMessage>> = state.lock().await; // теперь .await корректен
+            processmsg(msg, &mut *vec).await;
 
-            processmsg(msg).await;
             (StatusCode::OK, "OK")
         }
         Err(e) => {
-            eprintln!("❌ Ошибка декодирования protobuf: {}", e);
+            eprintln!("❌ Ошибка декодирования: {}", e);
             (StatusCode::BAD_REQUEST, "Invalid protobuf")
         }
     }
 }
 
+// async fn post_handler(
+//     body: Bytes,                       // тело запроса
+// ) -> impl IntoResponse {
+//     match decode_key_value_message(&body) {
+//         Ok(msg) => {
+//             println!("✅ Получено сообщение: {:?}", msg);
+
+//             processmsg(msg).await;
+//             (StatusCode::OK, "OK")
+//         }
+//         Err(e) => {
+//             eprintln!("❌ Ошибка декодирования protobuf: {}", e);
+//             (StatusCode::BAD_REQUEST, "Invalid protobuf")
+//         }
+//     }
+// }
+
 async fn fallback_handler() -> impl IntoResponse {
     (StatusCode::NOT_FOUND, "Страница не найдена")
 }
 
-// ----- ЗАПУСК -----
 pub async fn spawn() -> anyhow::Result<()> {
+    let shared_state = Arc::new(Mutex::new(Vec::<KeyValueMessage>::new()));
+
     let app = Router::new()
         .route("/test", get(hello_handler))
         .route("/test", post(post_handler))
+        .with_state(shared_state)
         .fallback(fallback_handler);
 
     let port = 3000;
