@@ -33,14 +33,13 @@
 //     }
 // }
 
-
 // pub async fn spawn() -> anyhow::Result<()> {
 //     let app = Router::new()
 //         .route("/test", get(hello_handler))
 //         .route("/test", post(post_handler)) // ← добавили
 //         .fallback(fallback_handler);
 
-//     let PORT = 3000;    
+//     let PORT = 3000;
 
 //     let addr = SocketAddr::from(([0, 0, 0, 0], PORT));
 //     println!(          "*********************************************************");
@@ -59,9 +58,6 @@
 //     print!("WORKING!!!!");
 //     Ok(())
 // }
-
-
-
 
 // async fn hello_handler() -> &'static str {
 //     "hello world"
@@ -83,27 +79,23 @@
 //     }
 // }
 
-
 // async fn fallback_handler() -> impl IntoResponse {
 //     (StatusCode::NOT_FOUND, "Страница не найдена")
 // }
 
-
-
 use axum::{
-    routing::{get, post},
     Router,
-    response::IntoResponse,
-    http::StatusCode,
     body::Bytes,
+    http::StatusCode,
+    response::IntoResponse,
+    routing::{get, post},
 };
-use std::net::SocketAddr;
 use reqwest::Client;
 use std::error::Error;
+use std::net::SocketAddr;
 
-use tokio::net::TcpListener;
 use crate::http_Test::{read_lines, read_lines_utf8, update_param_};
-
+use tokio::net::TcpListener;
 
 const WEBHOOK_FILENAME: &str = "webhook";
 
@@ -121,7 +113,8 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
     let mut value = None;
 
     while !bytes.is_empty() {
-        let (key_val, rest) = read_varint(bytes).map_err(|e| format!("Ошибка чтения ключа: {}", e))?;
+        let (key_val, rest) =
+            read_varint(bytes).map_err(|e| format!("Ошибка чтения ключа: {}", e))?;
         bytes = rest;
 
         let tag = key_val >> 3;
@@ -129,12 +122,14 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
 
         match (tag, wire_type) {
             (1, 0) => {
-                let (val, rest) = read_varint(bytes).map_err(|e| format!("Ошибка чтения id: {}", e))?;
+                let (val, rest) =
+                    read_varint(bytes).map_err(|e| format!("Ошибка чтения id: {}", e))?;
                 id = Some(val as i32);
                 bytes = rest;
             }
-            (2, 2) => { 
-                let (len, rest) = read_varint(bytes).map_err(|e| format!("Ошибка чтения длины key: {}", e))?;
+            (2, 2) => {
+                let (len, rest) =
+                    read_varint(bytes).map_err(|e| format!("Ошибка чтения длины key: {}", e))?;
                 if rest.len() < len as usize {
                     return Err("Недостаточно байт для key".into());
                 }
@@ -144,8 +139,9 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
                 key = Some(s);
                 bytes = &rest[len as usize..];
             }
-            (3, 2) => { 
-                let (len, rest) = read_varint(bytes).map_err(|e| format!("Ошибка чтения длины value: {}", e))?;
+            (3, 2) => {
+                let (len, rest) =
+                    read_varint(bytes).map_err(|e| format!("Ошибка чтения длины value: {}", e))?;
                 if rest.len() < len as usize {
                     return Err("Недостаточно байт для value".into());
                 }
@@ -157,19 +153,27 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
             }
             _ => {
                 match wire_type {
-                    0 => { // varint
-                        let (_, rest) = read_varint(bytes).map_err(|e| format!("Ошибка пропуска varint: {}", e))?;
+                    0 => {
+                        // varint
+                        let (_, rest) = read_varint(bytes)
+                            .map_err(|e| format!("Ошибка пропуска varint: {}", e))?;
                         bytes = rest;
                     }
-                    2 => { // length-delimited
-                        let (len, rest) = read_varint(bytes).map_err(|e| format!("Ошибка чтения длины для пропуска: {}", e))?;
+                    2 => {
+                        // length-delimited
+                        let (len, rest) = read_varint(bytes)
+                            .map_err(|e| format!("Ошибка чтения длины для пропуска: {}", e))?;
                         if rest.len() < len as usize {
                             return Err("Недостаточно байт для пропуска поля".into());
                         }
                         bytes = &rest[len as usize..];
                     }
-                    _ => { // wire type 1,5 — фиксированная длина 8/4 байт — но нам не встретятся
-                        return Err(format!("Неподдерживаемый wire type {} для пропуска", wire_type));
+                    _ => {
+                        // wire type 1,5 — фиксированная длина 8/4 байт — но нам не встретятся
+                        return Err(format!(
+                            "Неподдерживаемый wire type {} для пропуска",
+                            wire_type
+                        ));
                     }
                 }
             }
@@ -182,7 +186,6 @@ fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
         value: value.ok_or("Отсутствует поле value")?,
     })
 }
-
 
 fn read_varint(buf: &[u8]) -> Result<(u64, &[u8]), &'static str> {
     let mut result = 0u64;
@@ -208,24 +211,23 @@ async fn hello_handler() -> &'static str {
     "hello world"
 }
 
-pub fn get_webhook() -> String{
+pub fn get_webhook() -> String {
     get_webhook_(WEBHOOK_FILENAME)
 }
 
-pub fn get_webhook_(filename: &str) -> String{
+pub fn get_webhook_(filename: &str) -> String {
     let vec = read_lines(filename);
     let elem = vec[0].clone();
     elem
 }
 
-pub async fn update_param_2(client_reqwest: Client, params: &[(&str, &str)]) -> Result<String, Box<dyn Error>> {
+pub async fn update_param_2(
+    client_reqwest: Client,
+    params: &[(&str, &str)],
+) -> Result<String, Box<dyn Error>> {
     let url = get_webhook() + "user.update";
     println!("Resulted url: {}", url);
-    let response = client_reqwest
-        .post(url)
-        .form(params)
-        .send()
-        .await?;
+    let response = client_reqwest.post(url).form(params).send().await?;
     println!("Status: {}", response.status());
     println!("Headers: {:#?}", response.headers());
     let body = response.text().await?;
@@ -235,20 +237,20 @@ pub async fn update_param_2(client_reqwest: Client, params: &[(&str, &str)]) -> 
 async fn processmsg(msg: KeyValueMessage) -> Result<(), Box<dyn Error>> {
     println!("✅ Получено сообщение: {:?}", msg);
 
-    let client_reqwest = Client::new();
+    // let client_reqwest = Client::new();
 
-    let id_str = msg.id.to_string();
-    let key_str = msg.key.as_str();          
-    let value_str = msg.value.as_str();      
+    // let id_str = msg.id.to_string();
+    // let key_str = msg.key.as_str();
+    // let value_str = msg.value.as_str();
 
-    let item = [
-        ("ID", id_str.as_str()),
-        (key_str, value_str),
-    ];
+    // let item = [
+    //     ("ID", id_str.as_str()),
+    //     (key_str, value_str),
+    // ];
 
-    let result = update_param_2(client_reqwest.clone(), &item).await?;
-    
-    println!("Результат обновления: {}", result);
+    // let result = update_param_2(client_reqwest.clone(), &item).await?;
+
+    // println!("Результат обновления: {}", result);
     Ok(())
 }
 
