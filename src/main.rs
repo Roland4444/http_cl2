@@ -22,6 +22,7 @@ const ADD_DUMP: &str = "snoyman.bin";
 enum ADDITIONAL_FIELDS {
     WORK_POSITION,
     PERSONAL_BIRTHDAY,
+    UF_DEPARTMENT,
 }
 
 impl ADDITIONAL_FIELDS {
@@ -29,6 +30,7 @@ impl ADDITIONAL_FIELDS {
         vec![
             ADDITIONAL_FIELDS::WORK_POSITION,
             ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY,
+            ADDITIONAL_FIELDS::UF_DEPARTMENT,
         ]
     }
 
@@ -36,6 +38,7 @@ impl ADDITIONAL_FIELDS {
         match self {
             ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",
             ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => "PERSONAL_BIRTHDAY",
+            ADDITIONAL_FIELDS::UF_DEPARTMENT => "UF_DEPARTMENT",
         }
         .to_string()
     }
@@ -87,6 +90,7 @@ impl std::fmt::Display for ADDITIONAL_FIELDS {
         match self {
             ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность"),
             ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения"),
+            ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя")
         }
     }
 }
@@ -181,6 +185,16 @@ impl Pack {
         result
     }
 
+
+    fn to_string_poetic(&self, ender: String) -> String {
+        let mut result = String::from("");
+        for emp in &self.pack {
+            result.push_str(&&emp._to_string_poetic());
+            result.push_str(&ender);
+        }
+        result
+    }
+
     fn get_id_by_fi(&self, fi: String) -> Option<i32> {
         let splitted: Vec<String> = split_to_fi(fi);
         if splitted.len() < 3 {
@@ -249,6 +263,19 @@ impl Employee {
         )
     }
 
+
+    fn _to_string_poetic(&self) -> String {
+        format!(
+            "{} {} {} {} {}",
+            self.id,
+            self.name,
+            self.middle_name,
+            self.last_name,
+
+            format!("<{}>", Employee::map_to_string(self.map_add.clone()))
+        )
+    }
+
     fn map_to_string(m: HashMap<ADDITIONAL_FIELDS, String>) -> String {
         m.iter()
             .map(|(key, value)| format!("{}: {}", key, value))
@@ -267,6 +294,11 @@ fn get_i32_from_value(value: &Value) -> Option<i32> {
 
 fn p(s: &Value) -> String {
     s.to_string().replace("\"", "")
+}
+
+fn process_no_mobile(arr_list: Vec<String>, pack: Pack, filename_out: String) -> Pack {  //filename_out :: Binary Pack
+    let mut pack = Pack::new(Vec::new());
+    pack
 }
 
 async fn grub_data(
@@ -387,6 +419,7 @@ async fn try_grub() -> Result<(), Box<dyn std::error::Error>> {
         vec![
             ADDITIONAL_FIELDS::WORK_POSITION.to_string(),
             ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY.to_string(),
+            ADDITIONAL_FIELDS::UF_DEPARTMENT.to_string(),
         ],
     )
     .await; //DEFAULT_DUMP).await;
@@ -559,13 +592,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             eprintln!("Server error: {}", e);
         }
     });
-
+    try_grub().await;
     loop {
         println!("Main thread works...");
         thread::sleep(Duration::from_secs(1));
     }
 
-    //try_grub().await
+  //  try_grub().await
     Ok(())
 }
 
@@ -628,6 +661,7 @@ fn get_index_via_fio_result(fio: Vec<String>, filename: &str) -> Option<i32> {
 mod tests {
 
     use super::*;
+
 
     #[test]
     fn test_pperation() {
@@ -875,6 +909,17 @@ mod tests {
     fn test_get_id2() {
         let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
         println!("{}", pack.to_string("\n".to_string()));
+        assert_eq!(
+            1,
+            pack.get_id_by_fi("Цыбульский Сергей".to_string())
+                .expect("shit")
+        );
+    }
+
+    #[test]
+    fn test_get_id2_poetic() {
+        let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+        println!("{}", pack.to_string_poetic("\n".to_string()));
         assert_eq!(
             1,
             pack.get_id_by_fi("Цыбульский Сергей".to_string())
