@@ -1,0 +1,20 @@
+ curl -X POST   'https://b24-e8jgcd.bitrix24.ru/rest/1/aa6nqwskgkhq06qd/tasks.task.add'   -H 'Content-Type: application/json'   -d '{
+  "fields": {
+    "TITLE": "XXXXXX",   
+    "DESCRIPTION": "ZZZZZZZZZZZZ",
+    "RESPONSIBLE_ID": "1",
+    "CREATED_BY": "1",
+    "ACCOMPLICES": ["14"],
+    "AUDITORS": ["26"],
+    "DEADLINE": "2025-03-10T18:00:00+03:00",
+    "PRIORITY": "2",
+    "GROUP_ID": "10"
+  }
+}'
+
+TITLE  название
+DESCRIPTION   описание
+RESPONSIBLE_ID   исполнитель
+CREATED_BY  создан
+ACCOMPLICES   соисполнитель
+AUDITORS     наблюдатель
