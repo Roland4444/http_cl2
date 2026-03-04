@@ -18,3 +18,19 @@ RESPONSIBLE_ID   исполнитель
 CREATED_BY  создан
 ACCOMPLICES   соисполнитель
 AUDITORS     наблюдатель
+
+
+
+GLPI::
+
+curl -X GET   -H "Content-Type: application/json"   -H "App-Token: mol6EowqT6ktBj8NLmTAvHXs6IJpDm0Pn5D9qL7c"   -H "Authorization: user_token K4YWmdgTWl5IBVwwHK5Cq2CQ7VXwkTE1OaC71dZf"   "http://192.168.1.98/apirest.php/initSession"
+{"session_token":"ovpe5u2rgdkhbnnded7umo6ko1"}
+
+curl -X POST   "http://192.168.1.98/apirest.php/Ticket?app_token=mol6EowqT6ktBj8NLmTAvHXs6IJpDm0Pn5D9qL7c"   -H "Content-Type: application/json"   -H "Session-Token: ovpe5u2rgdkhbnnded7umo6ko1"   -d '{
+    "input": {
+      "name": "zzzzzzzzzzzzzzzzzzzz",
+      "content": "xxxxxxxxxxxxxx",
+      "_users_id_requester": 2
+    }
+  }'
+{"id":4,"message":"Item successfully added: zzzzzzzzzzzzzzzzzzzz (4)"}
