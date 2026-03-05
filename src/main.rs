@@ -650,6 +650,16 @@ fn get_index_via_fio_result(fio: Vec<String>, filename: &str) -> Option<i32> {
     None
 }
 
+fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
+    let full = lines.concat();
+    let pattern = format!("\"ID\":\"{}\",\"NAME\":\"", target_id);
+    full.find(&pattern).and_then(|pos| {
+        let after = &full[pos + pattern.len()..];
+        let name: String = after.chars().take_while(|&c| c != '"').collect();
+        if name.is_empty() { None } else { Some(name) }
+    })
+}
+
 // public void testGetIndexViaFIO() {
 //     java.util.List<String> javaList = java.util.Arrays.asList("Тестов","Тест");
 //     // Используем asScala из scala.jdk.javaapi.CollectionConverters
@@ -941,6 +951,14 @@ mod tests {
         let file = File::create(filename);
         let res = std::fs::write(filename, pack.to_string("\n".to_string()));
         // assert_eq!(res., Ok(()))
+    }
+
+
+    #[test]
+    fn test_read_deps(){
+        let strs = read_lines_utf8("deps.js");
+        let part1 = find_dep_name_by_id(17, &strs).unwrap();
+        assert_eq!(part1, "Юридический отдел");
     }
 }
 
