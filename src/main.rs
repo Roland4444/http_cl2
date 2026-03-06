@@ -959,6 +959,14 @@ mod tests {
         let strs = read_lines_utf8("deps.js");
         let part1 = find_dep_name_by_id(17, &strs).unwrap();
         assert_eq!(part1, "Юридический отдел");
+
+        for n in 0..10000 {
+            let dep = find_dep_name_by_id(n, &strs).unwrap_or("efes".to_string());
+            if (dep != "efes"){
+                println!("{}:{}\n", n, dep);
+            }
+
+        }
     }
 }
 
