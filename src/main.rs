@@ -1,3 +1,4 @@
+use crate::http_Proc::get_webhook;
 use crate::http_Test::{read_lines, read_lines_utf8};
 use bincode;
 use reqwest;
@@ -18,6 +19,8 @@ use std::time::Duration;
 
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
+const SYNTEKA_TOKEN_FILE: &str = "synteka";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 enum ADDITIONAL_FIELDS {
     WORK_POSITION,
@@ -90,7 +93,7 @@ impl std::fmt::Display for ADDITIONAL_FIELDS {
         match self {
             ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность"),
             ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения"),
-            ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя")
+            ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя"),
         }
     }
 }
@@ -185,7 +188,6 @@ impl Pack {
         result
     }
 
-
     fn to_string_poetic(&self, ender: String) -> String {
         let mut result = String::from("");
         for emp in &self.pack {
@@ -263,7 +265,6 @@ impl Employee {
         )
     }
 
-
     fn _to_string_poetic(&self) -> String {
         format!(
             "{} {} {} {} {}",
@@ -271,7 +272,6 @@ impl Employee {
             self.name,
             self.middle_name,
             self.last_name,
-
             format!("<{}>", Employee::map_to_string(self.map_add.clone()))
         )
     }
@@ -296,7 +296,8 @@ fn p(s: &Value) -> String {
     s.to_string().replace("\"", "")
 }
 
-fn process_no_mobile(arr_list: Vec<String>, pack: Pack, filename_out: String) -> Pack {  //filename_out :: Binary Pack
+fn process_no_mobile(arr_list: Vec<String>, pack: Pack, filename_out: String) -> Pack {
+    //filename_out :: Binary Pack
     let mut pack = Pack::new(Vec::new());
     pack
 }
@@ -598,7 +599,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         thread::sleep(Duration::from_secs(1));
     }
 
-  //  try_grub().await
+    //  try_grub().await
     Ok(())
 }
 
@@ -650,6 +651,10 @@ fn get_index_via_fio_result(fio: Vec<String>, filename: &str) -> Option<i32> {
     None
 }
 
+fn synteka() -> String {
+    return  http_Test::get_webhook_(SYNTEKA_TOKEN_FILE);
+}
+
 fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
     let full = lines.concat();
     let pattern = format!("\"ID\":\"{}\",\"NAME\":\"", target_id);
@@ -671,7 +676,6 @@ fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
 mod tests {
 
     use super::*;
-
 
     #[test]
     fn test_pperation() {
@@ -953,22 +957,26 @@ mod tests {
         // assert_eq!(res., Ok(()))
     }
 
-
     #[test]
-    fn test_read_deps(){
+    fn test_read_deps() {
         let strs = read_lines_utf8("deps.js");
         let part1 = find_dep_name_by_id(17, &strs).unwrap();
         assert_eq!(part1, "Юридический отдел");
 
         for n in 0..10000 {
             let dep = find_dep_name_by_id(n, &strs).unwrap_or("efes".to_string());
-            if (dep != "efes"){
+            if (dep != "efes") {
                 println!("{}:{}\n", n, dep);
             }
-
         }
     }
+
+    #[test]
+    fn test_synteka_token(){
+        let etalon = "token";
+        let mut file = File::create(SYNTEKA_TOKEN_FILE).expect("cant write file");
+        file.write_all(etalon.as_bytes());
+        assert_eq!(etalon, synteka());
+
+    }
 }
-
-
-
