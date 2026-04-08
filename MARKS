@@ -50,3 +50,51 @@ curl -X POST   "http://192.168.1.98/apirest.php/Ticket?app_token=mol6EowqT6ktBj8
 
 
 
+
+ curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{}' \
+  "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r/im.recent.list"  -o collabsRRR.js
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+100 118.8k   0 118.8k 100      2  77916      1   00:02   00:01   00:01  78335
+PULL all collabs 
+mask::
+{"id":"chat
+
+id last messages
+
+
+PULL MESSAGES via name:: with LIMIT
+ curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"DIALOG_ID": "chat8", "LAST_ID": 32, "LIMIT": 3}' \
+  "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r/im.dialog.messages.get"
+
+
+
+
+
+
+==================================================WRITE TO CHAT================================================
+====================================================================================================================
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"DIALOG_ID": "chat8", "MESSAGE": "Привет, коллеги!"}' \
+  "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r/im.message.add"
+
+
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"DIALOG_ID": "chat8", "MESSAGE": "Привет, коллеги!"}' \
+  "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r/im.message.add"  
+
+
+
+
+
+
+
+
+
+

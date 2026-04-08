@@ -665,6 +665,36 @@ fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
     })
 }
 
+pub async fn get_offers(count: Option<u32>, state: Option<&str>) -> anyhow::Result<Value>{
+
+    let token = synteka();
+    let count = count.unwrap_or(10);
+    let state = state.unwrap_or("DELETED");
+    let url = format!("http://restetris.cynteka.ru/api/v1/offers?count={}&state={}", count, state);
+
+    let client = Client::new();
+
+    let response = client.get(&url)
+        .header("accept", "application/json")
+        .header("ZakupayToken", token)
+        .send()
+        .await?;
+
+    let status = response.status();
+    if status.is_success(){
+        let json: Value= response.json().await?;
+        Ok(json)        
+    } else {
+        let error_text = response.text().await?;
+        Err(anyhow::anyhow!(
+            "HTTP request failed with status {}: {}",
+            status, error_text ))        
+    }
+    
+}
+
+
+
 // public void testGetIndexViaFIO() {
 //     java.util.List<String> javaList = java.util.Arrays.asList("Тестов","Тест");
 //     // Используем asScala из scala.jdk.javaapi.CollectionConverters
@@ -977,6 +1007,11 @@ mod tests {
         let mut file = File::create(SYNTEKA_TOKEN_FILE).expect("cant write file");
         file.write_all(etalon.as_bytes());
         assert_eq!(etalon, synteka());
+    }
 
+    #[tokio::test]
+    async fn test_get_offers(){
+        let offers = get_offers(None, None).await.unwrap();
+        println!("{}", serde_json::to_string_pretty(&offers).unwrap());
     }
 }
