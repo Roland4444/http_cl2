@@ -1,4 +1,4 @@
- curl -X POST   'https://b24-e8jgcd.bitrix24.ru/rest/1/aa6nqwskgkhq06qd/tasks.task.add'   -H 'Content-Type: application/json'   -d '{
+ curl -X POST   'https://b24-e8jgcd.bitrix24.ru/rest/1/aa6nqws6qd/tasks.task.add'   -H 'Content-Type: application/json'   -d '{
   "fields": {
     "TITLE": "XXXXXX",   
     "DESCRIPTION": "ZZZZZZZZZZZZ",
@@ -23,10 +23,10 @@ AUDITORS     наблюдатель
 
 GLPI::
 
-curl -X GET   -H "Content-Type: application/json"   -H "App-Token: mol6EowqT6ktBj8NLmTAvHXs6IJpDm0Pn5D9qL7c"   -H "Authorization: user_token K4YWmdgTWl5IBVwwHK5Cq2CQ7VXwkTE1OaC71dZf"   "http://192.168.1.98/apirest.php/initSession"
+curl -X GET   -H "Content-Type: application/json"   -H "App-Token: mol6Eom0Pn5D9qL7c"   -H "Authorization: user_token K4YWmdgTWl5IBVwwHK5Cq2CQ7VXwkTE1OaC71dZf"   "http://192.168.1.98/apirest.php/initSession"
 {"session_token":"ovpe5u2rgdkhbnnded7umo6ko1"}
 
-curl -X POST   "http://192.168.1.98/apirest.php/Ticket?app_token=mol6EowqT6ktBj8NLmTAvHXs6IJpDm0Pn5D9qL7c"   -H "Content-Type: application/json"   -H "Session-Token: ovpe5u2rgdkhbnnded7umo6ko1"   -d '{
+curl -X POST   "http://192.168.1.98/apirest.php/Ticket?app_token=mol6EoXs6IJpDm0Pn5D9qL7c"   -H "Content-Type: application/json"   -H "Session-Token: ovpe5u2rgdkhbnnded7umo6ko1"   -d '{
     "input": {
       "name": "zzzzzzzzzzzzzzzzzzzz",
       "content": "xxxxxxxxxxxxxx",
@@ -90,11 +90,82 @@ curl -X POST \
   "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r/im.message.add"  
 
 
+https://app.swaggerhub.com/apis-docs/Cynteka/cynteka/Cynteka#/
 
 
 
 
 
+// curl -X 'POST' \
+//   'https://zakupay-test.sel-be.ru/api/v1/api/v1/orders (заказчик)?format=xml&isoDate=true' \
+//   -H 'accept: application/json' \
+//   -H 'ZakupayToken: TOKEN_VALUE' \
+//   -H 'Content-Type: application/json' \
+//   -d '{
+//   "name": "Мурино",
+//   "project": {
+//     "id": 12
+//   },
+//   "state": "DRAFT",
+//   "finishDate": "2016-12-19",
+//   "comment": "Только самые качественные материалы",
+//   "sourceAccount": {
+//     "id": 34
+//   },
+//   "consignee": {
+//     "id": 2
+//   },
+//   "region": {
+//     "id": 23
+//   },
+//   "isDeliveryNeed": true,
+//   "deliveryAddress": "ул. Благовещенская, д. 12",
+//   "responsible": {
+//     "id": 45
+//   },
+//   "delay": 30,
+//   "externalId": 132,
+//   "orderItems": [
+//     {
+//       "goodName": "Кабель ВВГ 3x1.5",
+//       "count": 1000,
+//       "budgetItem": {
+//         "id": 10
+//       },
+//       "unit": {
+//         "id": 76
+//       },
+//       "costItem": {
+//         "id": 93
+//       },
+//       "analogAllow": false,
+//       "innerComment": "Красный",
+//       "goodPosition": {
+//         "externalId": "000000004100008693"
+//       }
+//     }
+//   ],
+//   "files": {
+//     "id": 56
+//   }
+// }'
+
+
+  curl --request GET --url 'https://restetris.cynteka.ru/api/v1/offers?count=10&state=DELETED' --header "accept: application/json" --header "ZakupayToken: jcr827al4vamitl6"
+
+
+  curl --request GET --url 'https://restetris.cynteka.ru/api/v1/orders?format=xml&page=1&batchSize=15&isoDate=true&state=DRAFT&category=4&templates=10&event=NEW&hasNew=true&hasWaiting=true&hasWaitingWithoutOffer=true&hasWarehouse=true&hasDelivered=true&hasOverdueDelivery=true&hasUndelivered=true&hasOverduePayment=true&notAllOnAcceptance=true&notAllAccepted=true&fromBudget=true&noResponsible=true&hasNotAccepted=true&offerHasNotFullDelivery=true&offerHasNotFullPayment=true&onlyDeferred=true&project=78&creator=2&responsible=8&creatorCompany=397&acceptors=623&zakupayIds=1157589&creationDateFrom=2016-12-01&creationDateTo=2016-12-15&finishDateFrom=2020-08-01&finishDateTo=2021-03-15&acceptedDateFrom=2020-08-01&acceptedDateTo=2021-03-15&workDateFrom=2020-08-01&workDateTo=2021-03-15&updateTimeFrom=2020-08-01%3A23%3A57&updateTimeTo=2021-03-15%3A20%3A31&deferredDateFrom=2020-08-01%3A23%3A57&deferredDateTo=2021-03-15%3A20%3A31&includeIconId=27&excludeIconId=23&searchByWhat=BY_ZAKUPAY_ID&search=145&totalCount=true'  --header "accept: application/json" --header "ZakupayToken: jcr827al4vam6hbjmbitl6"
+
+
+
+// curl -X 'GET' \
+//   'https://zakupay-test.sel-be.ru/api/v1/api/v1/orders (заказчик)?format=xml&page=1&batchSize=15&isoDate=true&state=DRAFT&category=4&templates=10&event=NEW&hasNew=true&hasWaiting=true&hasWaitingWithoutOffer=true&hasWarehouse=true&hasDelivered=true&hasOverdueDelivery=true&hasUndelivered=true&hasOverduePayment=true&notAllOnAcceptance=true&notAllAccepted=true&fromBudget=true&noResponsible=true&hasNotAccepted=true&offerHasNotFullDelivery=true&offerHasNotFullPayment=true&onlyDeferred=true&project=78&creator=2&responsible=8&creatorCompany=397&acceptors=623&zakupayIds=1157589&creationDateFrom=2016-12-01&creationDateTo=2016-12-15&finishDateFrom=2020-08-01&finishDateTo=2021-03-15&acceptedDateFrom=2020-08-01&acceptedDateTo=2021-03-15&workDateFrom=2020-08-01&workDateTo=2021-03-15&updateTimeFrom=2020-08-01%3A23%3A57&updateTimeTo=2021-03-15%3A20%3A31&deferredDateFrom=2020-08-01%3A23%3A57&deferredDateTo=2021-03-15%3A20%3A31&includeIconId=27&excludeIconId=23&searchByWhat=BY_ZAKUPAY_ID&search=145&totalCount=true' \
+//   -H 'accept: application/json' \
+//   -H 'ZakupayToken: TOKEN_VALUE'
+
+заявки::
+
+ curl --request GET --url 'https://restetris.cynteka.ru/api/v1/orders?format=json'  --header "accept: application/json" --header "ZakupayToken: 4eu92qp4vquikinkjqnqc7bifivtqd23652msghr1vfhfa8bi1cl"
 
 
 
