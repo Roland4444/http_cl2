@@ -1,5 +1,6 @@
 use futures::stream::{self, StreamExt, TryStreamExt}; // в начало файла
 
+use axum::extract::State;
 use axum::{
     Router,
     body::Bytes,
@@ -8,13 +9,14 @@ use axum::{
     routing::{get, post},
 };
 use reqwest::Client;
+use serde_json::{Value, json};
 use std::error::Error;
+use std::fs::File;
+use std::io::Write;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tokio::sync::Mutex;
-
-use axum::extract::State;
 use std::sync::atomic::{AtomicBool, Ordering};
+use tokio::sync::Mutex;
 
 use crate::http_Test::{read_lines, read_lines_utf8, update_param_};
 use tokio::net::TcpListener;
@@ -159,6 +161,8 @@ const CREATE_QUEUE: &str = "CREATE_QUEUE";
 
 const RUN_QUEUE: &str = "RUN_QUEUE";
 
+const CONTENT_TYPE: &str = "Content-type";
+
 async fn processmsg(
     msg: KeyValueMessage,
     vec: &mut Vec<KeyValueMessage>,
@@ -251,6 +255,52 @@ async fn post_handler(State(state): State<SharedState>, body: Bytes) -> impl Int
             (StatusCode::BAD_REQUEST, "Invalid protobuf")
         }
     }
+}
+
+fn json_to_file(filename: &str, value: Value) -> Result<(), Box<dyn std::error::Error>> {
+    let mut file: File = File::create(filename)?;
+    file.write_all(serde_json::to_string_pretty(&value)?.as_bytes())?;
+    Ok(())
+}
+
+pub async fn pull_messages(
+    client: Client,
+    base_webhook_url: &str,
+    dialog_id: &str,
+    last_id: i64,
+    limit: u32,
+    output_file: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let suffix: &str = "/im.dialog.messages.get";
+    let req_info = json!({"DIALOG_ID": dialog_id ,
+                             "LAST_ID"  : last_id,
+                             "LIMIT": limit });
+    let resp = client
+        .post(format!("{base_webhook_url}{suffix}"))
+        .header(CONTENT_TYPE, "application/json")
+        .json(&req_info)
+        .send()
+        .await?;
+    let json_value: Value = resp.json().await?;
+    json_to_file(output_file, json_value)
+}
+
+pub async fn fetch_recent_list(
+    client: Client,
+    base_webhook_url: &str,
+    params: Value,
+    output_file: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let suffix: &str = "/im.recent.list";
+    let resp = client
+        .post(format!("{base_webhook_url}{suffix}"))
+        .header(CONTENT_TYPE, "application/json")
+        .json(&params)
+        .send()
+        .await?;
+
+    let json_value: Value = resp.json().await?;
+    json_to_file(output_file, json_value)
 }
 
 // async fn post_handler(

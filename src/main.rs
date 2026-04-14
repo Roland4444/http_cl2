@@ -5,13 +5,14 @@ use reqwest;
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::{Read, Write};
 use std::process::id;
 use std::ptr::hash;
+pub mod http_Parser;
 pub mod http_Proc;
 pub mod http_Test;
 use std::thread;
@@ -652,7 +653,7 @@ fn get_index_via_fio_result(fio: Vec<String>, filename: &str) -> Option<i32> {
 }
 
 fn synteka() -> String {
-    return  http_Test::get_webhook_(SYNTEKA_TOKEN_FILE);
+    return http_Test::get_webhook_(SYNTEKA_TOKEN_FILE);
 }
 
 fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
@@ -664,36 +665,6 @@ fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
         if name.is_empty() { None } else { Some(name) }
     })
 }
-
-pub async fn get_offers(count: Option<u32>, state: Option<&str>) -> anyhow::Result<Value>{
-
-    let token = synteka();
-    let count = count.unwrap_or(10);
-    let state = state.unwrap_or("DELETED");
-    let url = format!("http://restetris.cynteka.ru/api/v1/offers?count={}&state={}", count, state);
-
-    let client = Client::new();
-
-    let response = client.get(&url)
-        .header("accept", "application/json")
-        .header("ZakupayToken", token)
-        .send()
-        .await?;
-
-    let status = response.status();
-    if status.is_success(){
-        let json: Value= response.json().await?;
-        Ok(json)        
-    } else {
-        let error_text = response.text().await?;
-        Err(anyhow::anyhow!(
-            "HTTP request failed with status {}: {}",
-            status, error_text ))        
-    }
-    
-}
-
-
 
 // public void testGetIndexViaFIO() {
 //     java.util.List<String> javaList = java.util.Arrays.asList("Тестов","Тест");
@@ -995,23 +966,39 @@ mod tests {
 
         for n in 0..10000 {
             let dep = find_dep_name_by_id(n, &strs).unwrap_or("efes".to_string());
-            if (dep != "efes") {
+            if dep != "efes" {
                 println!("{}:{}\n", n, dep);
             }
         }
     }
 
     #[test]
-    fn test_synteka_token(){
+    fn test_synteka_token() {
         let etalon = "token";
         let mut file = File::create(SYNTEKA_TOKEN_FILE).expect("cant write file");
         file.write_all(etalon.as_bytes());
         assert_eq!(etalon, synteka());
     }
+    const webhook_test_base: &str = "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r";
 
     #[tokio::test]
-    async fn test_get_offers(){
-        let offers = get_offers(None, None).await.unwrap();
-        println!("{}", serde_json::to_string_pretty(&offers).unwrap());
+    async fn test_pull_messages() {
+        let id = 56;
+        let limit = 120;
+        let out = "./out7.js";
+        let Client = Client::new();
+        let dialog_id = "chat8";
+        http_Proc::pull_messages(Client::new(), webhook_test_base, dialog_id, id, limit, out).await;
+    }
+
+    #[tokio::test]
+    async fn test_fetch_recent_chats() {
+        http_Proc::fetch_recent_list(
+            Client::new(),
+            webhook_test_base,
+            json!({}),
+            "recent_chats.js",
+        )
+        .await;
     }
 }

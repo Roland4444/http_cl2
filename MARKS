@@ -72,6 +72,18 @@ PULL MESSAGES via name:: with LIMIT
   "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r/im.dialog.messages.get"
 
 
+  ============================================================================================================
+
+ curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"DIALOG_ID": "chat8", "LAST_ID": 56, "LIMIT": 15}' \
+  "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r/im.dialog.messages.get"   -o dump6.js
+
+
+
+  ============================================================================================================
+
+
 
 
 
