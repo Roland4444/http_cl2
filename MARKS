@@ -62,6 +62,39 @@ PULL all collabs
 mask::
 {"id":"chat
 
+
+        "chat_id": 8,
+        "counter": 0,
+        "date_last_activity": "2026-04-14T07:31:29+03:00",
+        "date_update": "2026-04-14T07:31:29+03:00",
+        "has_reminder": false,
+        "id": "chat8",      <=============================================   CHAT ID
+        "last_id": 56,      <=============================================  LAST MESSAGE ID
+        "message": {
+          "attach": false,
+          "author_id": 1,
+          "date": "2026-04-14T07:31:29+03:00",
+          "file": false,
+          "id": 56,
+          "status": "received",
+          "sticker": null,
+          "text": "СООГЛАСВАНО",
+          "uuid": "6a95e199-014a-44c6-b978-56f4fb0f9ab6"
+        },
+        "options": [],
+        "pinned": false,
+        "title": "коллл",      <============================================= НАЗВАНИЕ
+        "type": "chat",
+        "unread": false,
+        "user": {
+
+
+
+
+
+
+
+
 id last messages
 
 
@@ -181,3 +214,8 @@ https://app.swaggerhub.com/apis-docs/Cynteka/cynteka/Cynteka#/
 
 
 
+curl -X POST \
+-H "Content-Type: application/json" \
+-H "Accept: application/json" \
+-d '{"CHAT_ID":"1","TITLE":"MAIN"}' \
+https://relits.bitrix24.ru/rest/336/7ls0ky0ld18r6g62/im.chat.updateTitle

@@ -979,8 +979,8 @@ mod tests {
         file.write_all(etalon.as_bytes());
         assert_eq!(etalon, synteka());
     }
-    const webhook_test_base: &str = "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r";
-
+    const WEBHOOK_TEST_BASE: &str = "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r";
+    const WEBHOOCK_PROD_CHAT: &str = "https://relits.bitrix24.ru/rest/336/7ls0ky0ld18r6g62";
     #[tokio::test]
     async fn test_pull_messages() {
         let id = 56;
@@ -988,17 +988,40 @@ mod tests {
         let out = "./out7.js";
         let Client = Client::new();
         let dialog_id = "chat8";
-        http_Proc::pull_messages(Client::new(), webhook_test_base, dialog_id, id, limit, out).await;
+        http_Proc::pull_messages(Client::new(), WEBHOOK_TEST_BASE, dialog_id, id, limit, out).await;
     }
 
     #[tokio::test]
     async fn test_fetch_recent_chats() {
-        http_Proc::fetch_recent_list(
+        let _ = http_Proc::fetch_recent_list(
             Client::new(),
-            webhook_test_base,
+            WEBHOOK_TEST_BASE,
             json!({}),
             "recent_chats.js",
         )
         .await;
     }
+
+    #[tokio::test]
+    async fn test_pull_messages_prod() {
+        let _ = http_Proc::fetch_recent_list(
+            Client::new(),
+            WEBHOOCK_PROD_CHAT,
+            json!({}),
+            "recent_chats_prod.js",
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_fetch_recent_chats_prod() {
+        let _ = http_Proc::fetch_recent_list(
+            Client::new(),
+            WEBHOOCK_PROD_CHAT,
+            json!({}),
+            "recent_chats.js",
+        )
+        .await;
+    }
+
 }
