@@ -676,6 +676,8 @@ fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
 #[cfg(test)]
 mod tests {
 
+    use crate::http_Proc::fetch_recent_list_raw;
+
     use super::*;
 
     #[test]
@@ -979,8 +981,18 @@ mod tests {
         file.write_all(etalon.as_bytes());
         assert_eq!(etalon, synteka());
     }
-    const WEBHOOK_TEST_BASE: &str = "https://b24-6tfv6q.bitrix24.ru/rest/1/3ounnx4dgkjag64r";
-    const WEBHOOCK_PROD_CHAT: &str = "https://relits.bitrix24.ru/rest/336/7ls0ky0ld18r6g62";
+    const WEBHOOK_TEST_BASE__: &str = "webhook.test";
+    const WEBHOOCK_PROD_CHAT__: &str = "webhook.prod";
+
+    fn webhook_base_test() -> String {
+        http_Proc::get_webhook_(WEBHOOK_TEST_BASE__)
+    }
+
+    fn webhook_base_prod() -> String {
+        http_Proc::get_webhook_(WEBHOOCK_PROD_CHAT__)
+    }
+
+
     #[tokio::test]
     async fn test_pull_messages() {
         let id = 56;
@@ -988,14 +1000,14 @@ mod tests {
         let out = "./out7.js";
         let Client = Client::new();
         let dialog_id = "chat8";
-        http_Proc::pull_messages(Client::new(), WEBHOOK_TEST_BASE, dialog_id, id, limit, out).await;
+        http_Proc::pull_messages(Client::new(), webhook_base_test().as_str(), dialog_id, id, limit, out).await;
     }
 
     #[tokio::test]
     async fn test_fetch_recent_chats() {
         let _ = http_Proc::fetch_recent_list(
             Client::new(),
-            WEBHOOK_TEST_BASE,
+            webhook_base_test().as_str(),
             json!({}),
             "recent_chats.js",
         )
@@ -1004,9 +1016,19 @@ mod tests {
 
     #[tokio::test]
     async fn test_pull_messages_prod() {
+        let id = 56;
+        let limit = 120;
+        let out = "./out7.js";
+        let dialog_id = "chat8";
+        http_Proc::pull_messages(Client::new(), webhook_base_prod().as_str(), dialog_id, id, limit, out)
+            .await;
+    }
+
+    #[tokio::test]
+    async fn test_fetch_recent_chats_prod() {
         let _ = http_Proc::fetch_recent_list(
             Client::new(),
-            WEBHOOCK_PROD_CHAT,
+            webhook_base_prod().as_str(),
             json!({}),
             "recent_chats_prod.js",
         )
@@ -1014,14 +1036,19 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_fetch_recent_chats_prod() {
-        let _ = http_Proc::fetch_recent_list(
-            Client::new(),
-            WEBHOOCK_PROD_CHAT,
-            json!({}),
-            "recent_chats.js",
-        )
-        .await;
-    }
+    async fn test_main() {
+        let js = fetch_recent_list_raw(Client::new(), webhook_base_prod().as_str(), json!({})).await;
+        
+        match js {
+            Ok(js) => {
+                println!("RAW JSON::{}", js);
+                let res = http_Parser::print_chats(js.to_string());
+                assert_eq!(0, res);
+            }
 
+            Err(e) => {
+                panic!("SHIT HAPPENS: {}", e)
+            }
+        }
+    }
 }

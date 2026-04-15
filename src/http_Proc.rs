@@ -1,3 +1,4 @@
+use futures::TryFutureExt;
 use futures::stream::{self, StreamExt, TryStreamExt}; // в начало файла
 
 use axum::extract::State;
@@ -291,6 +292,16 @@ pub async fn fetch_recent_list(
     params: Value,
     output_file: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let js = fetch_recent_list_raw(client, base_webhook_url, params).await?;
+    json_to_file(output_file, js)?;
+    Ok(())
+}
+
+pub async fn fetch_recent_list_raw(
+    client: Client,
+    base_webhook_url: &str,
+    params: Value,
+) -> Result<Value, reqwest::Error> {
     let suffix: &str = "/im.recent.list";
     let resp = client
         .post(format!("{base_webhook_url}{suffix}"))
@@ -299,8 +310,8 @@ pub async fn fetch_recent_list(
         .send()
         .await?;
 
-    let json_value: Value = resp.json().await?;
-    json_to_file(output_file, json_value)
+    let json = resp.json().await?;
+    Ok(json)
 }
 
 // async fn post_handler(
