@@ -5,7 +5,7 @@ use reqwest;
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::{Value, from_str, json};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
@@ -21,6 +21,107 @@ use std::time::Duration;
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
 const SYNTEKA_TOKEN_FILE: &str = "synteka";
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+enum Collab {
+    PAYMENTS,
+    OLIVIA,
+    BABEFA,
+    OKLAND,
+    RED,
+    TETRIS,
+    SCANDINAVIA,
+    KUIB,
+    POLZ,
+    ZVEZD,
+    SKY,
+}
+
+impl Collab {
+    fn title(&self) -> &'static str {
+        match self {
+            Collab::PAYMENTS => "Платежи",
+            Collab::OLIVIA => "ОЛИВИЯ МАКСАКОВА",
+            Collab::BABEFA => "ЖК Бабефа",
+            Collab::OKLAND => "ОКЛАНД РЫБАЦКАЯ",
+            Collab::RED => "РЭД Грузинская",
+            Collab::TETRIS => "ЖК Тетрис на Керченской",
+            Collab::SCANDINAVIA => "Скандинавия - Моздокская",
+            Collab::KUIB => "Куйбышева",
+            Collab::POLZ => "Ползунова",
+            Collab::ZVEZD => "Звездная",
+            Collab::SKY => "СКАЙ ИГАРСКАЯ",
+        }
+    }
+}
+
+const VECTORS_COLLABS: &[Collab] = &[
+    Collab::PAYMENTS,
+    Collab::OLIVIA,
+    Collab::BABEFA,
+    Collab::OKLAND,
+    Collab::RED,
+    Collab::TETRIS,
+    Collab::SCANDINAVIA,
+    Collab::KUIB,
+    Collab::POLZ,
+    Collab::ZVEZD,
+    Collab::SKY,
+];
+
+
+
+
+
+
+const PAYMENTS: &str = "Платежи";
+const OLIVIA: &str = "ОЛИВИЯ МАКСАКОВА";
+const BABEFA: &str = "ЖК Бабефа";
+const OKLAND: &str = "ОКЛАНД РЫБАЦКАЯ";
+const RED: &str = "РЭД Грузинская";
+const TETRIS: &str = "ЖК Тетрис на Керченской";
+const SCANDINAVIA: &str = "Скандинавия - Моздокская";
+const KUIB: &str = "Куйбышева";
+const POLZ: &str = "Ползунова";
+const ZVEZD: &str = "Звездная";
+const SKY: &str = "СКАЙ ИГАРСКАЯ";
+
+const VECTORS_COLLABS_____: &[&str] = &[
+    OLIVIA,
+    BABEFA,
+    OKLAND,
+    RED,
+    TETRIS,
+    SCANDINAVIA,
+    KUIB,
+    POLZ,
+    ZVEZD,
+    SKY,
+];
+macro_rules! hashmap {
+    ($($key: expr => $val: expr), *) => {
+        {
+            let mut map = ::std::collections::HashMap::new();
+            $(map.insert($key, $val); )*
+            map
+        }
+    };
+}
+//genned
+const CHATS_ID: std::collections::HashMap<Collab, &str> = hashmap!(
+    Collab::PAYMENTS => "chat9224",
+    Collab::OLIVIA => "chat6998",
+    Collab::BABEFA => "chat6974",
+    Collab::OKLAND => "chat6986",
+    Collab::RED => "chat7018",
+    Collab::TETRIS => "chat7014",
+    Collab::SCANDINAVIA => "chat9796",
+    Collab::KUIB => "chat7210",
+    Collab::POLZ => "chat7208",
+    Collab::ZVEZD => "chat7242",
+    Collab::SKY => "chat6966"
+);
+//genned
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 enum ADDITIONAL_FIELDS {
@@ -291,6 +392,51 @@ fn get_i32_from_value(value: &Value) -> Option<i32> {
         Value::String(s) => s.parse::<i32>().ok(),
         _ => None,
     }
+}
+
+fn codegen(data: String, filter_names: &[&str]) -> () {
+    let v: Value = serde_json::from_str(&data).expect("ERROR PARCING");
+    if let Some(items) = v["result"]["items"].as_array() {
+        for item in items {
+            let title = item["title"].as_str().unwrap_or("");
+            let id = item["id"].as_str().unwrap_or("");
+            if filter_names.contains(&title) {
+                println!("{:?} => {:?}, ", title, id)
+            }
+        }
+    } else {
+        eprint!("Не найден массив items")
+    }
+}
+
+fn codegen2(data: String, collabs: &[Collab]) {
+    let v: Value = serde_json::from_str(&data).expect("ERROR PARSING");
+
+    let mut title_to_id = std::collections::HashMap::new();
+    if let Some(items) = v["result"]["items"].as_array() {
+        for item in items {
+            if item["type"].as_str() == Some("chat") {
+                let title = item["title"].as_str().unwrap_or("");
+                let id = item["id"].as_str().unwrap_or("");
+                title_to_id.insert(title, id);
+            }
+        }
+    } else {
+        eprintln!("Не найден массив items");
+        return;
+    }
+
+    println!("const CHATS_ID: std::collections::HashMap<Collab, &str> = hashmap!(");
+    for collab in collabs {
+        let title = collab.title();
+        if let Some(&id) = title_to_id.get(title) {
+            // Выводим имя варианта
+            println!("    Collab::{:?} => {:?},", collab, id);
+        } else {
+            eprintln!("Предупреждение: '{}' не найдено", title);
+        }
+    }
+    println!(");");
 }
 
 fn p(s: &Value) -> String {
@@ -992,7 +1138,6 @@ mod tests {
         http_Proc::get_webhook_(WEBHOOCK_PROD_CHAT__)
     }
 
-
     #[tokio::test]
     async fn test_pull_messages() {
         let id = 56;
@@ -1000,7 +1145,15 @@ mod tests {
         let out = "./out7.js";
         let Client = Client::new();
         let dialog_id = "chat8";
-        http_Proc::pull_messages(Client::new(), webhook_base_test().as_str(), dialog_id, id, limit, out).await;
+        http_Proc::pull_messages(
+            Client::new(),
+            webhook_base_test().as_str(),
+            dialog_id,
+            id,
+            limit,
+            out,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1020,8 +1173,32 @@ mod tests {
         let limit = 120;
         let out = "./out7.js";
         let dialog_id = "chat8";
-        http_Proc::pull_messages(Client::new(), webhook_base_prod().as_str(), dialog_id, id, limit, out)
-            .await;
+        http_Proc::pull_messages(
+            Client::new(),
+            webhook_base_prod().as_str(),
+            dialog_id,
+            id,
+            limit,
+            out,
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_pull_messages_prod_okland() {
+        let id = 56;
+        let limit = 120;
+        let out = "./out7.js";
+        let dialog_id = "chat8";
+        http_Proc::pull_messages(
+            Client::new(),
+            webhook_base_prod().as_str(),
+            dialog_id,
+            id,
+            limit,
+            out,
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1037,8 +1214,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_main() {
-        let js = fetch_recent_list_raw(Client::new(), webhook_base_prod().as_str(), json!({})).await;
-        
+        let js =
+            fetch_recent_list_raw(Client::new(), webhook_base_prod().as_str(), json!({})).await;
+
         match js {
             Ok(js) => {
                 println!("RAW JSON::{}", js);
@@ -1048,6 +1226,36 @@ mod tests {
 
             Err(e) => {
                 panic!("SHIT HAPPENS: {}", e)
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_codegen() {
+        let js = http_Proc::fetch_recent_list_raw(
+            Client::new(),
+            webhook_base_prod().as_str(),
+            json!({}),
+        )
+        .await;
+
+        match js {
+            Ok(value) => {
+                let pretty = serde_json::to_string_pretty(&value);
+                match pretty {
+                    Ok(nice_str) => {
+                        println!("GENNED:\n{}\n\n\n\n", nice_str);
+
+                        codegen2(nice_str, VECTORS_COLLABS);
+                    }
+                    Err(e) => {
+                        panic!("SHIT HAPPENS: {}", e)
+                    }
+                }
+            }
+
+            Err(e) => {
+                panic!("SHIT HAPPENS22222: {}", e)
             }
         }
     }
