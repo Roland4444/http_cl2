@@ -25,6 +25,14 @@ const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
 const SYNTEKA_TOKEN_FILE: &str = "synteka";
 
+
+#[derive(Debug, Serialize)]
+pub struct ExtractedMessage {
+    pub author_name: String,
+    pub text: String,
+    pub uuid: Option<String>
+}
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 enum Collab {
     PAYMENTS,
@@ -848,6 +856,42 @@ pub async fn get_last_id_for_collab(
 }
 
 
+pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
+    let mut user_names = HashMap::new();
+    if let Some(users) = value["result"]["users"].as_array() {
+        for user in users {
+            if let (Some(id), Some(name)) = (user["id"].as_u64(), user["name"].as_str()) {
+                user_names.insert(id, name.to_string());
+            }
+        }
+    }
+
+    let mut result = Vec::new();
+    if let Some(messages) = value["result"]["messages"].as_array() {
+        for msg in messages {
+            let author_id = msg["author_id"].as_u64().unwrap_or(0);
+            if author_id == 0 {
+                continue; // системное сообщение
+            }
+            let author_name = user_names
+                .get(&author_id)
+                .cloned()
+                .unwrap_or_else(|| format!("unknown_{}", author_id));
+            let text = msg["text"].as_str().unwrap_or("").to_string();
+            let uuid = msg["uuid"].as_str().map(|s| s.to_string());
+            result.push(ExtractedMessage {
+                author_name,
+                text,
+                uuid,
+            });
+        }
+    }
+    result
+}
+
+
+
+
 // public void testGetIndexViaFIO() {
 //     java.util.List<String> javaList = java.util.Arrays.asList("Тестов","Тест");
 //     // Используем asScala из scala.jdk.javaapi.CollectionConverters
@@ -1297,4 +1341,39 @@ mod tests {
             }
         }
     }
+
+
+
+#[tokio::test]
+async fn test_pull_messages_prod_okland2() {
+    let id = get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str())
+        .await
+        .unwrap();
+
+
+    println!("\n\n\n\nLAST ID IN OKLAND:: {}\n\n\n", id);
+    let limit = 120;
+
+    let json_value = http_Proc::pull_messages_raw(
+        Client::new(),
+        webhook_base_prod().as_str(),
+        CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"),
+        ( id +1)as i64,    // <=============== pull with last!
+        limit,
+    )
+    .await
+    .unwrap();
+
+    let messages = extract_messages_from_json(&json_value);
+    println!("Извлечено {} сообщений", messages.len());
+    for msg in messages.iter(){//.take(5) {
+        println!("{:?}", msg);
+    }
+
+    // Если нужно сохранить только извлечённые данные в файл:
+    let out_extracted = format!("{}_last{}_extracted.json", "OKLAND", limit);
+    let json_output = serde_json::to_string_pretty(&messages).unwrap();
+    std::fs::write(out_extracted, json_output).unwrap();
+}
+
 }
