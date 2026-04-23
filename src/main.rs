@@ -17,6 +17,9 @@ pub mod http_Proc;
 pub mod http_Test;
 use std::thread;
 use std::time::Duration;
+use anyhow::Context;
+use once_cell::sync::Lazy;
+
 
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
@@ -108,7 +111,8 @@ macro_rules! hashmap {
     };
 }
 //genned
-const CHATS_ID: std::collections::HashMap<Collab, &str> = hashmap!(
+static CHATS_ID: Lazy<HashMap<Collab, &str>> = Lazy::new(|| {
+hashmap!(
     Collab::PAYMENTS => "chat9224",
     Collab::OLIVIA => "chat6998",
     Collab::BABEFA => "chat6974",
@@ -120,7 +124,7 @@ const CHATS_ID: std::collections::HashMap<Collab, &str> = hashmap!(
     Collab::POLZ => "chat7208",
     Collab::ZVEZD => "chat7242",
     Collab::SKY => "chat6966"
-);
+)});
 //genned
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -812,6 +816,38 @@ fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
     })
 }
 
+
+pub async fn get_last_id_for_collab(
+    collab: Collab,
+    client: Client,
+    webhook_url: &str,
+) -> anyhow::Result<u64> {
+    let json = http_Proc::fetch_recent_list_raw(client, webhook_url, json!({}))
+        .await
+        .context("Ошибка получения списка чатов")?;
+
+    let items = json["result"]["items"]
+        .as_array()
+        .context("Нет поля result.items в JSON")?;
+
+    let target_title = collab.title();
+
+    for item in items {
+        let item_type = item["type"].as_str().unwrap_or("");
+        let title = item["title"].as_str().unwrap_or("");
+
+        if item_type == "chat" && title == target_title {
+            let last_id = item["last_id"]
+                .as_u64()
+                .context("Поле last_id отсутствует или не число")?;
+            return Ok(last_id);
+        }
+    }
+
+    anyhow::bail!("Чат с названием '{}' не найден", target_title);
+}
+
+
 // public void testGetIndexViaFIO() {
 //     java.util.List<String> javaList = java.util.Arrays.asList("Тестов","Тест");
 //     // Используем asScala из scala.jdk.javaapi.CollectionConverters
@@ -821,6 +857,8 @@ fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
 // }
 #[cfg(test)]
 mod tests {
+
+    use futures::TryFutureExt;
 
     use crate::http_Proc::fetch_recent_list_raw;
 
@@ -1172,11 +1210,11 @@ mod tests {
         let id = 56;
         let limit = 120;
         let out = "./out7.js";
-        let dialog_id = "chat8";
+        let chatid = CHATS_ID.get(&Collab::OKLAND).unwrap().to_string();
         http_Proc::pull_messages(
             Client::new(),
             webhook_base_prod().as_str(),
-            dialog_id,
+            &chatid,
             id,
             limit,
             out,
@@ -1186,17 +1224,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_pull_messages_prod_okland() {
-        let id = 56;
+        let id = get_last_id_for_collab(Collab::OKLAND,
+        Client::new(), webhook_base_prod().as_str()).await.unwrap();
         let limit = 120;
-        let out = "./out7.js";
-        let dialog_id = "chat8";
-        http_Proc::pull_messages(
+        let out = format!("{}_last{}.js", OKLAND, limit);
+        let _ = http_Proc::pull_messages(
             Client::new(),
             webhook_base_prod().as_str(),
-            dialog_id,
-            id,
+    CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"), // <-- исправлено
+            id as i64,
             limit,
-            out,
+            &out,
         )
         .await;
     }

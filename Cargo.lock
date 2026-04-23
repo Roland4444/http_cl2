@@ -477,6 +477,7 @@ dependencies = [
  "chrono",
  "encoding_rs",
  "futures",
+ "once_cell",
  "reqwest",
  "serde",
  "serde_json",

@@ -264,6 +264,30 @@ fn json_to_file(filename: &str, value: Value) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
+
+pub async fn pull_messages_raw(
+    client: Client,
+    base_webhook_url: &str,
+    dialog_id: &str,
+    last_id: i64,
+    limit: u32,
+) -> Result<Value, Box<dyn std::error::Error>> {
+    let suffix = "/im.dialog.messages.get";
+    let req_info = json!({
+        "DIALOG_ID": dialog_id,
+        "LAST_ID": last_id,
+        "LIMIT": limit
+    });
+    let resp = client
+        .post(format!("{}{}", base_webhook_url, suffix))
+        .header(CONTENT_TYPE, "application/json")
+        .json(&req_info)
+        .send()
+        .await?;
+    let json_value = resp.json().await?;
+    Ok(json_value)
+}
+
 pub async fn pull_messages(
     client: Client,
     base_webhook_url: &str,
@@ -272,17 +296,7 @@ pub async fn pull_messages(
     limit: u32,
     output_file: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let suffix: &str = "/im.dialog.messages.get";
-    let req_info = json!({"DIALOG_ID": dialog_id ,
-                             "LAST_ID"  : last_id,
-                             "LIMIT": limit });
-    let resp = client
-        .post(format!("{base_webhook_url}{suffix}"))
-        .header(CONTENT_TYPE, "application/json")
-        .json(&req_info)
-        .send()
-        .await?;
-    let json_value: Value = resp.json().await?;
+    let json_value = pull_messages_raw(client, base_webhook_url, dialog_id, last_id, limit).await.expect("ERROR");
     json_to_file(output_file, json_value)
 }
 
