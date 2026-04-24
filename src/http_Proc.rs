@@ -31,6 +31,21 @@ const WEBHOOK_FILENAME: &str = "webhook";
 
 static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
+
+const PAYMENTS: &str = "Платежи";
+const OLIVIA: &str = "ОЛИВИЯ МАКСАКОВА";
+const BABEFA: &str = "ЖК Бабефа";
+const OKLAND: &str = "ОКЛАНД РЫБАЦКАЯ";
+const RED: &str = "РЭД Грузинская";
+const TETRIS: &str = "ЖК Тетрис на Керченской";
+const SCANDINAVIA: &str = "Скандинавия - Моздокская";
+const KUIB: &str = "Куйбышева";
+const POLZ: &str = "Ползунова";
+const ZVEZD: &str = "Звездная";
+const SKY: &str = "СКАЙ ИГАРСКАЯ";
+const OWN: &str = "OWN";
+
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyValueMessage {
     pub id: i32,
@@ -216,13 +231,6 @@ pub async fn get_text_via_chat_id_and_id(chat_name: String, message_id: u64) -> 
     anyhow::bail!("Не получен ответ от сервера");
 }
 
-fn get_embed_text_via_chromium(msg: u64, chat_id: u64, driver: WebDriver) -> String {
-    "".to_string()
-}
-
-fn get_embed_text(msg_id: u64, chat_id: u64) -> String {
-    "".to_string()
-}
 
 async fn processmsg(
     msg: KeyValueMessage,
@@ -452,5 +460,19 @@ mod tests {
             chat_id: 9796,
         };
         assert_eq!(100822, http_Proc::process_message(msg));
+    }
+
+
+    #[tokio::test]
+    async fn test_websocket_extract_quote() {
+        let resp = get_text_via_chat_id_and_id(OKLAND.to_string(), 118782).await;
+        match resp {
+            Ok(text) => {
+                println!("EXTRACTED::{}", text)
+            }
+            Err(_) => {
+                println!("FAILED!")
+            }
+        }
     }
 }
