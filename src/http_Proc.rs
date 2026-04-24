@@ -1,6 +1,3 @@
-use chrono::format;
-use futures::TryFutureExt;
-use futures::stream::{self, StreamExt, TryStreamExt}; // в начало файла
 use crate::ExtractedMessage;
 use axum::extract::State;
 use axum::{
@@ -10,7 +7,11 @@ use axum::{
     response::IntoResponse,
     routing::{get, post},
 };
-use thirtyfour::prelude::*;
+use futures_util::{SinkExt, StreamExt};
+use anyhow::{Context, Result};
+use chrono::format;
+use futures::TryFutureExt;
+use futures::stream::{self,  TryStreamExt}; // в начало файла
 use reqwest::Client;
 use serde_json::{Value, json};
 use std::error::Error;
@@ -19,8 +20,10 @@ use std::io::Write;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use thirtyfour::prelude::*;
 use tokio::sync::Mutex;
-
+use tokio_tungstenite::{connect_async, tungstenite::Message};
+use serde::{Serialize, Deserialize};
 use crate::http_Test::{read_lines, read_lines_utf8, update_param_};
 use tokio::net::TcpListener;
 
@@ -33,6 +36,14 @@ pub struct KeyValueMessage {
     pub id: i32,
     pub key: String,
     pub value: String,
+}
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ExtractResp {
+    pub success: bool,
+    pub quoted_text: Option<String>,
+    pub error: Option<String>,
 }
 
 fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
@@ -166,34 +177,52 @@ const RUN_QUEUE: &str = "RUN_QUEUE";
 
 const CONTENT_TYPE: &str = "Content-type";
 
-
 const APPROVED: &str = "СОГЛАСОВАНО";
 
-fn process_message(msg: ExtractedMessage) -> u64{
-    if !msg.text.to_uppercase().contains(APPROVED){
+fn process_message(msg: ExtractedMessage) -> u64 {
+    if !msg.text.to_uppercase().contains(APPROVED) {
         println!("SKIPPED");
         msg.id
-    }
-    else {
+    } else {
         println!("PROCESSED!");
         msg.id
     }
 }
 
-fn get_embed_text_via_chromium(msg: u64, chat_id: u64, driver: WebDriver) -> String{
+pub async fn get_text_via_chat_id_and_id(chat_name: String, message_id: u64) -> Result<String> {
+    let (mut ws_stream, _) = connect_async("ws://127.0.0.1:3000/proc")
+        .await
+        .context("Не удалось подключиться к WebSocket")?;
+
+    let request = json!({
+        "collab": chat_name,
+        "message_id": message_id
+    });
+
+    let request_bytes = serde_json::to_vec(&request)?;
+    ws_stream
+        .send(Message::Binary(request_bytes.into()))
+        .await?;
+
+    if let Some(Ok(Message::Text(resp_text))) = ws_stream.next().await {
+        let resp: ExtractResp = serde_json::from_str(&resp_text)?;
+        if resp.success {
+            return Ok(resp.quoted_text.unwrap_or_default());
+        } else {
+            anyhow::bail!("Ошибка сервера: {}", resp.error.unwrap_or_default());
+        }
+    }
+
+    anyhow::bail!("Не получен ответ от сервера");
+}
+
+fn get_embed_text_via_chromium(msg: u64, chat_id: u64, driver: WebDriver) -> String {
     "".to_string()
 }
 
-
-
-
-
-
-fn get_embed_text(msg_id: u64, chat_id: u64) -> String{
-    
+fn get_embed_text(msg_id: u64, chat_id: u64) -> String {
+    "".to_string()
 }
-
-
 
 async fn processmsg(
     msg: KeyValueMessage,
@@ -295,7 +324,6 @@ fn json_to_file(filename: &str, value: Value) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
-
 pub async fn pull_messages_raw(
     client: Client,
     base_webhook_url: &str,
@@ -327,7 +355,9 @@ pub async fn pull_messages(
     limit: u32,
     output_file: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let json_value = pull_messages_raw(client, base_webhook_url, dialog_id, last_id, limit).await.expect("ERROR");
+    let json_value = pull_messages_raw(client, base_webhook_url, dialog_id, last_id, limit)
+        .await
+        .expect("ERROR");
     json_to_file(output_file, json_value)
 }
 
@@ -406,7 +436,6 @@ async fn main() -> anyhow::Result<()> {
     spawn().await
 }
 
-
 #[cfg(test)]
 mod tests {
     use crate::http_Proc;
@@ -415,17 +444,13 @@ mod tests {
 
     #[test]
     fn test_process_msg() {
-        let msg = ExtractedMessage { 
-            author_name: "Сергей Браташов".to_string(), 
-            text: "Согласовано".to_string(), 
-            uuid: Some("851fba1b-35d9-4b61-aaaa-0258fc093efd".to_string()), 
-            id: 100822, chat_id: 9796 
+        let msg = ExtractedMessage {
+            author_name: "Сергей Браташов".to_string(),
+            text: "Согласовано".to_string(),
+            uuid: Some("851fba1b-35d9-4b61-aaaa-0258fc093efd".to_string()),
+            id: 100822,
+            chat_id: 9796,
         };
         assert_eq!(100822, http_Proc::process_message(msg));
-
-
-
     }
-
-
 }

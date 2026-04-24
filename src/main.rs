@@ -15,24 +15,22 @@ use std::ptr::hash;
 pub mod http_Parser;
 pub mod http_Proc;
 pub mod http_Test;
-use std::thread;
-use std::time::Duration;
 use anyhow::Context;
 use once_cell::sync::Lazy;
-
+use std::thread;
+use std::time::Duration;
 
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
 const SYNTEKA_TOKEN_FILE: &str = "synteka";
-
 
 #[derive(Debug, Serialize)]
 pub struct ExtractedMessage {
     pub author_name: String,
     pub text: String,
     pub uuid: Option<String>,
-    pub id:   u64,
-    pub chat_id: u64
+    pub id: u64,
+    pub chat_id: u64,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
@@ -48,7 +46,7 @@ enum Collab {
     POLZ,
     ZVEZD,
     SKY,
-    OWN
+    OWN,
 }
 
 impl Collab {
@@ -65,7 +63,7 @@ impl Collab {
             Collab::POLZ => "Ползунова",
             Collab::ZVEZD => "Звездная",
             Collab::SKY => "СКАЙ ИГАРСКАЯ",
-            Collab::OWN => "OWN"
+            Collab::OWN => "OWN",
         }
     }
 }
@@ -82,13 +80,8 @@ const VECTORS_COLLABS: &[Collab] = &[
     Collab::POLZ,
     Collab::ZVEZD,
     Collab::SKY,
-    Collab::OWN
+    Collab::OWN,
 ];
-
-
-
-
-
 
 const PAYMENTS: &str = "Платежи";
 const OLIVIA: &str = "ОЛИВИЯ МАКСАКОВА";
@@ -114,7 +107,7 @@ const VECTORS_COLLABS_____: &[&str] = &[
     POLZ,
     ZVEZD,
     SKY,
-    OWN
+    OWN,
 ];
 macro_rules! hashmap {
     ($($key: expr => $val: expr), *) => {
@@ -127,36 +120,36 @@ macro_rules! hashmap {
 }
 //genned
 static CHATS_ID: Lazy<HashMap<Collab, &str>> = Lazy::new(|| {
-hashmap!(
-    Collab::PAYMENTS => "chat9224",
-    Collab::OLIVIA => "chat6998",
-    Collab::BABEFA => "chat6974",
-    Collab::OKLAND => "chat6986",
-    Collab::RED => "chat7018",
-    Collab::TETRIS => "chat7014",
-    Collab::SCANDINAVIA => "chat9796",
-    Collab::KUIB => "chat7210",
-    Collab::POLZ => "chat7208",
-    Collab::ZVEZD => "chat7242",
-    Collab::SKY => "chat6966",
-    Collab::OWN => "chat13372" 
-)});
+    hashmap!(
+        Collab::PAYMENTS => "chat9224",
+        Collab::OLIVIA => "chat6998",
+        Collab::BABEFA => "chat6974",
+        Collab::OKLAND => "chat6986",
+        Collab::RED => "chat7018",
+        Collab::TETRIS => "chat7014",
+        Collab::SCANDINAVIA => "chat9796",
+        Collab::KUIB => "chat7210",
+        Collab::POLZ => "chat7208",
+        Collab::ZVEZD => "chat7242",
+        Collab::SKY => "chat6966",
+        Collab::OWN => "chat13372"
+    )
+});
 //genned
 
-
-static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(||
-    {
-        CHATS_ID
+static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(|| {
+    CHATS_ID
         .iter()
-        .map(|(collab, &id_str)|{
-            let num = id_str.strip_prefix("chat")
-            .unwrap_or(id_str)
-            .parse()
-            .expect("INVALID ID");
+        .map(|(collab, &id_str)| {
+            let num = id_str
+                .strip_prefix("chat")
+                .unwrap_or(id_str)
+                .parse()
+                .expect("INVALID ID");
             (*collab, num)
-        })  
+        })
         .collect()
-    });
+});
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 enum ADDITIONAL_FIELDS {
@@ -847,7 +840,6 @@ fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
     })
 }
 
-
 pub async fn get_last_id_for_collab(
     collab: Collab,
     client: Client,
@@ -878,7 +870,6 @@ pub async fn get_last_id_for_collab(
     anyhow::bail!("Чат с названием '{}' не найден", target_title);
 }
 
-
 pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
     let mut user_names = HashMap::new();
     if let Some(users) = value["result"]["users"].as_array() {
@@ -904,20 +895,17 @@ pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
                 .unwrap_or_else(|| format!("unknown_{}", author_id));
             let text = msg["text"].as_str().unwrap_or("").to_string();
             let uuid = msg["uuid"].as_str().map(|s| s.to_string());
-            result.push(ExtractedMessage {                
+            result.push(ExtractedMessage {
                 author_name,
                 text,
                 uuid,
                 id,
-                chat_id
+                chat_id,
             });
         }
     }
     result
 }
-
-
-
 
 // public void testGetIndexViaFIO() {
 //     java.util.List<String> javaList = java.util.Arrays.asList("Тестов","Тест");
@@ -1248,9 +1236,6 @@ mod tests {
         http_Proc::get_webhook_(WEBHOOCK_PROD_CHAT__)
     }
 
-
-
-
     #[tokio::test]
     async fn test_pull_messages() {
         let id = 56;
@@ -1299,14 +1284,16 @@ mod tests {
 
     #[tokio::test]
     async fn test_pull_messages_prod_okland() {
-        let id = get_last_id_for_collab(Collab::OKLAND,
-        Client::new(), webhook_base_prod().as_str()).await.unwrap();
+        let id =
+            get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str())
+                .await
+                .unwrap();
         let limit = 120;
         let out = format!("{}_last{}.js", OKLAND, limit);
         let _ = http_Proc::pull_messages(
             Client::new(),
             webhook_base_prod().as_str(),
-    CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"), // <-- исправлено
+            CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"), // <-- исправлено
             id as i64,
             limit,
             &out,
@@ -1373,120 +1360,136 @@ mod tests {
         }
     }
 
+    #[tokio::test]
+    async fn test_pull_messages_prod_okland2() {
+        let id =
+            get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str())
+                .await
+                .unwrap();
 
+        println!("\n\n\n\nLAST ID IN OKLAND:: {}\n\n\n", id);
+        let limit = 120;
 
-#[tokio::test]
-async fn test_pull_messages_prod_okland2() {
-    let id = get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str())
+        let json_value = http_Proc::pull_messages_raw(
+            Client::new(),
+            webhook_base_prod().as_str(),
+            CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"),
+            (id + 2) as i64, // <=============== pull with last!
+            limit,
+        )
         .await
         .unwrap();
 
+        let messages = extract_messages_from_json(&json_value);
+        println!("Извлечено {} сообщений", messages.len());
+        for msg in messages.iter() {
+            //.take(5) {
+            println!("{:?}", msg);
+        }
 
-    println!("\n\n\n\nLAST ID IN OKLAND:: {}\n\n\n", id);
-    let limit = 120;
+        // Если нужно сохранить только извлечённые данные в файл:
+        let out_extracted = format!("{}_last{}_extracted.json", "OKLAND", limit);
+        let json_output = serde_json::to_string_pretty(&messages).unwrap();
+        std::fs::write(out_extracted, json_output).unwrap();
 
-    let json_value = http_Proc::pull_messages_raw(
-        Client::new(),
-        webhook_base_prod().as_str(),
-        CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"),
-        ( id +1)as i64,    // <=============== pull with last!
-        limit,
-    )
-    .await
-    .unwrap();
-
-    let messages = extract_messages_from_json(&json_value);
-    println!("Извлечено {} сообщений", messages.len());
-    for msg in messages.iter(){//.take(5) {
-        println!("{:?}", msg);
+        let _ = std::fs::write(
+            format!("{}_last{}_extracted_FULL.json", "OKLAND", limit),
+            serde_json::to_string_pretty(&json_value).unwrap(),
+        );
     }
 
-    // Если нужно сохранить только извлечённые данные в файл:
-    let out_extracted = format!("{}_last{}_extracted.json", "OKLAND", limit);
-    let json_output = serde_json::to_string_pretty(&messages).unwrap();
-    std::fs::write(out_extracted, json_output).unwrap();
+    #[tokio::test]
+    async fn test_pull_messages_prod_Scandinavia2() {
+        let current_collab = Collab::SCANDINAVIA;
+        let title = current_collab.title();
+        let id =
+            get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str())
+                .await
+                .unwrap();
 
-    let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", "OKLAND", limit), serde_json::to_string_pretty(&json_value).unwrap());
-}
+        println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+        let limit = 120;
 
-
-#[tokio::test]
-async fn test_pull_messages_prod_Scandinavia2() {
-
-    let current_collab = Collab::SCANDINAVIA;
-    let title = current_collab.title();
-    let id = get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str())
+        let json_value = http_Proc::pull_messages_raw(
+            Client::new(),
+            webhook_base_prod().as_str(),
+            CHATS_ID
+                .get(&current_collab)
+                .expect(&format!("{} not found", title)),
+            (id + 1) as i64, // <=============== pull with last!
+            limit,
+        )
         .await
         .unwrap();
 
+        let messages = extract_messages_from_json(&json_value);
+        println!("Извлечено {} сообщений", messages.len());
+        for msg in messages.iter() {
+            //.take(5) {
+            println!("{:?}", msg);
+        }
 
-    println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
-    let limit = 120;
+        // Если нужно сохранить только извлечённые данные в файл:
+        let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
+        let json_output = serde_json::to_string_pretty(&messages).unwrap();
+        std::fs::write(out_extracted, json_output).unwrap();
 
-    let json_value = http_Proc::pull_messages_raw(
-        Client::new(),
-        webhook_base_prod().as_str(),
-        CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
-        ( id +1)as i64,    // <=============== pull with last!
-        limit,
-    )
-    .await
-    .unwrap();
-
-    let messages = extract_messages_from_json(&json_value);
-    println!("Извлечено {} сообщений", messages.len());
-    for msg in messages.iter(){//.take(5) {
-        println!("{:?}", msg);
+        let _ = std::fs::write(
+            format!(
+                "{}_last{}_extracted_FULL.json",
+                current_collab.title(),
+                limit
+            ),
+            serde_json::to_string_pretty(&json_value).unwrap(),
+        );
     }
 
-    // Если нужно сохранить только извлечённые данные в файл:
-    let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
-    let json_output = serde_json::to_string_pretty(&messages).unwrap();
-    std::fs::write(out_extracted, json_output).unwrap();
+    #[tokio::test]
+    async fn test_pull_messages_prod_OWN() {
+        let current_collab = Collab::OWN;
+        let title = current_collab.title();
+        let id =
+            get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str())
+                .await
+                .unwrap();
 
-    let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit), serde_json::to_string_pretty(&json_value).unwrap());
-}
+        println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+        let limit = 120;
 
-
-#[tokio::test]
-async fn test_pull_messages_prod_OWN() {
-
-    let current_collab = Collab::OWN;
-    let title = current_collab.title();
-    let id = get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str())
+        let json_value = http_Proc::pull_messages_raw(
+            Client::new(),
+            webhook_base_prod().as_str(),
+            CHATS_ID
+                .get(&current_collab)
+                .expect(&format!("{} not found", title)),
+            (id + 1) as i64, // <=============== pull with last!
+            limit,
+        )
         .await
         .unwrap();
 
+        let messages = extract_messages_from_json(&json_value);
+        println!("Извлечено {} сообщений", messages.len());
+        for msg in messages.iter() {
+            //.take(5) {
+            println!("{:?}", msg);
+        }
 
-    println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
-    let limit = 120;
+        // Если нужно сохранить только извлечённые данные в файл:
+        let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
+        let json_output = serde_json::to_string_pretty(&messages).unwrap();
+        std::fs::write(out_extracted, json_output).unwrap();
 
-    let json_value = http_Proc::pull_messages_raw(
-        Client::new(),
-        webhook_base_prod().as_str(),
-        CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
-        ( id +1)as i64,    // <=============== pull with last!
-        limit,
-    )
-    .await
-    .unwrap();
-
-    let messages = extract_messages_from_json(&json_value);
-    println!("Извлечено {} сообщений", messages.len());
-    for msg in messages.iter(){//.take(5) {
-        println!("{:?}", msg);
+        let _ = std::fs::write(
+            format!(
+                "{}_last{}_extracted_FULL.json",
+                current_collab.title(),
+                limit
+            ),
+            serde_json::to_string_pretty(&json_value).unwrap(),
+        );
     }
-
-    // Если нужно сохранить только извлечённые данные в файл:
-    let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
-    let json_output = serde_json::to_string_pretty(&messages).unwrap();
-    std::fs::write(out_extracted, json_output).unwrap();
-
-    let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit), serde_json::to_string_pretty(&json_value).unwrap());
 }
-
-}
-
 
 ////
 ////
