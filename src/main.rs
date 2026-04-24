@@ -30,7 +30,9 @@ const SYNTEKA_TOKEN_FILE: &str = "synteka";
 pub struct ExtractedMessage {
     pub author_name: String,
     pub text: String,
-    pub uuid: Option<String>
+    pub uuid: Option<String>,
+    pub id:   u64,
+    pub chat_id: u64
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
@@ -46,6 +48,7 @@ enum Collab {
     POLZ,
     ZVEZD,
     SKY,
+    OWN
 }
 
 impl Collab {
@@ -62,6 +65,7 @@ impl Collab {
             Collab::POLZ => "Ползунова",
             Collab::ZVEZD => "Звездная",
             Collab::SKY => "СКАЙ ИГАРСКАЯ",
+            Collab::OWN => "OWN"
         }
     }
 }
@@ -78,6 +82,7 @@ const VECTORS_COLLABS: &[Collab] = &[
     Collab::POLZ,
     Collab::ZVEZD,
     Collab::SKY,
+    Collab::OWN
 ];
 
 
@@ -96,6 +101,7 @@ const KUIB: &str = "Куйбышева";
 const POLZ: &str = "Ползунова";
 const ZVEZD: &str = "Звездная";
 const SKY: &str = "СКАЙ ИГАРСКАЯ";
+const OWN: &str = "OWN";
 
 const VECTORS_COLLABS_____: &[&str] = &[
     OLIVIA,
@@ -108,6 +114,7 @@ const VECTORS_COLLABS_____: &[&str] = &[
     POLZ,
     ZVEZD,
     SKY,
+    OWN
 ];
 macro_rules! hashmap {
     ($($key: expr => $val: expr), *) => {
@@ -131,9 +138,25 @@ hashmap!(
     Collab::KUIB => "chat7210",
     Collab::POLZ => "chat7208",
     Collab::ZVEZD => "chat7242",
-    Collab::SKY => "chat6966"
+    Collab::SKY => "chat6966",
+    Collab::OWN => "chat13372" 
 )});
 //genned
+
+
+static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(||
+    {
+        CHATS_ID
+        .iter()
+        .map(|(collab, &id_str)|{
+            let num = id_str.strip_prefix("chat")
+            .unwrap_or(id_str)
+            .parse()
+            .expect("INVALID ID");
+            (*collab, num)
+        })  
+        .collect()
+    });
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 enum ADDITIONAL_FIELDS {
@@ -871,18 +894,22 @@ pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
         for msg in messages {
             let author_id = msg["author_id"].as_u64().unwrap_or(0);
             if author_id == 0 {
-                continue; // системное сообщение
+                continue;
             }
+            let id = msg["id"].as_u64().unwrap_or(0);
+            let chat_id = msg["chat_id"].as_u64().unwrap_or(0);
             let author_name = user_names
                 .get(&author_id)
                 .cloned()
                 .unwrap_or_else(|| format!("unknown_{}", author_id));
             let text = msg["text"].as_str().unwrap_or("").to_string();
             let uuid = msg["uuid"].as_str().map(|s| s.to_string());
-            result.push(ExtractedMessage {
+            result.push(ExtractedMessage {                
                 author_name,
                 text,
                 uuid,
+                id,
+                chat_id
             });
         }
     }
@@ -902,6 +929,7 @@ pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
 #[cfg(test)]
 mod tests {
 
+    use chrono::format;
     use futures::TryFutureExt;
 
     use crate::http_Proc::fetch_recent_list_raw;
@@ -1374,6 +1402,94 @@ async fn test_pull_messages_prod_okland2() {
     let out_extracted = format!("{}_last{}_extracted.json", "OKLAND", limit);
     let json_output = serde_json::to_string_pretty(&messages).unwrap();
     std::fs::write(out_extracted, json_output).unwrap();
+
+    let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", "OKLAND", limit), serde_json::to_string_pretty(&json_value).unwrap());
+}
+
+
+#[tokio::test]
+async fn test_pull_messages_prod_Scandinavia2() {
+
+    let current_collab = Collab::SCANDINAVIA;
+    let title = current_collab.title();
+    let id = get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str())
+        .await
+        .unwrap();
+
+
+    println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+    let limit = 120;
+
+    let json_value = http_Proc::pull_messages_raw(
+        Client::new(),
+        webhook_base_prod().as_str(),
+        CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
+        ( id +1)as i64,    // <=============== pull with last!
+        limit,
+    )
+    .await
+    .unwrap();
+
+    let messages = extract_messages_from_json(&json_value);
+    println!("Извлечено {} сообщений", messages.len());
+    for msg in messages.iter(){//.take(5) {
+        println!("{:?}", msg);
+    }
+
+    // Если нужно сохранить только извлечённые данные в файл:
+    let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
+    let json_output = serde_json::to_string_pretty(&messages).unwrap();
+    std::fs::write(out_extracted, json_output).unwrap();
+
+    let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit), serde_json::to_string_pretty(&json_value).unwrap());
+}
+
+
+#[tokio::test]
+async fn test_pull_messages_prod_OWN() {
+
+    let current_collab = Collab::OWN;
+    let title = current_collab.title();
+    let id = get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str())
+        .await
+        .unwrap();
+
+
+    println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+    let limit = 120;
+
+    let json_value = http_Proc::pull_messages_raw(
+        Client::new(),
+        webhook_base_prod().as_str(),
+        CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
+        ( id +1)as i64,    // <=============== pull with last!
+        limit,
+    )
+    .await
+    .unwrap();
+
+    let messages = extract_messages_from_json(&json_value);
+    println!("Извлечено {} сообщений", messages.len());
+    for msg in messages.iter(){//.take(5) {
+        println!("{:?}", msg);
+    }
+
+    // Если нужно сохранить только извлечённые данные в файл:
+    let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
+    let json_output = serde_json::to_string_pretty(&messages).unwrap();
+    std::fs::write(out_extracted, json_output).unwrap();
+
+    let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit), serde_json::to_string_pretty(&json_value).unwrap());
 }
 
 }
+
+
+////
+////
+////
+//// <div class="bx-im-message-base__container"><div class="bx-im-message-base__content"><div class="bx-im-message-base__body"><div class="bx-im-message-default__container"><div class="bx-im-message-author-title__container --clickable"><div class="bx-im-chat-title__scope bx-im-chat-title__container"><span class="bx-im-chat-title__content"><!----><span class="bx-im-chat-title__text" title="Сергей Музданбаев" style="color: rgb(88, 204, 71);">Сергей Музданбаев</span><!----><!----><!----></span></div></div><div class="bx-im-message-default-content__container bx-im-message-default-content__scope"><div class="bx-im-message-quote --reply --collapsed --clickable" data-context="chat6986/117754"><div class="bx-im-message-quote__wrap"><div class="bx-im-message-quote__name"><div class="bx-im-message-quote__name-text">Дмитрий Бердников</div></div><div class="bx-im-message-quote__text">Прошу согласовать на 24.04.26  к 13:00 манипулятор для перевозки уголков и перемычек с Куйбышевой 86 на Рыбацкую <br><br>Конт. тел. 89170911410 Дмитрий</div><!----></div></div><div class="bx-im-message-default-content__text">Согласовано</div><!----><div class="bx-im-message-default-content__bottom-panel"><!----><div class="bx-im-message-default-content__status-container"><div class="bx-im-message-status__container"><!----><div class="bx-im-message-status__date">14:06</div><!----></div></div></div></div></div><!----><div class="bx-im-reaction-selector__container"><div class="bx-im-reaction-selector__selector"><div class="bx-im-reaction-selector__icon"></div></div></div></div><div class="bx-im-message-context-menu__container bx-im-message-context-menu__scope"><button title="Кликните для открытия меню действий или удерживайте CTRL для цитирования сообщения" class="bx-im-message-context-menu__button"></button></div></div><!----></div>
+////
+////
+////
+////
