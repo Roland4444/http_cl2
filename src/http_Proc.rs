@@ -1,6 +1,7 @@
+use chrono::format;
 use futures::TryFutureExt;
 use futures::stream::{self, StreamExt, TryStreamExt}; // в начало файла
-
+use crate::ExtractedMessage;
 use axum::extract::State;
 use axum::{
     Router,
@@ -9,6 +10,7 @@ use axum::{
     response::IntoResponse,
     routing::{get, post},
 };
+use thirtyfour::prelude::*;
 use reqwest::Client;
 use serde_json::{Value, json};
 use std::error::Error;
@@ -163,6 +165,35 @@ const CREATE_QUEUE: &str = "CREATE_QUEUE";
 const RUN_QUEUE: &str = "RUN_QUEUE";
 
 const CONTENT_TYPE: &str = "Content-type";
+
+
+const APPROVED: &str = "СОГЛАСОВАНО";
+
+fn process_message(msg: ExtractedMessage) -> u64{
+    if !msg.text.to_uppercase().contains(APPROVED){
+        println!("SKIPPED");
+        msg.id
+    }
+    else {
+        println!("PROCESSED!");
+        msg.id
+    }
+}
+
+fn get_embed_text_via_chromium(msg: u64, chat_id: u64, driver: WebDriver) -> String{
+    "".to_string()
+}
+
+
+
+
+
+
+fn get_embed_text(msg_id: u64, chat_id: u64) -> String{
+    
+}
+
+
 
 async fn processmsg(
     msg: KeyValueMessage,
@@ -373,4 +404,28 @@ pub async fn spawn() -> anyhow::Result<()> {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     spawn().await
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::http_Proc;
+
+    use super::*;
+
+    #[test]
+    fn test_process_msg() {
+        let msg = ExtractedMessage { 
+            author_name: "Сергей Браташов".to_string(), 
+            text: "Согласовано".to_string(), 
+            uuid: Some("851fba1b-35d9-4b61-aaaa-0258fc093efd".to_string()), 
+            id: 100822, chat_id: 9796 
+        };
+        assert_eq!(100822, http_Proc::process_message(msg));
+
+
+
+    }
+
+
 }
