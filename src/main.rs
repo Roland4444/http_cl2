@@ -31,42 +31,22 @@ macro_rules! hashmap {
         {
             let mut map = ::std::collections::HashMap::new();
             $(map.insert($key, $val); )*
-            map
-        }
-    };
-}
+            map        }    };}
 //genned
 static CHATS_ID: Lazy<HashMap<Collab, &str>> = Lazy::new(|| {
     hashmap!(
-        Collab::PAYMENTS => "chat9224",
-        Collab::OLIVIA => "chat6998",
-        Collab::BABEFA => "chat6974",
-        Collab::OKLAND => "chat6986",
-        Collab::RED => "chat7018",
-        Collab::TETRIS => "chat7014",
-        Collab::SCANDINAVIA => "chat9796",
-        Collab::KUIB => "chat7210",
-        Collab::POLZ => "chat7208",
-        Collab::ZVEZD => "chat7242",
-        Collab::SKY => "chat6966",
-        Collab::OWN => "chat13372"
-    )
-});
+        Collab::PAYMENTS => "chat9224",        Collab::OLIVIA => "chat6998",        Collab::BABEFA => "chat6974",        Collab::OKLAND => "chat6986",        Collab::RED => "chat7018",
+        Collab::TETRIS => "chat7014",          Collab::SCANDINAVIA => "chat9796",   Collab::KUIB => "chat7210",          Collab::POLZ => "chat7208",          Collab::ZVEZD => "chat7242",
+        Collab::SKY => "chat6966",             Collab::OWN => "chat13372"    )});
 //genned
 
 static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(|| {
     CHATS_ID
         .iter()
         .map(|(collab, &id_str): (&Collab, &&str)| {
-            let num = id_str
-                .strip_prefix("chat")
-                .unwrap_or(id_str)
-                .parse()
-                .expect("INVALID ID");
-            (*collab, num)
-        })
-        .collect()
-});
+            let num = id_str.strip_prefix("chat").unwrap_or(id_str).parse().expect("INVALID ID");
+            (*collab, num)})
+        .collect()});
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 enum ADDITIONAL_FIELDS {
@@ -104,75 +84,38 @@ struct Operations {
 }
 
 impl Operation {
-    fn new(id: i32, m: HashMap<String, String>) -> Self {
-        Operation {
-            id_for_item: id,
-            map_params: m,
-        }
-    }
-
-    fn to_string(&self) -> String {
-        return format!(
-            "Struct Operation::\nid::{}, params::{}",
-            self.id_for_item,
-            Operation::map_to_string(self.map_params.clone())
-        );
-    }
-
-    fn map_to_string(m: HashMap<String, String>) -> String {
-        m.iter()
-            .map(|(key, value)| format!("{}: {}", key, value))
-            .collect::<Vec<String>>()
-            .join(", ")
-    }
+    fn new(id: i32, m: HashMap<String, String>) -> Self {    Operation {            id_for_item: id,            map_params: m,        }    }
+    fn to_string(&self) -> String {format!("Struct Operation::\nid::{}, params::{}", self.id_for_item,  Operation::map_to_string(self.map_params.clone()) ) }
+    fn map_to_string(m: HashMap<String, String>) -> String {m.iter().map(|(key, value)| format!("{}: {}", key, value)).collect::<Vec<String>>().join(", ")    }
 }
 
-fn get_enum__by_string(target: &str) -> ADDITIONAL_FIELDS {
-    ADDITIONAL_FIELDS::all_values()
-        .iter()
-        .find(|&field| field.to_string() == target)
-        .cloned()
-        .unwrap_or_else(|| panic!("No field found with string: {}", target))
-}
+fn get_enum__by_string(target: &str) -> ADDITIONAL_FIELDS {    ADDITIONAL_FIELDS::all_values().iter().find(|&field| field.to_string() == target).cloned().unwrap_or_else(|| panic!("No field found with string: {}", target))}
 
 impl std::fmt::Display for ADDITIONAL_FIELDS {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность"),
-            ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения"),
-            ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя"),
+        match self {  ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность"),  ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения"),  ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя"),
         }
     }
 }
 
 fn deserialize_from_file<T: DeserializeOwned>(
     filename: &str,
-) -> Result<T, Box<dyn std::error::Error>> {
-    let mut file: File = File::open(filename)?;
-    let mut buffer: Vec<u8> = Vec::new();
-    file.read_to_end(&mut buffer)?;
+) -> Result<T, Box<dyn std::error::Error>> {   
+    let mut file: File = File::open(filename)?;   
+    let mut buffer: Vec<u8> = Vec::new();   
+     file.read_to_end(&mut buffer)?;
     let decoded: T = bincode::deserialize(&buffer)?;
     Ok(decoded)
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-struct Employee {
-    id: i32,
-    name: String,
-    last_name: String,
-    middle_name: String,
-    map_add: HashMap<ADDITIONAL_FIELDS, String>,
-}
+struct Employee {    id: i32,    name: String,    last_name: String,    middle_name: String,    map_add: HashMap<ADDITIONAL_FIELDS, String>,}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-struct Pack {
-    pack: Vec<Employee>,
-}
+struct Pack {    pack: Vec<Employee>,}
 
 impl Pack {
-    fn new(pack: Vec<Employee>) -> Self {
-        Pack { pack }
-    }
+    fn new(pack: Vec<Employee>) -> Self {        Pack { pack }    }
 
     fn serialize_to_file(&self, filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         let encoded: Vec<u8> = bincode::serialize(self)?;
@@ -181,14 +124,10 @@ impl Pack {
         Ok(())
     }
 
-    fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        deserialize_from_file(filename)
-    }
+    fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>> {        deserialize_from_file(filename)    }
 
     fn push_and_update(&mut self, entry: Employee) -> () {
-        if self.is_contains(&entry) {
-            self.remove(&entry);
-        }
+        if self.is_contains(&entry) {            self.remove(&entry);        }
         self.pack.push(entry);
     }
 
@@ -202,13 +141,9 @@ impl Pack {
             let cur_name = &emp.name;
             let cur_last_name = &emp.last_name;
 
-            if cur_id == entry_id {
-                return true;
-            }
+            if cur_id == entry_id {                return true;            }
 
-            if (cur_name == entry_name) && (cur_last_name == entry_last_name) {
-                return true;
-            }
+            if (cur_name == entry_name) && (cur_last_name == entry_last_name) {                return true;            }
         }
         false
     }
@@ -218,12 +153,8 @@ impl Pack {
             emp.id == entry.id || (emp.name == entry.name && emp.last_name == entry.last_name)
         });
 
-        if let Some(idx) = index {
-            self.pack.remove(idx);
-            true
-        } else {
-            false
-        }
+        if let Some(idx) = index {            self.pack.remove(idx);            true} 
+        else {            false        }
     }
 
     fn to_string(&self, ender: String) -> String {
@@ -246,9 +177,7 @@ impl Pack {
 
     fn get_id_by_fi(&self, fi: String) -> Option<i32> {
         let splitted: Vec<String> = split_to_fi(fi);
-        if splitted.len() < 3 {
-            return None;
-        }
+        if splitted.len() < 3 {            return None;        }
 
         let last_name = &splitted[0];
         let first_name = &splitted[1];
@@ -259,32 +188,15 @@ impl Pack {
         for employee in &self.pack {
             println!("EMPLOYEE    F:{}", employee.last_name.to_string());
             println!("EMPLOYEE    I:{}", employee.name.to_string());
-            if employee.last_name == last_name.to_string()
-                && employee.name == first_name.to_string()
-            {
-                return Some(employee.id);
-            }
+            if employee.last_name == last_name.to_string()  && employee.name == first_name.to_string()  {                return Some(employee.id);            }
         }
         None
     }
 }
 
 impl Employee {
-    fn new(
-        id: i32,
-        name: String,
-        last_name: String,
-        middle_name: String,
-        map_add: HashMap<ADDITIONAL_FIELDS, String>,
-    ) -> Self {
-        Employee {
-            id,
-            name,
-            last_name,
-            middle_name,
-            map_add,
-        }
-    }
+    fn new(        id: i32,        name: String,        last_name: String,        middle_name: String,        map_add: HashMap<ADDITIONAL_FIELDS, String>,    ) -> Self {
+        Employee {            id,            name,            last_name,            middle_name,            map_add,        }}
 
     fn serialize_to_file(&self, filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         let encoded: Vec<u8> = bincode::serialize(self)?;
@@ -293,47 +205,24 @@ impl Employee {
         Ok(())
     }
 
-    fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        deserialize_from_file(filename)
-    }
+    fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>> {        deserialize_from_file(filename)    }
 
 
     fn _to_string(&self) -> String {
-        format!(
-            "{} {} {} {} {}",
-            self.id,
-            self.last_name,
-            self.name,
-            self.middle_name,
-            format!("<{}>", Employee::map_to_string(self.map_add.clone()))
-        )
+        format!(            "{} {} {} {} {}",            self.id,            self.last_name,            self.name,            self.middle_name,            format!("<{}>", Employee::map_to_string(self.map_add.clone())))
     }
 
     fn _to_string_poetic(&self) -> String {
-        format!(
-            "{} {} {} {} {}",
-            self.id,
-            self.name,
-            self.middle_name,
-            self.last_name,
-            format!("<{}>", Employee::map_to_string(self.map_add.clone()))
-        )
+        format!( "{} {} {} {} {}",  self.id,  self.name,  self.middle_name,  self.last_name,  format!("<{}>", Employee::map_to_string(self.map_add.clone()))        )
     }
 
     fn map_to_string(m: HashMap<ADDITIONAL_FIELDS, String>) -> String {
-        m.iter()
-            .map(|(key, value)| format!("{}: {}", key, value))
-            .collect::<Vec<String>>()
-            .join(", ")
+        m.iter().map(|(key, value)| format!("{}: {}", key, value)).collect::<Vec<String>>().join(", ")
     }
 }
 
 fn get_i32_from_value(value: &Value) -> Option<i32> {
-    match value {
-        Value::Number(n) => n.as_i64().map(|x| x as i32),
-        Value::String(s) => s.parse::<i32>().ok(),
-        _ => None,
-    }
+    match value {        Value::Number(n) => n.as_i64().map(|x| x as i32),        Value::String(s) => s.parse::<i32>().ok(),        _ => None,    }
 }
 
 fn codegen(data: String, filter_names: &[&str]) -> () {
@@ -378,9 +267,7 @@ fn codegen2(data: String, collabs: &[Collab]) {
     println!(");");
 }
 
-fn p(s: &Value) -> String {
-    s.to_string().replace("\"", "")
-}
+fn p(s: &Value) -> String {    s.to_string().replace("\"", "")}
 
 fn process_no_mobile(arr_list: Vec<String>, pack: Pack, filename_out: String) -> Pack {
     //filename_out :: Binary Pack
@@ -388,11 +275,7 @@ fn process_no_mobile(arr_list: Vec<String>, pack: Pack, filename_out: String) ->
     pack
 }
 
-async fn grub_data(
-    index_start: i32,
-    index_stop: i32,
-    filename_to_dump: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn grub_data(    index_start: i32,    index_stop: i32,    filename_to_dump: &str,) -> Result<(), Box<dyn std::error::Error>> {
     let init_buffer: Vec<Employee> = Vec::new();
     let mut pack = Pack::new(init_buffer);
     let client_reqwest: Client = reqwest::Client::new();
@@ -439,12 +322,7 @@ async fn grub_data(
     Ok(())
 }
 
-async fn grub_data_with_add_params(
-    index_start: i32,
-    index_stop: i32,
-    filename_to_dump: &str,
-    params: Vec<String>,
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn grub_data_with_add_params(    index_start: i32,    index_stop: i32,    filename_to_dump: &str,    params: Vec<String>,) -> Result<(), Box<dyn std::error::Error>> {
     let init_buffer: Vec<Employee> = Vec::new();
     let mut pack = Pack::new(init_buffer);
     let client_reqwest: Client = reqwest::Client::new();
@@ -498,18 +376,11 @@ async fn grub_data_with_add_params(
 }
 
 async fn try_grub() -> Result<(), Box<dyn std::error::Error>> {
-    // grub_data(1, 400, ADD_DUMP).await//DEFAULT_DUMP).await
-    let res = grub_data_with_add_params(
-        1,
-        450,
-        ADD_DUMP,
-        vec![
-            ADDITIONAL_FIELDS::WORK_POSITION.to_string(),
+    let res = grub_data_with_add_params(        1,        450,        ADD_DUMP,        vec![          ADDITIONAL_FIELDS::WORK_POSITION.to_string(),
             ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY.to_string(),
             ADDITIONAL_FIELDS::UF_DEPARTMENT.to_string(),
         ],
-    )
-    .await; //DEFAULT_DUMP).await;
+    ).await; //DEFAULT_DUMP).await;
 
     let pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
     println!("RESULT:: {}", pack.to_string("\n".to_string()));
@@ -519,8 +390,7 @@ async fn try_grub() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn send_message(msg: &str, id_to_send: i32) -> Result<(), Box<dyn std::error::Error>> {
-    http_Test::send_notification_to_user(reqwest::Client::new(), &id_to_send.to_string(), msg)
-        .await?;
+    http_Test::send_notification_to_user(reqwest::Client::new(), &id_to_send.to_string(), msg).await?;
     Ok(())
 }
 
@@ -535,9 +405,7 @@ async fn process_packed_no_mobile(filename: String) -> Result<(), Box<dyn std::e
         let id3 = get_index_via_fio_result(v.clone(), "USERS.init");
         let id = get_index_via_fio_result(v.clone(), "USERS.init").expect("error");
 
-        if id3 == None {
-            panic!("ID is null");
-        }
+        if id3 == None {            panic!("ID is null");        }
 
         println!("ID as string: '{}'", &id.to_string());
         println!("ID as string trimmed: '{}'", &id.to_string().trim());
@@ -564,14 +432,8 @@ async fn process(client_reqwest: Client) -> Result<(), Box<dyn std::error::Error
     let z19 = [("SECOND_NAME", "Петрович"), ("ID", "285")];
 
     let z20 = [("ID", "283"), ("PERSONAL_MOBILE", "+7927581-68-51")];
-    let z22 = [
-        ("ID", "283"),
-        ("WORK_POSITION", "Ведущий инженер-конструктор"),
-    ];
-    let z21 = [
-        ("ID", "285"),
-        ("WORK_POSITION", "Специалист по корпоративной безопасности"),
-    ];
+    let z22 = [        ("ID", "283"),        ("WORK_POSITION", "Ведущий инженер-конструктор"),    ];
+    let z21 = [        ("ID", "285"),        ("WORK_POSITION", "Специалист по корпоративной безопасности"),    ];
 
     let arr = vec![z1, z11, z12, z13, z14, z15, z16, z17, z18, z19];
 
@@ -589,9 +451,7 @@ async fn process(client_reqwest: Client) -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
-fn gen_batch_str(input: String, pack: Pack, _1c_info_file: String) -> String {
-    return "".to_string();
-}
+fn gen_batch_str(input: String, pack: Pack, _1c_info_file: String) -> String {    return "".to_string();}
 
 async fn getting_users(client_reqwest: Client) -> () {
     println!("=== Получение пользователя по ID 111111111111111111111===");
@@ -726,33 +586,18 @@ fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
     })
 }
 
-pub async fn get_last_id_for_collab(
-    collab: Collab,
-    client: Client,
-    webhook_url: &str,
-) -> anyhow::Result<u64> {
-    let json = http_Proc::fetch_recent_list_raw(client, webhook_url, json!({}))
-        .await
-        .context("Ошибка получения списка чатов")?;
-
-    let items = json["result"]["items"]
-        .as_array()
-        .context("Нет поля result.items в JSON")?;
-
+pub async fn get_last_id_for_collab(    collab: Collab,    client: Client,    webhook_url: &str,) -> anyhow::Result<u64> {
+    let json = http_Proc::fetch_recent_list_raw(client, webhook_url, json!({})).await.context("Ошибка получения списка чатов")?;
+    let items = json["result"]["items"].as_array().context("Нет поля result.items в JSON")?;
     let target_title = collab.title();
-
     for item in items {
         let item_type = item["type"].as_str().unwrap_or("");
         let title = item["title"].as_str().unwrap_or("");
-
         if item_type == "chat" && title == target_title {
-            let last_id = item["last_id"]
-                .as_u64()
-                .context("Поле last_id отсутствует или не число")?;
+            let last_id = item["last_id"]                .as_u64()                .context("Поле last_id отсутствует или не число")?;
             return Ok(last_id);
         }
     }
-
     anyhow::bail!("Чат с названием '{}' не найден", target_title);
 }
 
@@ -770,36 +615,18 @@ pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
     if let Some(messages) = value["result"]["messages"].as_array() {
         for msg in messages {
             let author_id = msg["author_id"].as_u64().unwrap_or(0);
-            if author_id == 0 {
-                continue;
-            }
+            if author_id == 0 {                continue;            }
             let id = msg["id"].as_u64().unwrap_or(0);
             let chat_id = msg["chat_id"].as_u64().unwrap_or(0);
-            let author_name = user_names
-                .get(&author_id)
-                .cloned()
-                .unwrap_or_else(|| format!("unknown_{}", author_id));
+            let author_name = user_names                .get(&author_id)                .cloned()                .unwrap_or_else(|| format!("unknown_{}", author_id));
             let text = msg["text"].as_str().unwrap_or("").to_string();
             let uuid = msg["uuid"].as_str().map(|s| s.to_string());
-            result.push(ExtractedMessage {
-                author_name,
-                text,
-                uuid,
-                id,
-                chat_id,
-            });
+            result.push(ExtractedMessage {                author_name,                text,                uuid,                id,                chat_id,            });
         }
     }
     result
 }
 
-// public void testGetIndexViaFIO() {
-//     java.util.List<String> javaList = java.util.Arrays.asList("Тестов","Тест");
-//     // Используем asScala из scala.jdk.javaapi.CollectionConverters
-//     List<String> scalaList = JavaConverters.asScalaIteratorConverter(javaList.iterator())
-//             .asScala()
-//             .toList();        assertEquals(Integer.valueOf(298), Integer.valueOf(Bitrix.getIndexViaFIO(scalaList, "USERS.init" )));
-// }
 #[cfg(test)]
 mod tests {
 
@@ -812,31 +639,18 @@ mod tests {
 
     #[test]
     fn test_pperation() {
-        let operation: Operation = Operation::new(
-            12,
-            Some((
-                ADDITIONAL_FIELDS::WORK_POSITION.to_string(),
-                "Главный гитарист".to_string(),
-            ))
-            .into_iter()
-            .collect(),
-        );
+        let operation: Operation = Operation::new(12,Some((ADDITIONAL_FIELDS::WORK_POSITION.to_string(),"Главный гитарист".to_string(),)).into_iter().collect(),;
         let to_str = operation.to_string();
         println!("{}", to_str);
         assert_eq!(true, to_str.contains("id::12, params:"));
     }
 
     #[test]
-    fn test_batch_func_gen() {
-        let input = "Курьянов Владимир Владимирович: должность сделать как в 1С";
-    }
+    fn test_batch_func_gen() {        let input = "Курьянов Владимир Владимирович: должность сделать как в 1С";    }
 
     #[test]
     fn test_get_enum() {
-        assert_eq!(
-            get_enum__by_string("WORK_POSITION"),
-            ADDITIONAL_FIELDS::WORK_POSITION
-        )
+        assert_eq!(            get_enum__by_string("WORK_POSITION"),            ADDITIONAL_FIELDS::WORK_POSITION        )
     }
 
     #[test]
@@ -854,14 +668,10 @@ mod tests {
     }
 
     #[test]
-    fn test_add() {
-        assert_eq!(add(1, 2), 3);
-    }
+    fn test_add() {        assert_eq!(add(1, 2), 3);    }
 
     #[test]
-    fn test_bad_add() {
-        assert_eq!(bad_add(1, 2), -1);
-    }
+    fn test_bad_add() {        assert_eq!(bad_add(1, 2), -1);    }
 
     #[test]
     fn test_read_str() {
@@ -882,13 +692,7 @@ mod tests {
 
     #[test]
     fn test_ser() {
-        let emp = Employee::new(
-            1,
-            "John Doe".to_string(),
-            "DOE".to_string(),
-            "DOE".to_string(),
-            HashMap::new(),
-        );
+        let emp = Employee::new(1,  "John Doe".to_string(),  "DOE".to_string(),  "DOE".to_string(),  HashMap::new(),  );
         emp.serialize_to_file("employee.bin");
         println!("Data serialized to employee.bin");
         let emp2 = Employee::deserialize_from_file("employee.bin").expect("shit");
@@ -898,20 +702,8 @@ mod tests {
 
     #[test]
     fn test_sr_dsr() {
-        let emp1 = Employee::new(
-            1,
-            "John Doe".to_string(),
-            "DOE".to_string(),
-            "DOE".to_string(),
-            HashMap::new(),
-        );
-        let emp2 = Employee::new(
-            1,
-            "John Doe".to_string(),
-            "DOE".to_string(),
-            "DOE".to_string(),
-            HashMap::new(),
-        );
+        let emp1 = Employee::new(1,"John Doe".to_string(),"DOE".to_string(),"DOE".to_string(),HashMap::new(),        );
+        let emp2 = Employee::new(1,"John Doe".to_string(),"DOE".to_string(),"DOE".to_string(),HashMap::new(),        );
         let pack_filename = "pack.bin";
         let emp_Vecs = vec![emp1, emp2];
         let pack = Pack::new(emp_Vecs);
@@ -924,154 +716,63 @@ mod tests {
 
     #[test]
     fn test_contains_pack() {
-        let emp1 = Employee::new(
-            1,
-            "Michael".to_string(),
-            "Snoyman".to_string(),
-            "".to_string(),
-            HashMap::new(),
-        );
-        let emp2 = Employee::new(
-            2,
-            "Roman".to_string(),
-            "Pastushkov".to_string(),
-            "DOE".to_string(),
-            HashMap::new(),
-        );
+        let emp1 = Employee::new(1,"Michael".to_string(),"Snoyman".to_string(),"".to_string(),HashMap::new(),        );
+        let emp2 = Employee::new(2,"Roman".to_string(),"Pastushkov".to_string(),"DOE".to_string(),HashMap::new(),        );
         let pack_filename = "pack.bin";
         let emp_Vecs = vec![emp1, emp2];
         let mut pack = Pack::new(emp_Vecs);
-        let emp3 = Employee::new(
-            1,
-            "Michael".to_string(),
-            "Snoyman".to_string(),
-            "".to_string(),
-            HashMap::new(),
-        );
-        let emp4 = Employee::new(
-            99,
-            "Michael".to_string(),
-            "Snoyman".to_string(),
-            "".to_string(),
-            HashMap::new(),
-        );
-        let emp5 = Employee::new(
-            99,
-            "Michael2".to_string(),
-            "Snoyman".to_string(),
-            "".to_string(),
-            HashMap::new(),
-        );
-        let emp6 = Employee::new(
-            1,
-            "Michael2".to_string(),
-            "Snoyman".to_string(),
-            "".to_string(),
-            HashMap::new(),
-        );
+        let emp3 = Employee::new(1,"Michael".to_string(),"Snoyman".to_string(),"".to_string(),HashMap::new(),        );
+        let emp4 = Employee::new(99,"Michael".to_string(),"Snoyman".to_string(),"".to_string(),HashMap::new(),);
+        let emp5 = Employee::new(99,"Michael2".to_string(),"Snoyman".to_string(),"".to_string(),HashMap::new(),);
+        let emp6 = Employee::new(1,"Michael2".to_string(),"Snoyman".to_string(),"".to_string(),HashMap::new(),);
 
-        let res = pack.is_contains(&emp3);
-        assert_eq!(true, res);
+        let res = pack.is_contains(&emp3);        assert_eq!(true, res);
 
-        let res2 = pack.is_contains(&emp4);
-        assert_eq!(true, res2);
+        let res2 = pack.is_contains(&emp4);        assert_eq!(true, res2);
 
-        let res3 = pack.is_contains(&emp5);
-        assert_eq!(false, res3);
+        let res3 = pack.is_contains(&emp5);        assert_eq!(false, res3);
 
-        let res4 = pack.is_contains(&emp6);
-        assert_eq!(true, res4);
-
+        let res4 = pack.is_contains(&emp6);        assert_eq!(true, res4);
         println!("{}", pack.to_string("\n".to_string()))
     }
 
     #[test]
     fn test_delete_pack() {
-        let emp1 = Employee::new(
-            1,
-            "Michael".to_string(),
-            "Snoyman".to_string(),
-            "".to_string(),
-            HashMap::new(),
-        );
-        let emp2 = Employee::new(
-            2,
-            "Roman".to_string(),
-            "Pastushkov".to_string(),
-            "DOE".to_string(),
-            HashMap::new(),
-        );
+        let emp1 = Employee::new(1,"Michael".to_string(),"Snoyman".to_string(),"".to_string(),HashMap::new(),        );
+        let emp2 = Employee::new(2,"Roman".to_string(),"Pastushkov".to_string(),"DOE".to_string(),HashMap::new(),        );
         let emp_Vecs = vec![emp1, emp2];
         let mut pack = Pack::new(emp_Vecs);
-        let emp3 = Employee::new(
-            1,
-            "Michael".to_string(),
-            "Snoyman".to_string(),
-            "".to_string(),
-            HashMap::new(),
-        );
+        let emp3 = Employee::new(1,"Michael".to_string(),"Snoyman".to_string(),"".to_string(),HashMap::new(),);
 
-        let res = pack.is_contains(&emp3);
-        assert_eq!(true, res);
+        let res = pack.is_contains(&emp3);        assert_eq!(true, res);
 
         pack.remove(&emp3);
-
         let res2 = pack.is_contains(&emp3);
         assert_eq!(false, res2);
     }
 
     #[test]
     fn test_get_id() {
-        let emp1 = Employee::new(
-            1,
-            "Michaelen".to_string(),
-            "Snoyman".to_string(),
-            "".to_string(),
-            HashMap::new(),
-        );
-        let emp2 = Employee::new(
-            2,
-            "Роман".to_string(),
-            "Пастушков".to_string(),
-            "DOE".to_string(),
-            HashMap::new(),
-        );
-        let emp3 = Employee::new(
-            1,
-            "Michael".to_string(),
-            "Snoyman".to_string(),
-            "".to_string(),
-            HashMap::new(),
-        );
+        let emp1 = Employee::new(1,"Michaelen".to_string(),"Snoyman".to_string(),"".to_string(),HashMap::new(),        );
+        let emp2 = Employee::new(2,"Роман".to_string(),"Пастушков".to_string(),"DOE".to_string(),HashMap::new(),        );
+        let emp3 = Employee::new(1,"Michael".to_string(),"Snoyman".to_string(),"".to_string(),HashMap::new(),        );
         let emp_Vecs = vec![emp1, emp2, emp3];
         let mut pack = Pack::new(emp_Vecs);
-        assert_eq!(
-            2,
-            pack.get_id_by_fi("Пастушков Роман".to_string())
-                .expect("shit")
-        );
+        assert_eq!(2,pack.get_id_by_fi("Пастушков Роман".to_string()).expect("shit"));
     }
 
     #[test]
     fn test_get_id2() {
         let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
         println!("{}", pack.to_string("\n".to_string()));
-        assert_eq!(
-            1,
-            pack.get_id_by_fi("Цыбульский Сергей".to_string())
-                .expect("shit")
-        );
+        assert_eq!(            1,            pack.get_id_by_fi("Цыбульский Сергей".to_string())                .expect("shit")        );
     }
 
     #[test]
     fn test_get_id2_poetic() {
         let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
         println!("{}", pack.to_string_poetic("\n".to_string()));
-        assert_eq!(
-            1,
-            pack.get_id_by_fi("Цыбульский Сергей".to_string())
-                .expect("shit")
-        );
+        assert_eq!(            1,            pack.get_id_by_fi("Цыбульский Сергей".to_string())                .expect("shit")        );
     }
 
     #[test]
@@ -1098,9 +799,7 @@ mod tests {
 
         for n in 0..10000 {
             let dep = find_dep_name_by_id(n, &strs).unwrap_or("efes".to_string());
-            if dep != "efes" {
-                println!("{}:{}\n", n, dep);
-            }
+            if dep != "efes" {                println!("{}:{}\n", n, dep);            }
         }
     }
 
@@ -1114,13 +813,9 @@ mod tests {
     const WEBHOOK_TEST_BASE__: &str = "webhook.test";
     const WEBHOOCK_PROD_CHAT__: &str = "webhook.prod";
 
-    fn webhook_base_test() -> String {
-        http_Proc::get_webhook_(WEBHOOK_TEST_BASE__)
-    }
+    fn webhook_base_test() -> String {        http_Proc::get_webhook_(WEBHOOK_TEST_BASE__)    }
 
-    fn webhook_base_prod() -> String {
-        http_Proc::get_webhook_(WEBHOOCK_PROD_CHAT__)
-    }
+    fn webhook_base_prod() -> String {        http_Proc::get_webhook_(WEBHOOCK_PROD_CHAT__)    }
 
     #[tokio::test]
     async fn test_pull_messages() {
@@ -1128,28 +823,12 @@ mod tests {
         let limit = 120;
         let out = "./out7.js";
         let Client = Client::new();
-        let dialog_id = "chat8";
-        http_Proc::pull_messages(
-            Client::new(),
-            webhook_base_test().as_str(),
-            dialog_id,
-            id,
-            limit,
-            out,
-        )
-        .await;
+        let dialog_id = "chat8";  
+        http_Proc::pull_messages(Client::new(),webhook_base_test().as_str(),dialog_id,id,limit,out,).await;
     }
 
     #[tokio::test]
-    async fn test_fetch_recent_chats() {
-        let _ = http_Proc::fetch_recent_list(
-            Client::new(),
-            webhook_base_test().as_str(),
-            json!({}),
-            "recent_chats.js",
-        )
-        .await;
-    }
+    async fn test_fetch_recent_chats() {let _ = http_Proc::fetch_recent_list(Client::new(),webhook_base_test().as_str(),json!({}),"recent_chats.js",).await;}
 
     #[tokio::test]
     async fn test_pull_messages_prod() {
@@ -1157,223 +836,115 @@ mod tests {
         let limit = 120;
         let out = "./out7.js";
         let chatid = CHATS_ID.get(&Collab::OKLAND).unwrap().to_string();
-        http_Proc::pull_messages(
-            Client::new(),
-            webhook_base_prod().as_str(),
-            &chatid,
-            id,
-            limit,
-            out,
-        )
-        .await;
+        http_Proc::pull_messages(Client::new(),webhook_base_prod().as_str(),&chatid,id,limit,out,        ).await;
     }
 
     #[tokio::test]
     async fn test_pull_messages_prod_okland() {
-        let id =
-            get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str())
-                .await
-                .unwrap();
+        let id =get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str()).await.unwrap();
         let limit = 120;
         let out = format!("{}_last{}.js", OKLAND, limit);
-        let _ = http_Proc::pull_messages(
-            Client::new(),
-            webhook_base_prod().as_str(),
-            CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"), // <-- исправлено
-            id as i64,
-            limit,
-            &out,
-        )
-        .await;
+        let _ = http_Proc::pull_messages(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"),  id as i64,limit,&out,).await;
     }
 
     #[tokio::test]
-    async fn test_fetch_recent_chats_prod() {
-        let _ = http_Proc::fetch_recent_list(
-            Client::new(),
-            webhook_base_prod().as_str(),
-            json!({}),
-            "recent_chats_prod.js",
-        )
-        .await;
-    }
+    async fn test_fetch_recent_chats_prod() {        let _ = http_Proc::fetch_recent_list( Client::new(),webhook_base_prod().as_str(),json!({}),"recent_chats_prod.js",).await;}
 
     #[tokio::test]
     async fn test_main() {
-        let js =
-            fetch_recent_list_raw(Client::new(), webhook_base_prod().as_str(), json!({})).await;
-
+        let js =            fetch_recent_list_raw(Client::new(), webhook_base_prod().as_str(), json!({})).await;
         match js {
             Ok(js) => {
                 println!("RAW JSON::{}", js);
                 let res = http_Parser::print_chats(js.to_string());
                 assert_eq!(0, res);
             }
-
-            Err(e) => {
-                panic!("SHIT HAPPENS: {}", e)
-            }
+            Err(e) => {                panic!("SHIT HAPPENS: {}", e)           }
         }
     }
 
     #[tokio::test]
     async fn test_codegen() {
-        let js = http_Proc::fetch_recent_list_raw(
-            Client::new(),
-            webhook_base_prod().as_str(),
-            json!({}),
-        )
-        .await;
+        let js = http_Proc::fetch_recent_list_raw(Client::new(),webhook_base_prod().as_str(),json!({}),).await;
 
         match js {
             Ok(value) => {
                 let pretty = serde_json::to_string_pretty(&value);
                 match pretty {
-                    Ok(nice_str) => {
-                        println!("GENNED:\n{}\n\n\n\n", nice_str);
-
-                        codegen2(nice_str, VECTORS_COLLABS);
-                    }
-                    Err(e) => {
-                        panic!("SHIT HAPPENS: {}", e)
-                    }
+                    Ok(nice_str) => {println!("GENNED:\n{}\n\n\n\n", nice_str);codegen2(nice_str, VECTORS_COLLABS);}
+                    Err(e) => {panic!("SHIT HAPPENS: {}", e)}
                 }
             }
 
-            Err(e) => {
-                panic!("SHIT HAPPENS22222: {}", e)
-            }
+            Err(e) => {                panic!("SHIT HAPPENS22222: {}", e)}
         }
     }
 
     #[tokio::test]
     async fn test_pull_messages_prod_okland2() {
-        let id =
-            get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str())
-                .await
-                .unwrap();
+        let id =            get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
         println!("\n\n\n\nLAST ID IN OKLAND:: {}\n\n\n", id);
         let limit = 120;
 
-        let json_value = http_Proc::pull_messages_raw(
-            Client::new(),
-            webhook_base_prod().as_str(),
-            CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"),
-            (id + 2) as i64, // <=============== pull with last!
-            limit,
-        )
-        .await
-        .unwrap();
+        let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"),
+            (id + 2) as i64,  limit,        ).await.unwrap();
 
         let messages = extract_messages_from_json(&json_value);
         println!("Извлечено {} сообщений", messages.len());
-        for msg in messages.iter() {
-            //.take(5) {
-            println!("{:?}", msg);
-        }
+        for msg in messages.iter() {                     println!("{:?}", msg);        }
 
-        // Если нужно сохранить только извлечённые данные в файл:
         let out_extracted = format!("{}_last{}_extracted.json", "OKLAND", limit);
         let json_output = serde_json::to_string_pretty(&messages).unwrap();
         std::fs::write(out_extracted, json_output).unwrap();
 
-        let _ = std::fs::write(
-            format!("{}_last{}_extracted_FULL.json", "OKLAND", limit),
-            serde_json::to_string_pretty(&json_value).unwrap(),
-        );
+        let _ = std::fs::write(            format!("{}_last{}_extracted_FULL.json", "OKLAND", limit),serde_json::to_string_pretty(&json_value).unwrap(),        );
     }
 
     #[tokio::test]
     async fn test_pull_messages_prod_Scandinavia2() {
         let current_collab = Collab::SCANDINAVIA;
         let title = current_collab.title();
-        let id =
-            get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str())
-                .await
-                .unwrap();
+        let id =            get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
         println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
         let limit = 120;
 
-        let json_value = http_Proc::pull_messages_raw(
-            Client::new(),
-            webhook_base_prod().as_str(),
-            CHATS_ID
-                .get(&current_collab)
-                .expect(&format!("{} not found", title)),
-            (id + 1) as i64, // <=============== pull with last!
-            limit,
-        )
-        .await
-        .unwrap();
+        let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),(id + 1) as i64, // <=============== pull with last!
+            limit,).await.unwrap();
 
         let messages = extract_messages_from_json(&json_value);
         println!("Извлечено {} сообщений", messages.len());
-        for msg in messages.iter() {
-            //.take(5) {
-            println!("{:?}", msg);
-        }
+        for msg in messages.iter() {               println!("{:?}", msg);        }
 
-        // Если нужно сохранить только извлечённые данные в файл:
         let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
         let json_output = serde_json::to_string_pretty(&messages).unwrap();
         std::fs::write(out_extracted, json_output).unwrap();
 
-        let _ = std::fs::write(
-            format!(
-                "{}_last{}_extracted_FULL.json",
-                current_collab.title(),
-                limit
-            ),
-            serde_json::to_string_pretty(&json_value).unwrap(),
-        );
+        let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json",current_collab.title(),limit),serde_json::to_string_pretty(&json_value).unwrap(),);
     }
 
     #[tokio::test]
     async fn test_pull_messages_prod_OWN() {
         let current_collab = Collab::OWN;
         let title = current_collab.title();
-        let id =
-            get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str())
-                .await
-                .unwrap();
+        let id =get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
         println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
         let limit = 120;
 
-        let json_value = http_Proc::pull_messages_raw(
-            Client::new(),
-            webhook_base_prod().as_str(),
-            CHATS_ID
-                .get(&current_collab)
-                .expect(&format!("{} not found", title)),
-            (id + 1) as i64, // <=============== pull with last!
-            limit,
-        )
-        .await
-        .unwrap();
+        let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab)
+                .expect(&format!("{} not found", title)),(id + 1) as i64,limit,).await.unwrap();
 
         let messages = extract_messages_from_json(&json_value);
         println!("Извлечено {} сообщений", messages.len());
-        for msg in messages.iter() {
-            //.take(5) {
-            println!("{:?}", msg);
-        }
+        for msg in messages.iter() {                    println!("{:?}", msg);        }
 
-        // Если нужно сохранить только извлечённые данные в файл:
         let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
         let json_output = serde_json::to_string_pretty(&messages).unwrap();
         std::fs::write(out_extracted, json_output).unwrap();
 
-        let _ = std::fs::write(
-            format!(
-                "{}_last{}_extracted_FULL.json",
-                current_collab.title(),
-                limit
-            ),
-            serde_json::to_string_pretty(&json_value).unwrap(),
-        );
+        let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json",current_collab.title(),limit),serde_json::to_string_pretty(&json_value).unwrap(),);
     }
 }
 
