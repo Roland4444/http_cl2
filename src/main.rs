@@ -49,28 +49,13 @@ static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(|| {
         .collect()});
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-enum ADDITIONAL_FIELDS {
-    WORK_POSITION,
-    PERSONAL_BIRTHDAY,
-    UF_DEPARTMENT,
-}
+enum ADDITIONAL_FIELDS {    WORK_POSITION,    PERSONAL_BIRTHDAY,    UF_DEPARTMENT,}
 
 impl ADDITIONAL_FIELDS {
-    fn all_values() -> Vec<Self> {
-        vec![
-            ADDITIONAL_FIELDS::WORK_POSITION,
-            ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY,
-            ADDITIONAL_FIELDS::UF_DEPARTMENT,
-        ]
-    }
+    fn all_values() -> Vec<Self> {vec![ADDITIONAL_FIELDS::WORK_POSITION,ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY,ADDITIONAL_FIELDS::UF_DEPARTMENT,]    }
 
     fn to_string(&self) -> String {
-        match self {
-            ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",
-            ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => "PERSONAL_BIRTHDAY",
-            ADDITIONAL_FIELDS::UF_DEPARTMENT => "UF_DEPARTMENT",
-        }
-        .to_string()
+        match self {ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => "PERSONAL_BIRTHDAY",ADDITIONAL_FIELDS::UF_DEPARTMENT => "UF_DEPARTMENT",}.to_string()
     }
 }
 
@@ -103,7 +88,7 @@ fn deserialize_from_file<T: DeserializeOwned>(
 ) -> Result<T, Box<dyn std::error::Error>> {   
     let mut file: File = File::open(filename)?;   
     let mut buffer: Vec<u8> = Vec::new();   
-     file.read_to_end(&mut buffer)?;
+    file.read_to_end(&mut buffer)?;
     let decoded: T = bincode::deserialize(&buffer)?;
     Ok(decoded)
 }
@@ -159,10 +144,7 @@ impl Pack {
 
     fn to_string(&self, ender: String) -> String {
         let mut result = String::from("");
-        for emp in &self.pack {
-            result.push_str(&emp._to_string());
-            result.push_str(&ender);
-        }
+        for emp in &self.pack {result.push_str(&emp._to_string());result.push_str(&ender);}
         result
     }
 
@@ -208,22 +190,14 @@ impl Employee {
     fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>> {        deserialize_from_file(filename)    }
 
 
-    fn _to_string(&self) -> String {
-        format!(            "{} {} {} {} {}",            self.id,            self.last_name,            self.name,            self.middle_name,            format!("<{}>", Employee::map_to_string(self.map_add.clone())))
-    }
+    fn _to_string(&self) -> String {format!("{} {} {} {} {}",self.id,self.last_name,self.name,self.middle_name,format!("<{}>", Employee::map_to_string(self.map_add.clone())))}
 
-    fn _to_string_poetic(&self) -> String {
-        format!( "{} {} {} {} {}",  self.id,  self.name,  self.middle_name,  self.last_name,  format!("<{}>", Employee::map_to_string(self.map_add.clone()))        )
-    }
+    fn _to_string_poetic(&self) -> String {format!( "{} {} {} {} {}",  self.id,  self.name,  self.middle_name,  self.last_name,  format!("<{}>", Employee::map_to_string(self.map_add.clone())))}
 
-    fn map_to_string(m: HashMap<ADDITIONAL_FIELDS, String>) -> String {
-        m.iter().map(|(key, value)| format!("{}: {}", key, value)).collect::<Vec<String>>().join(", ")
-    }
+    fn map_to_string(m: HashMap<ADDITIONAL_FIELDS, String>) -> String {m.iter().map(|(key, value)| format!("{}: {}", key, value)).collect::<Vec<String>>().join(", ")}
 }
 
-fn get_i32_from_value(value: &Value) -> Option<i32> {
-    match value {        Value::Number(n) => n.as_i64().map(|x| x as i32),        Value::String(s) => s.parse::<i32>().ok(),        _ => None,    }
-}
+fn get_i32_from_value(value: &Value) -> Option<i32> {match value {Value::Number(n) => n.as_i64().map(|x| x as i32),Value::String(s) => s.parse::<i32>().ok(),_ => None,    }}
 
 fn codegen(data: String, filter_names: &[&str]) -> () {
     let v: Value = serde_json::from_str(&data).expect("ERROR PARCING");
@@ -231,13 +205,8 @@ fn codegen(data: String, filter_names: &[&str]) -> () {
         for item in items {
             let title = item["title"].as_str().unwrap_or("");
             let id = item["id"].as_str().unwrap_or("");
-            if filter_names.contains(&title) {
-                println!("{:?} => {:?}, ", title, id)
-            }
-        }
-    } else {
-        eprint!("Не найден массив items")
-    }
+            if filter_names.contains(&title) {                println!("{:?} => {:?}, ", title, id)            } }} 
+    else {        eprint!("Не найден массив items")    }
 }
 
 fn codegen2(data: String, collabs: &[Collab]) {
@@ -251,18 +220,13 @@ fn codegen2(data: String, collabs: &[Collab]) {
                 let id = item["id"].as_str().unwrap_or("");
                 title_to_id.insert(title, id);
             }
-        }
-    } else {
-        eprintln!("Не найден массив items");
-        return;
-    }
+        }} 
+    else {        eprintln!("Не найден массив items");        return;}
 
     println!("const CHATS_ID: std::collections::HashMap<Collab, &str> = hashmap!(");
     for collab in collabs {
         let title = collab.title(); // &str
-        if let Some(&id) = title_to_id.get(title) {
-            println!("    Collab::{:?} => {:?},", collab, id);
-        }
+        if let Some(&id) = title_to_id.get(title) {            println!("    Collab::{:?} => {:?},", collab, id);        }
     }
     println!(");");
 }
@@ -299,15 +263,8 @@ async fn grub_data(    index_start: i32,    index_stop: i32,    filename_to_dump
                             println!("Должность: {}", work_position);
                             println!("---");
                             let number_id = get_i32_from_value(id).expect("shit");
-                            let emp = Employee::new(
-                                number_id,
-                                p(name),
-                                p(last_name),
-                                p(second_name),
-                                HashMap::from([(
-                                    ADDITIONAL_FIELDS::WORK_POSITION,
-                                    work_position.to_string(),
-                                )]),
+                            let emp = Employee::new(number_id,p(name),p(last_name),p(second_name),
+                            HashMap::from([(ADDITIONAL_FIELDS::WORK_POSITION,work_position.to_string(),)]),
                             );
                             pack.push_and_update(emp);
                         }
@@ -355,13 +312,7 @@ async fn grub_data_with_add_params(    index_start: i32,    index_stop: i32,    
 
                             println!("---");
                             let number_id = get_i32_from_value(id).expect("shit");
-                            let emp = Employee::new(
-                                number_id,
-                                p(name),
-                                p(last_name),
-                                p(second_name),
-                                map22,
-                            );
+                            let emp = Employee::new(number_id,p(name),p(last_name),p(second_name),map22,);
                             pack.push_and_update(emp);
                         }
                     }
@@ -405,7 +356,7 @@ async fn process_packed_no_mobile(filename: String) -> Result<(), Box<dyn std::e
         let id3 = get_index_via_fio_result(v.clone(), "USERS.init");
         let id = get_index_via_fio_result(v.clone(), "USERS.init").expect("error");
 
-        if id3 == None {            panic!("ID is null");        }
+        if id3 == None {panic!("ID is null");}
 
         println!("ID as string: '{}'", &id.to_string());
         println!("ID as string trimmed: '{}'", &id.to_string().trim());
@@ -499,45 +450,29 @@ async fn getting_users(client_reqwest: Client) -> () {
     }
 }
 
-fn compare(fromVik: String, fromDump: String) -> bool {
-    return false;
-
-}
+fn compare(fromVik: String, fromDump: String) -> bool {    return false;}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_reqwest: Client = reqwest::Client::new();
-
-
-    let server_handle = tokio::spawn(async {
-        if let Err(e) = http_Proc::spawn().await {
-            eprintln!("Server error: {}", e);
-        }
-    });
+    let server_handle = tokio::spawn(async {if let Err(e) = http_Proc::spawn().await {eprintln!("Server error: {}", e);}});
     try_grub().await;
     loop {
         println!("Main thread works...");
         thread::sleep(Duration::from_secs(1));
     }
-
     //  try_grub().await
     Ok(())
 }
 
-pub fn add(a: i32, b: i32) -> i32 {
-    a + b
-}
+pub fn add(a: i32, b: i32) -> i32 {    a + b}
 
-pub fn bad_add(a: i32, b: i32) -> i32 {
-    a - b
-}
+pub fn bad_add(a: i32, b: i32) -> i32 {    a - b}
 
 pub fn split_to_fi(input: String) -> Vec<String> {
     let mut res: Vec<String> = Vec::new();
     let splitted = input.split_whitespace();
-    for _i in splitted {
-        res.push(_i.to_string());
-    }
+    for _i in splitted {        res.push(_i.to_string());    }
     res.push(input);
     res
 }
@@ -550,7 +485,6 @@ fn write_js_to_file(filename: &str, json: Value) -> Result<(), Box<dyn std::erro
 
 async fn get_tasks_to_file() -> Result<(), Box<dyn std::error::Error>> {
     let client_reqwest: Client = reqwest::Client::new();
-    //let value = http_Test::read_tasks2(&client_reqwest).await?;
     let value = http_Test::read_tasks2(&client_reqwest).await?;
     write_js_to_file("dump2.js", value)
 }
@@ -560,21 +494,13 @@ fn get_index_via_fio_result(fio: Vec<String>, filename: &str) -> Option<i32> {
     for item in lines.iter() {
         println!("current string {}", item);
         if fio.iter().all(|s| item.contains(s)) {
-            if let Some(space_index) = item.find(' ') {
-                if space_index > 0 {
-                    if let Ok(num) = item[..space_index].parse::<i32>() {
-                        return Some(num);
-                    }
-                }
-            }
+            if let Some(space_index) = item.find(' ') {if space_index > 0 {if let Ok(num) = item[..space_index].parse::<i32>() {return Some(num);}}}
         }
     }
     None
 }
 
-fn synteka() -> String {
-    return http_Test::get_webhook_(SYNTEKA_TOKEN_FILE);
-}
+fn synteka() -> String {    return http_Test::get_webhook_(SYNTEKA_TOKEN_FILE);}
 
 fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
     let full = lines.concat();
@@ -604,11 +530,7 @@ pub async fn get_last_id_for_collab(    collab: Collab,    client: Client,    we
 pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
     let mut user_names = HashMap::new();
     if let Some(users) = value["result"]["users"].as_array() {
-        for user in users {
-            if let (Some(id), Some(name)) = (user["id"].as_u64(), user["name"].as_str()) {
-                user_names.insert(id, name.to_string());
-            }
-        }
+        for user in users {if let (Some(id), Some(name)) = (user["id"].as_u64(), user["name"].as_str()) {user_names.insert(id, name.to_string());}}
     }
 
     let mut result = Vec::new();
@@ -649,9 +571,7 @@ mod tests {
     fn test_batch_func_gen() {        let input = "Курьянов Владимир Владимирович: должность сделать как в 1С";    }
 
     #[test]
-    fn test_get_enum() {
-        assert_eq!(            get_enum__by_string("WORK_POSITION"),            ADDITIONAL_FIELDS::WORK_POSITION        )
-    }
+    fn test_get_enum() {        assert_eq!(            get_enum__by_string("WORK_POSITION"),            ADDITIONAL_FIELDS::WORK_POSITION        )    }
 
     #[test]
     fn test_map() {
@@ -727,11 +647,8 @@ mod tests {
         let emp6 = Employee::new(1,"Michael2".to_string(),"Snoyman".to_string(),"".to_string(),HashMap::new(),);
 
         let res = pack.is_contains(&emp3);        assert_eq!(true, res);
-
         let res2 = pack.is_contains(&emp4);        assert_eq!(true, res2);
-
         let res3 = pack.is_contains(&emp5);        assert_eq!(false, res3);
-
         let res4 = pack.is_contains(&emp6);        assert_eq!(true, res4);
         println!("{}", pack.to_string("\n".to_string()))
     }
