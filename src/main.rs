@@ -561,7 +561,7 @@ mod tests {
 
     #[test]
     fn test_pperation() {
-        let operation: Operation = Operation::new(12,Some((ADDITIONAL_FIELDS::WORK_POSITION.to_string(),"Главный гитарист".to_string(),)).into_iter().collect(),;
+        let operation: Operation = Operation::new(12,Some((ADDITIONAL_FIELDS::WORK_POSITION.to_string(),"Главный гитарист".to_string(),)).into_iter().collect(),);
         let to_str = operation.to_string();
         println!("{}", to_str);
         assert_eq!(true, to_str.contains("id::12, params:"));
