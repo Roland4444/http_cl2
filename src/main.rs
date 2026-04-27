@@ -19,96 +19,13 @@ use anyhow::Context;
 use once_cell::sync::Lazy;
 use std::thread;
 use std::time::Duration;
+use common::*;
 
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
 const SYNTEKA_TOKEN_FILE: &str = "synteka";
 
-#[derive(Debug, Serialize)]
-pub struct ExtractedMessage {
-    pub author_name: String,
-    pub text: String,
-    pub uuid: Option<String>,
-    pub id: u64,
-    pub chat_id: u64,
-}
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-enum Collab {
-    PAYMENTS,
-    OLIVIA,
-    BABEFA,
-    OKLAND,
-    RED,
-    TETRIS,
-    SCANDINAVIA,
-    KUIB,
-    POLZ,
-    ZVEZD,
-    SKY,
-    OWN,
-}
-
-impl Collab {
-    fn title(&self) -> &'static str {
-        match self {
-            Collab::PAYMENTS => "Платежи",
-            Collab::OLIVIA => "ОЛИВИЯ МАКСАКОВА",
-            Collab::BABEFA => "ЖК Бабефа",
-            Collab::OKLAND => "ОКЛАНД РЫБАЦКАЯ",
-            Collab::RED => "РЭД Грузинская",
-            Collab::TETRIS => "ЖК Тетрис на Керченской",
-            Collab::SCANDINAVIA => "Скандинавия - Моздокская",
-            Collab::KUIB => "Куйбышева",
-            Collab::POLZ => "Ползунова",
-            Collab::ZVEZD => "Звездная",
-            Collab::SKY => "СКАЙ ИГАРСКАЯ",
-            Collab::OWN => "OWN",
-        }
-    }
-}
-
-const VECTORS_COLLABS: &[Collab] = &[
-    Collab::PAYMENTS,
-    Collab::OLIVIA,
-    Collab::BABEFA,
-    Collab::OKLAND,
-    Collab::RED,
-    Collab::TETRIS,
-    Collab::SCANDINAVIA,
-    Collab::KUIB,
-    Collab::POLZ,
-    Collab::ZVEZD,
-    Collab::SKY,
-    Collab::OWN,
-];
-
-const PAYMENTS: &str = "Платежи";
-const OLIVIA: &str = "ОЛИВИЯ МАКСАКОВА";
-const BABEFA: &str = "ЖК Бабефа";
-const OKLAND: &str = "ОКЛАНД РЫБАЦКАЯ";
-const RED: &str = "РЭД Грузинская";
-const TETRIS: &str = "ЖК Тетрис на Керченской";
-const SCANDINAVIA: &str = "Скандинавия - Моздокская";
-const KUIB: &str = "Куйбышева";
-const POLZ: &str = "Ползунова";
-const ZVEZD: &str = "Звездная";
-const SKY: &str = "СКАЙ ИГАРСКАЯ";
-const OWN: &str = "OWN";
-
-const VECTORS_COLLABS_____: &[&str] = &[
-    OLIVIA,
-    BABEFA,
-    OKLAND,
-    RED,
-    TETRIS,
-    SCANDINAVIA,
-    KUIB,
-    POLZ,
-    ZVEZD,
-    SKY,
-    OWN,
-];
 macro_rules! hashmap {
     ($($key: expr => $val: expr), *) => {
         {
@@ -140,7 +57,7 @@ static CHATS_ID: Lazy<HashMap<Collab, &str>> = Lazy::new(|| {
 static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(|| {
     CHATS_ID
         .iter()
-        .map(|(collab, &id_str)| {
+        .map(|(collab, &id_str): (&Collab, &&str)| {
             let num = id_str
                 .strip_prefix("chat")
                 .unwrap_or(id_str)
@@ -380,9 +297,6 @@ impl Employee {
         deserialize_from_file(filename)
     }
 
-    //  fn _to_string(&self) -> String{
-    //     format!("{} {} {} {} {}", self.id, self.name, self.middle_name, self.last_name, format!("<{}>", Employee::map_to_string(self.map_add.clone())))
-    //  }
 
     fn _to_string(&self) -> String {
         format!(
@@ -440,7 +354,7 @@ fn codegen(data: String, filter_names: &[&str]) -> () {
 fn codegen2(data: String, collabs: &[Collab]) {
     let v: Value = serde_json::from_str(&data).expect("ERROR PARSING");
 
-    let mut title_to_id = std::collections::HashMap::new();
+    let mut title_to_id: HashMap<&str, &str> = HashMap::new();
     if let Some(items) = v["result"]["items"].as_array() {
         for item in items {
             if item["type"].as_str() == Some("chat") {
@@ -456,12 +370,9 @@ fn codegen2(data: String, collabs: &[Collab]) {
 
     println!("const CHATS_ID: std::collections::HashMap<Collab, &str> = hashmap!(");
     for collab in collabs {
-        let title = collab.title();
+        let title = collab.title(); // &str
         if let Some(&id) = title_to_id.get(title) {
-            // Выводим имя варианта
             println!("    Collab::{:?} => {:?},", collab, id);
-        } else {
-            eprintln!("Предупреждение: '{}' не найдено", title);
         }
     }
     println!(");");
@@ -473,7 +384,7 @@ fn p(s: &Value) -> String {
 
 fn process_no_mobile(arr_list: Vec<String>, pack: Pack, filename_out: String) -> Pack {
     //filename_out :: Binary Pack
-    let mut pack = Pack::new(Vec::new());
+    let pack = Pack::new(Vec::new());
     pack
 }
 
@@ -482,7 +393,7 @@ async fn grub_data(
     index_stop: i32,
     filename_to_dump: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut init_buffer: Vec<Employee> = Vec::new();
+    let init_buffer: Vec<Employee> = Vec::new();
     let mut pack = Pack::new(init_buffer);
     let client_reqwest: Client = reqwest::Client::new();
     for _i in index_start..index_stop {
@@ -534,7 +445,7 @@ async fn grub_data_with_add_params(
     filename_to_dump: &str,
     params: Vec<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut init_buffer: Vec<Employee> = Vec::new();
+    let init_buffer: Vec<Employee> = Vec::new();
     let mut pack = Pack::new(init_buffer);
     let client_reqwest: Client = reqwest::Client::new();
     for _i in index_start..index_stop {
@@ -600,7 +511,7 @@ async fn try_grub() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await; //DEFAULT_DUMP).await;
 
-    let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+    let pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
     println!("RESULT:: {}", pack.to_string("\n".to_string()));
     let filename = "lastdump.txt";
     std::fs::write(filename, pack.to_string("\n".to_string()));
@@ -633,10 +544,7 @@ async fn process_packed_no_mobile(filename: String) -> Result<(), Box<dyn std::e
 
         send_message(direct_message, id3.unwrap()).await;
         println!("\n\n\n\n\nID::{}", id3.unwrap());
-        //send_message_str(direct_message, &id.to_string()).await;
-        // send_message(direct_message, 296).await;
 
-        //send_message("direct_message", id.unwrap()).await?;
     }
     Ok(())
 }
@@ -681,10 +589,6 @@ async fn process(client_reqwest: Client) -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
-// async fn  batch_update(client_reqwest: Client) -> Result<(), Box<dyn std::error::Error>>{
-
-// }
-
 fn gen_batch_str(input: String, pack: Pack, _1c_info_file: String) -> String {
     return "".to_string();
 }
@@ -713,7 +617,6 @@ async fn getting_users(client_reqwest: Client) -> () {
         Err(e) => println!("Ошибка: {}", e),
     }
 
-    // Пример 2: Получаем пользователя с определенными полями
     println!("\n=== Получение пользователя с определенными полями    222222222222222222 ===");
     let fields = vec!["ID", "NAME", "LAST_NAME", "EMAIL", "PERSONAL_MOBILE"];
     match http_Test::get_user_with_fields(client_reqwest.clone(), 1, &fields).await {
@@ -721,7 +624,6 @@ async fn getting_users(client_reqwest: Client) -> () {
         Err(e) => println!("Ошибка: {}", e),
     }
 
-    // Пример 3: Получаем несколько пользователей
     println!("\n=== Получение нескольких пользователей 333333333333333333333333333333===");
     let user_ids = vec![1, 2, 3];
     match http_Test::get_multiple_users(client_reqwest.clone(), &user_ids).await {
@@ -739,29 +641,13 @@ async fn getting_users(client_reqwest: Client) -> () {
 
 fn compare(fromVik: String, fromDump: String) -> bool {
     return false;
-    //FROM VIK
-    // 6 Цыбульский Сергей Александрович Директор по информационным технологиям 01.04.2024 01.09.1984
-    // 1984-09-01T03:00:00+04:00    01.04.2024                PERSONAL_BIRTHDAY
-    // WORK_POSITION   PERSONAL_BIRTHDAY
 
-    // TYPE":"employee","WORK_PHONE":"","WORK_POSITION":"Директор по ИТ","XML_ID":"49915858"}
-    // ID: "1"
-    // Имя: "Сергей"
-    // Фамилия: "Цыбульский"
-    // Отчество: "Александрович"
-    // ДОП ПАРАМЕТРЫ: Должность: "Директор по ИТ"
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_reqwest: Client = reqwest::Client::new();
 
-    //process(client_reqwest).await
-    // proc2();
-    // getting_users(client_reqwest).await;
-    // process_packed_no_mobile("MOBILE_NO.txt".to_string()).await
-    //get_tasks_to_file().await
-    // send_message(direct_message, 296).await
 
     let server_handle = tokio::spawn(async {
         if let Err(e) = http_Proc::spawn().await {

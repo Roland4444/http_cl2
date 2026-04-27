@@ -237,6 +237,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "const_format"
 version = "0.2.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -579,6 +586,7 @@ dependencies = [
  "bincode",
  "bytes",
  "chrono",
+ "common",
  "encoding_rs",
  "futures",
  "futures-util",

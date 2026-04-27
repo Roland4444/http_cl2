@@ -1,4 +1,3 @@
-use crate::ExtractedMessage;
 use axum::extract::State;
 use axum::{
     Router,
@@ -9,8 +8,6 @@ use axum::{
 };
 use futures_util::{SinkExt, StreamExt};
 use anyhow::{Context, Result};
-use chrono::format;
-use futures::TryFutureExt;
 use futures::stream::{self,  TryStreamExt}; // в начало файла
 use reqwest::Client;
 use serde_json::{Value, json};
@@ -20,31 +17,15 @@ use std::io::Write;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use thirtyfour::prelude::*;
 use tokio::sync::Mutex;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use serde::{Serialize, Deserialize};
 use crate::http_Test::{read_lines, read_lines_utf8, update_param_};
 use tokio::net::TcpListener;
-
+use common::*;
 const WEBHOOK_FILENAME: &str = "webhook";
 
 static IS_PENDING: AtomicBool = AtomicBool::new(false);
-
-
-const PAYMENTS: &str = "Платежи";
-const OLIVIA: &str = "ОЛИВИЯ МАКСАКОВА";
-const BABEFA: &str = "ЖК Бабефа";
-const OKLAND: &str = "ОКЛАНД РЫБАЦКАЯ";
-const RED: &str = "РЭД Грузинская";
-const TETRIS: &str = "ЖК Тетрис на Керченской";
-const SCANDINAVIA: &str = "Скандинавия - Моздокская";
-const KUIB: &str = "Куйбышева";
-const POLZ: &str = "Ползунова";
-const ZVEZD: &str = "Звездная";
-const SKY: &str = "СКАЙ ИГАРСКАЯ";
-const OWN: &str = "OWN";
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyValueMessage {
@@ -54,12 +35,6 @@ pub struct KeyValueMessage {
 }
 
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ExtractResp {
-    pub success: bool,
-    pub quoted_text: Option<String>,
-    pub error: Option<String>,
-}
 
 fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
     let mut bytes = buf;
@@ -449,6 +424,7 @@ mod tests {
     use crate::http_Proc;
 
     use super::*;
+    use common::*;
 
     #[test]
     fn test_process_msg() {
