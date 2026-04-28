@@ -948,7 +948,14 @@ mod tests {
 
     #[test]
     fn test_try_create_order(){
-        
+
+    }
+
+
+    #[test]
+    fn test_thread_call(){ 
+        let handle = thread::spawn(http_Proc::process_function);
+        handle.join();
     }
 
 }

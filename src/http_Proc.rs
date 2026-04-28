@@ -17,6 +17,7 @@ use std::io::Write;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 use tokio::sync::Mutex;
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 use serde::{Serialize, Deserialize};
@@ -24,7 +25,8 @@ use crate::http_Test::{read_lines, read_lines_utf8, update_param_};
 use tokio::net::TcpListener;
 use common::*;
 const WEBHOOK_FILENAME: &str = "webhook";
-
+use once_cell::sync::Lazy;
+use crate::thread;
 static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug, Clone, PartialEq)]
@@ -33,6 +35,48 @@ pub struct KeyValueMessage {
     pub key: String,
     pub value: String,
 }
+
+static QUEUE: Lazy<Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| Mutex::new(Vec::new()));
+
+//   add::             QUEUE.lock().unwrap().push(msg);
+//   remove::             QUEUE.lock().unwrap().remove(index);
+
+//  iteration
+//  let mut queue = QUEUE.lock().unwrap();
+//  for item in queue.iter() { ... }
+
+
+pub fn __func1(mut counter1: u64){
+        loop {
+            counter1+=1;
+            thread::sleep(Duration::from_secs(3));
+            println!("THREAD1::{}\n\n\n", counter1)
+        }
+}
+
+pub fn __func2(mut counter2: u64){
+        loop {
+            counter2+=3;
+
+            thread::sleep(Duration::from_secs(2));
+            println!("THREAD2::{}\n\n\n", counter2)
+        }
+}
+
+
+
+
+pub fn process_function() {
+    let  counter1 = 0;
+    let  counter2 = 0;
+    let __hndl1 = thread::spawn(move || {__func1(counter1);});
+
+    let __hndl2 = thread::spawn(move || {__func2(counter2);});
+
+    loop {thread::sleep(Duration::from_secs(3));}
+
+}
+
 
 
 
@@ -146,10 +190,7 @@ pub fn get_webhook_(filename: &str) -> String {
     elem
 }
 
-pub async fn update_param_2(
-    client_reqwest: Client,
-    params: &[(&str, &str)],
-) -> Result<String, Box<dyn Error>> {
+pub async fn update_param_2(    client_reqwest: Client,    params: &[(&str, &str)],) -> Result<String, Box<dyn Error>> {
     let url = get_webhook() + "user.update";
     println!("Resulted url: {}", url);
     let response = client_reqwest.post(url).form(params).send().await?;
