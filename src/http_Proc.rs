@@ -27,6 +27,8 @@ use common::*;
 const WEBHOOK_FILENAME: &str = "webhook";
 use once_cell::sync::Lazy;
 use crate::thread;
+
+
 static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug, Clone, PartialEq)]
@@ -72,8 +74,11 @@ where
     processor(msg)
 }
 
+pub static QUEUE: Lazy< std::sync::Mutex<Vec<ExtractedMessage>>> = Lazy::new(||  std::sync::Mutex::new(Vec::new()));
 
-pub static QUEUE: Lazy<Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| Mutex::new(Vec::new()));
+
+
+//pub static QUEUE__: Lazy<Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 //   add::             QUEUE.lock().unwrap().push(msg);
 //   remove::             QUEUE.lock().unwrap().remove(index);
@@ -81,15 +86,14 @@ pub static QUEUE: Lazy<Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| Mutex::new(V
 //  iteration
 //  let mut queue = QUEUE.lock().unwrap();
 //  for item in queue.iter() { ... }
-pub async fn adding_to_Pack(msg: ExtractedMessage) -> bool {
-    QUEUE.lock().await.push(msg);
+pub fn adding_to_Pack(msg: ExtractedMessage) -> bool {
+    QUEUE.lock().unwrap().push(msg);
     true
 }
 
-
-
-pub async fn watch() {
-    let queue = QUEUE.lock().await;
+// Синхронный просмотр очереди
+pub fn watch() {
+    let queue = QUEUE.lock().unwrap();
     for item in queue.iter() {
         println!("{}", item.to_string());
     }
@@ -354,15 +358,16 @@ async fn processmsg(
     Ok(())
 }
 
+
+
 type SharedState = Arc<Mutex<Vec<KeyValueMessage>>>;
 
 async fn post_handler(State(state): State<SharedState>, body: Bytes) -> impl IntoResponse {
     match decode_key_value_message(&body) {
         Ok(msg) => {
             println!("✅ Получено сообщение: {:?}", msg);
-            let mut vec: tokio::sync::MutexGuard<'_, Vec<KeyValueMessage>> = state.lock().await; // теперь .await корректен
+            let mut vec = state.lock().await; // теперь .await работает
             processmsg(msg, &mut *vec).await;
-
             (StatusCode::OK, "OK")
         }
         Err(e) => {

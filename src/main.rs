@@ -990,50 +990,61 @@ mod tests {
         let handle = thread::spawn(http_Proc::process_function);
         handle.join();
     }
-    #[tokio::test]
-    async fn test_pull_messages_prod_Scandinavia2_with_dump() {
-        let current_collab = Collab::SCANDINAVIA;
-        let title = current_collab.title();
-        let id = get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str())
-            .await
-            .unwrap();
+#[tokio::test]
+async fn test_pull_messages_prod_Scandinavia2_with_dump() {
+    let current_collab = Collab::SCANDINAVIA;
+    let title = current_collab.title();
+    let id = get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str())
+        .await
+        .unwrap();
 
-        println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
-        let limit = 1220;
+    println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+    let limit = 1220;
 
-        let json_value = http_Proc::pull_messages_raw(        Client::new(),        webhook_base_prod().as_str(),        CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
-        (id + 1) as i64,        limit,).await.unwrap();
+    let json_value = http_Proc::pull_messages_raw(
+        Client::new(),
+        webhook_base_prod().as_str(),
+        CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
+        (id + 1) as i64,
+        limit,
+    )
+    .await
+    .unwrap();
 
-        let messages = extract_messages_from_json(&json_value);
-        println!("Извлечено {} сообщений", messages.len());
-        for msg in messages.iter() {        println!("{:?}", msg);    }
-    // 1. Добавляем сообщения в глобальную очередь (асинхронно)
-        {
-            let mut queue = http_Proc::QUEUE.lock().await;
-            queue.extend(messages.clone()); // можно также использовать queue.append(&mut messages)
-        }
-
-    // 2. Сериализуем текущее состояние очереди в бинарный файл
-let bin_filename = format!("{}_queue.bin", current_collab.title());
-{
-    let queue_data = http_Proc::QUEUE.lock().await;
-    let serialized = bincode::serialize(&*queue_data).expect("Ошибка сериализации");
-    std::fs::write(&bin_filename, serialized).expect("Не удалось записать бинарный файл");
-}
-println!("Очередь сохранена в {}", bin_filename);
-
-
-        println!("\n\n\nSTARING WATCH!\n\n\n");
-        http_Proc::watch().await;
-
-    // Сохраняем JSON-файлы (как и раньше)
-        let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
-        let json_output = serde_json::to_string_pretty(&messages).unwrap();
-        std::fs::write(out_extracted, json_output).unwrap();
-
-        let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit),serde_json::to_string_pretty(&json_value).unwrap(),);
+    let messages = extract_messages_from_json(&json_value);
+    println!("Извлечено {} сообщений", messages.len());
+    for msg in messages.iter() {
+        println!("{:?}", msg);
     }
 
+    // 1. Добавляем сообщения в глобальную очередь (синхронно)
+    {
+        let mut queue = http_Proc::QUEUE.lock().unwrap();
+        queue.extend(messages.clone());
+    }
+
+    // 2. Сериализуем текущее состояние очереди в бинарный файл
+    let bin_filename = format!("{}_queue.bin", current_collab.title());
+    {
+        let queue_data = http_Proc::QUEUE.lock().unwrap();
+        let serialized = bincode::serialize(&*queue_data).expect("Ошибка сериализации");
+        std::fs::write(&bin_filename, serialized).expect("Не удалось записать бинарный файл");
+    }
+    println!("Очередь сохранена в {}", bin_filename);
+
+    println!("\n\n\nSTARING WATCH!\n\n\n");
+    http_Proc::watch(); // синхронный вызов
+
+    // Сохраняем JSON-файлы
+    let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
+    let json_output = serde_json::to_string_pretty(&messages).unwrap();
+    std::fs::write(out_extracted, json_output).unwrap();
+
+    let _ = std::fs::write(
+        format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit),
+        serde_json::to_string_pretty(&json_value).unwrap(),
+    );
+}
     }
 
 
