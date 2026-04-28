@@ -40,22 +40,6 @@ pub struct KeyValueMessage {
 
 
 
-pub fn __func1(mut counter1: u64){
-        loop {
-            counter1+=1;
-            thread::sleep(Duration::from_secs(3));
-            println!("THREAD1::{}\n\n\n", counter1)
-        }
-}
-
-pub fn __func2(mut counter2: u64){
-        loop {
-            counter2+=3;
-
-            thread::sleep(Duration::from_secs(2));
-            println!("THREAD2::{}\n\n\n", counter2)
-        }
-}
 
 pub fn process_msg(entry: ExtractedMessage)-> bool{
     let author = entry.author_name;
@@ -97,6 +81,25 @@ pub fn watch() {
     for item in queue.iter() {
         println!("{}", item.to_string());
     }
+}
+
+
+
+pub fn __func1(mut counter1: u64){
+        loop {
+            counter1+=1;
+            thread::sleep(Duration::from_secs(3));
+            println!("THREAD1::{}\n\n\n", counter1)
+        }
+}
+
+pub fn __func2(mut counter2: u64){
+        loop {
+            counter2+=3;
+
+            thread::sleep(Duration::from_secs(2));
+            println!("THREAD2::{}\n\n\n", counter2)
+        }
 }
 
 
