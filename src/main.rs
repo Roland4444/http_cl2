@@ -95,6 +95,39 @@ fn deserialize_from_file<T: DeserializeOwned>(
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
+struct MsgPack {    pack: Vec<ExtractedMessage>,}
+
+impl MsgPack {
+    fn new(pack: Vec<ExtractedMessage>) -> Self {        MsgPack { pack }    }
+
+    fn serialize_to_file(&self, filename: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let encoded = bincode::serialize(self)?;
+        let mut file = File::create(filename)?;
+        file.write_all(&encoded)?;
+        Ok(())
+    }
+
+    fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>> {        deserialize_from_file(filename)    }
+
+    fn push_and_update(&mut self, entry: ExtractedMessage) {
+        if self.is_contains(&entry) {            self.remove(&entry);        }
+        self.pack.push(entry);
+    }
+
+    fn is_contains(&self, entry: &ExtractedMessage) -> bool {
+        if let Some(uuid) = &entry.uuid {            self.pack.iter().any(|msg| msg.uuid.as_ref() == Some(uuid))        } 
+        else {            false        }
+    }
+
+    fn remove(&mut self, entry: &ExtractedMessage) -> bool {
+        if let Some(pos) = self.pack.iter().position(|msg| msg.uuid == entry.uuid) {
+            self.pack.remove(pos);
+            true} 
+        else {            false         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 struct Employee {    id: i32,    name: String,    last_name: String,    middle_name: String,    map_add: HashMap<ADDITIONAL_FIELDS, String>,}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -886,7 +919,7 @@ mod tests {
         if !response.status().is_success() {        anyhow::bail!("HTTP error: {}", response.status());    }
 
         let json_text = response.text().await?;
-        let json_value: Value = serde_json::from_str(&json_text)?;
+        let json_value: Value = serde_json::from_str(&json_text)?; 
         let pretty_json = serde_json::to_string_pretty(&json_value)?;
 
         fs::write(EMPLOYES_FILE_NAME_JS, pretty_json)?;
