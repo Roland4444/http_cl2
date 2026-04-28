@@ -3,6 +3,14 @@ name = "httpTest"
 version = "0.1.0"
 edition = "2024"
 
+[profile.dev]
+debug = 0               # Уменьшить объем отладочной информации (0 - выкл, 1 - огр., 2 - полная)
+incremental = false     # ОТКЛЮЧИТЬ инкрементальную компиляцию!
+
+# Для зависимостей в режиме dev можно вообще отключить отладку
+[profile.dev.package."*"]
+debug = false
+
 [dependencies]
 encoding_rs = "0.8.35"
 reqwest = { version = "0.13", features = ["json","form"] }
@@ -25,6 +33,7 @@ futures = "0.3.32"
 
 futures-util = "0.3.32"
 tokio-tungstenite = "0.29.0"
+parking_lot = "0.12.5"
 
 
 

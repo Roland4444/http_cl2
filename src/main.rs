@@ -1006,14 +1006,14 @@ mod tests {
 
         // 1. Добавляем сообщения в глобальную очередь (синхронно)
         {
-            let mut queue = http_Proc::QUEUE.lock().unwrap();
+            let mut queue = http_Proc::QUEUE.lock();
             queue.extend(messages.clone());
         }
 
     // 2. Сериализуем текущее состояние очереди в бинарный файл
         let bin_filename = format!("{}_queue.bin", current_collab.title());
         {
-            let queue_data = http_Proc::QUEUE.lock().unwrap();
+            let queue_data = http_Proc::QUEUE.lock();
             let serialized = bincode::serialize(&*queue_data).expect("Ошибка сериализации");
             std::fs::write(&bin_filename, serialized).expect("Не удалось записать бинарный файл");
         }
@@ -1028,6 +1028,8 @@ mod tests {
         std::fs::write(out_extracted, json_output).unwrap();
 
         let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit),serde_json::to_string_pretty(&json_value).unwrap(),);
+        //let handle = thread::spawn(http_Proc::process_function);//<===good
+        //handle.join();  //process
 }
     }
 

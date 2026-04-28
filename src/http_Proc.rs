@@ -27,7 +27,7 @@ use common::*;
 const WEBHOOK_FILENAME: &str = "webhook";
 use once_cell::sync::Lazy;
 use crate::thread;
-
+use parking_lot::Mutex as Mutex2;
 
 static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
@@ -58,10 +58,9 @@ where
     processor(msg)
 }
 
-pub static QUEUE: Lazy< std::sync::Mutex<Vec<ExtractedMessage>>> = Lazy::new(||  std::sync::Mutex::new(Vec::new()));
+//pub static QUEUE: Lazy< std::sync::Mutex<Vec<ExtractedMessage>>> = Lazy::new(||  std::sync::Mutex::new(Vec::new()));
 
-
-
+pub static QUEUE: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
 //pub static QUEUE__: Lazy<Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 //   add::             QUEUE.lock().unwrap().push(msg);
@@ -71,32 +70,46 @@ pub static QUEUE: Lazy< std::sync::Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| 
 //  let mut queue = QUEUE.lock().unwrap();
 //  for item in queue.iter() { ... }
 pub fn adding_to_Pack(msg: ExtractedMessage) -> bool {
-    QUEUE.lock().unwrap().push(msg);
+    QUEUE.lock().push(msg);
     true
 }
 
 // Синхронный просмотр очереди
 pub fn watch() {
-    let queue = QUEUE.lock().unwrap();
+    let queue = QUEUE.lock();
     for item in queue.iter() {
         println!("{}", item.to_string());
     }
 }
 
-
+fn process_atom_queue(){
+    let mut queue: parking_lot::lock_api::MutexGuard<'_, parking_lot::RawMutex, Vec<ExtractedMessage>> = QUEUE.lock();
+    let elem = queue.first();
+    match elem{
+        Some(el__) => {
+            println!("DROPPED:{}", el__.to_string());
+            queue.remove(0);
+        },
+        None => {  }
+    }        
+}
 
 pub fn __func1(mut counter1: u64){
         loop {
             counter1+=1;
             thread::sleep(Duration::from_secs(3));
+            process_atom_queue();
             println!("THREAD1::{}\n\n\n", counter1)
+            
         }
 }
 
 pub fn __func2(mut counter2: u64){
         loop {
             counter2+=3;
+            let queue = QUEUE.lock();
 
+            println!("SIZE QUE:{}, size", queue.len());
             thread::sleep(Duration::from_secs(2));
             println!("THREAD2::{}\n\n\n", counter2)
         }
