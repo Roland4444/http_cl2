@@ -15,6 +15,7 @@ use std::ptr::hash;
 pub mod http_Parser;
 pub mod http_Proc;
 pub mod http_Test;
+pub mod http_synteka;
 use anyhow::Context;
 use once_cell::sync::Lazy;
 use std::thread;
@@ -802,7 +803,7 @@ mod tests {
         let id =            get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
         println!("\n\n\n\nLAST ID IN OKLAND:: {}\n\n\n", id);
-        let limit = 120;
+        let limit = 1200;
 
         let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"),
             (id + 2) as i64,  limit,        ).await.unwrap();
@@ -825,7 +826,7 @@ mod tests {
         let id =            get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
         println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
-        let limit = 120;
+        let limit = 1220;
 
         let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),(id + 1) as i64, // <=============== pull with last!
             limit,).await.unwrap();
@@ -863,7 +864,59 @@ mod tests {
 
         let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json",current_collab.title(),limit),serde_json::to_string_pretty(&json_value).unwrap(),);
     }
+
+    #[tokio::test]
+    async fn test_create_order(){
+            let token = synteka(); // можно взять из конфига
+            let client = Client::new();
+            let result = http_synteka::create_order(&token, &client).await;
+            println!("Ответ сервера: {:#?}", result);
+           // Ok(())
+    }
+
+    use std::fs;
+
+    #[tokio::test]
+    async fn test_pull_employess() -> Result<() , anyhow::Error> {
+        let url = "https://restetris.cynteka.ru/api/v1/refbooks/employees/3000014640";
+        let token = synteka();
+        let client = Client::new();
+        let response = client.get(url).header("accept", "application/json").header("ZakupayToken", token).send().await?;
+
+        if !response.status().is_success() {        anyhow::bail!("HTTP error: {}", response.status());    }
+
+        let json_text = response.text().await?;
+        let json_value: Value = serde_json::from_str(&json_text)?;
+        let pretty_json = serde_json::to_string_pretty(&json_value)?;
+
+        fs::write(EMPLOYES_FILE_NAME_JS, pretty_json)?;
+        println!("Ответ сохранён в response.json");
+        Ok(())
+    }
+    const EMPLOYES_FILE_NAME_JS : &str = "employess_cynteka.json";
+
+    #[test]
+    fn test_extract_id_via_fio() {
+        let etalon_id = 299;
+        let js_content = fs::read_to_string(EMPLOYES_FILE_NAME_JS).expect("Не удалось прочитать файл");
+        let json_value: Value = serde_json::from_str(&js_content).expect("Ошибка парсинга JSON");
+        let vec_fio = vec!["Сидагалиев".to_string(), "Нурлан".to_string()];
+        let result = http_synteka::get_id_user_via_fio_cynteka(vec_fio, &json_value).unwrap();
+        assert_eq!(etalon_id, result);
+    }
+
+    #[test]
+    fn test_extract_id_via_fio2() {
+        let etalon_id = 276;
+        let js_content = fs::read_to_string(EMPLOYES_FILE_NAME_JS).expect("Не удалось прочитать файл");
+        let json_value: Value = serde_json::from_str(&js_content).expect("Ошибка парсинга JSON");
+        let vec_fio = vec!["Музданбаев".to_string(), "Сергей".to_string()];
+        let result = http_synteka::get_id_user_via_fio_cynteka(vec_fio, &json_value).unwrap();
+        assert_eq!(etalon_id, result);
+    }
+
 }
+
 
 ////
 ////
