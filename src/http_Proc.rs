@@ -36,14 +36,6 @@ pub struct KeyValueMessage {
     pub value: String,
 }
 
-static QUEUE: Lazy<Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| Mutex::new(Vec::new()));
-
-//   add::             QUEUE.lock().unwrap().push(msg);
-//   remove::             QUEUE.lock().unwrap().remove(index);
-
-//  iteration
-//  let mut queue = QUEUE.lock().unwrap();
-//  for item in queue.iter() { ... }
 
 
 pub fn __func1(mut counter1: u64){
@@ -63,7 +55,45 @@ pub fn __func2(mut counter2: u64){
         }
 }
 
+pub fn process_msg(entry: ExtractedMessage)-> bool{
+    let author = entry.author_name;
+    let collab = entry.chat_id;
+    true
+    //entry.
+}
 
+
+
+
+pub fn process_message<F, R>(msg: ExtractedMessage, processor: F) -> R
+where
+    F: Fn(ExtractedMessage) -> R,
+{
+    processor(msg)
+}
+
+
+pub static QUEUE: Lazy<Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| Mutex::new(Vec::new()));
+
+//   add::             QUEUE.lock().unwrap().push(msg);
+//   remove::             QUEUE.lock().unwrap().remove(index);
+
+//  iteration
+//  let mut queue = QUEUE.lock().unwrap();
+//  for item in queue.iter() { ... }
+pub async fn adding_to_Pack(msg: ExtractedMessage) -> bool {
+    QUEUE.lock().await.push(msg);
+    true
+}
+
+
+
+pub async fn watch() {
+    let queue = QUEUE.lock().await;
+    for item in queue.iter() {
+        println!("{}", item.to_string());
+    }
+}
 
 
 pub fn process_function() {
@@ -210,7 +240,7 @@ const CONTENT_TYPE: &str = "Content-type";
 
 const APPROVED: &str = "СОГЛАСОВАНО";
 
-fn process_message(msg: ExtractedMessage) -> u64 {
+fn process_message2(msg: ExtractedMessage) -> u64 {
     if !msg.text.to_uppercase().contains(APPROVED) {
         println!("SKIPPED");
         msg.id
@@ -417,7 +447,7 @@ mod tests {
             id: 100822,
             chat_id: 9796,
         };
-        assert_eq!(100822, http_Proc::process_message(msg));
+        assert_eq!(100822, http_Proc::process_message2(msg));
     }
 
 
