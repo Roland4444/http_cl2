@@ -893,7 +893,38 @@ mod tests {
         println!("Ответ сохранён в response.json");
         Ok(())
     }
+
+
+    const URL: &str = "https://restetris.cynteka.ru/api/v1/refbooks/colleagues?format=xml";
+    const OUTPUT_FILE: &str = "colleagues.json";
+
+    #[tokio::test]
+    async fn test_pull_collegues() -> Result<() , anyhow::Error> {
+        let client = Client::new();
+        let response = client
+            .get(URL)
+            .header("accept", "application/json")
+            .header("ZakupayToken", synteka())
+            .send()
+            .await?;
+
+    if !response.status().is_success() {
+        anyhow::bail!("HTTP error: {}", response.status());
+    }
+
+    let body = response.text().await?;
+    let json: Value = serde_json::from_str(&body)?;
+    let pretty = serde_json::to_string_pretty(&json)?;
+    fs::write(OUTPUT_FILE, pretty)?;
+    println!("Ответ сохранён в {}", OUTPUT_FILE);
+    Ok(())
+    }
+
+
+
     const EMPLOYES_FILE_NAME_JS : &str = "employess_cynteka.json";
+    const COLLEGUES_FILE_NAME_JS : &str = "collegues_cynteka.json";
+
 
     #[test]
     fn test_extract_id_via_fio() {
@@ -913,6 +944,11 @@ mod tests {
         let vec_fio = vec!["Музданбаев".to_string(), "Сергей".to_string()];
         let result = http_synteka::get_id_user_via_fio_cynteka(vec_fio, &json_value).unwrap();
         assert_eq!(etalon_id, result);
+    }
+
+    #[test]
+    fn test_try_create_order(){
+        
     }
 
 }

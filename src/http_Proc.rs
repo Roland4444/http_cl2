@@ -307,87 +307,31 @@ fn json_to_file(filename: &str, value: Value) -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
-pub async fn pull_messages_raw(
-    client: Client,
-    base_webhook_url: &str,
-    dialog_id: &str,
-    last_id: i64,
-    limit: u32,
-) -> Result<Value, Box<dyn std::error::Error>> {
+pub async fn pull_messages_raw(    client: Client,    base_webhook_url: &str,    dialog_id: &str,    last_id: i64,    limit: u32,) -> Result<Value, Box<dyn std::error::Error>> {
     let suffix = "/im.dialog.messages.get";
-    let req_info = json!({
-        "DIALOG_ID": dialog_id,
-        "LAST_ID": last_id,
-        "LIMIT": limit
-    });
-    let resp = client
-        .post(format!("{}{}", base_webhook_url, suffix))
-        .header(CONTENT_TYPE, "application/json")
-        .json(&req_info)
-        .send()
-        .await?;
+    let req_info = json!({"DIALOG_ID": dialog_id,"LAST_ID": last_id,"LIMIT": limit});
+    let resp = client.post(format!("{}{}", base_webhook_url, suffix)).header(CONTENT_TYPE, "application/json").json(&req_info).send().await?;
     let json_value = resp.json().await?;
     Ok(json_value)
 }
 
-pub async fn pull_messages(
-    client: Client,
-    base_webhook_url: &str,
-    dialog_id: &str,
-    last_id: i64,
-    limit: u32,
-    output_file: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let json_value = pull_messages_raw(client, base_webhook_url, dialog_id, last_id, limit)
-        .await
-        .expect("ERROR");
+pub async fn pull_messages(    client: Client,    base_webhook_url: &str,    dialog_id: &str,    last_id: i64,    limit: u32,    output_file: &str,) -> Result<(), Box<dyn std::error::Error>> {
+    let json_value = pull_messages_raw(client, base_webhook_url, dialog_id, last_id, limit).await.expect("ERROR");
     json_to_file(output_file, json_value)
 }
 
-pub async fn fetch_recent_list(
-    client: Client,
-    base_webhook_url: &str,
-    params: Value,
-    output_file: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn fetch_recent_list(    client: Client,    base_webhook_url: &str,    params: Value,    output_file: &str,) -> Result<(), Box<dyn std::error::Error>> {
     let js = fetch_recent_list_raw(client, base_webhook_url, params).await?;
     json_to_file(output_file, js)?;
     Ok(())
 }
 
-pub async fn fetch_recent_list_raw(
-    client: Client,
-    base_webhook_url: &str,
-    params: Value,
-) -> Result<Value, reqwest::Error> {
+pub async fn fetch_recent_list_raw(    client: Client,    base_webhook_url: &str,    params: Value,) -> Result<Value, reqwest::Error> {
     let suffix: &str = "/im.recent.list";
-    let resp = client
-        .post(format!("{base_webhook_url}{suffix}"))
-        .header(CONTENT_TYPE, "application/json")
-        .json(&params)
-        .send()
-        .await?;
-
+    let resp = client.post(format!("{base_webhook_url}{suffix}")).header(CONTENT_TYPE, "application/json").json(&params).send().await?;
     let json = resp.json().await?;
     Ok(json)
 }
-
-// async fn post_handler(
-//     body: Bytes,                       // тело запроса
-// ) -> impl IntoResponse {
-//     match decode_key_value_message(&body) {
-//         Ok(msg) => {
-//             println!("✅ Получено сообщение: {:?}", msg);
-
-//             processmsg(msg).await;
-//             (StatusCode::OK, "OK")
-//         }
-//         Err(e) => {
-//             eprintln!("❌ Ошибка декодирования protobuf: {}", e);
-//             (StatusCode::BAD_REQUEST, "Invalid protobuf")
-//         }
-//     }
-// }
 
 async fn fallback_handler() -> impl IntoResponse {
     (StatusCode::NOT_FOUND, "Страница не найдена")
@@ -396,10 +340,7 @@ async fn fallback_handler() -> impl IntoResponse {
 pub async fn spawn() -> anyhow::Result<()> {
     let shared_state = Arc::new(Mutex::new(Vec::<KeyValueMessage>::new()));
 
-    let app = Router::new()
-        .route("/test", get(hello_handler))
-        .route("/test", post(post_handler))
-        .with_state(shared_state)
+    let app = Router::new().route("/test", get(hello_handler)).route("/test", post(post_handler)).with_state(shared_state)
         .fallback(fallback_handler);
 
     let port = 3000;
