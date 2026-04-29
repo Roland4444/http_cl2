@@ -29,6 +29,12 @@ use crate::webhook_base_prod;
 
 static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
+
+const SYSTEM_MESSAGE: &str = "0";    const CREATE_QUEUE: &str = "CREATE_QUEUE";         const RUN_QUEUE: &str = "RUN_QUEUE";   const CONTENT_TYPE: &str = "Content-type";
+const APPROVED: &str = "СОГЛАСОВАНО";
+
+
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyValueMessage {
     pub id: i32,
@@ -59,34 +65,19 @@ pub static CHATS_ID: Lazy<HashMap<Collab, &str>> = Lazy::new(|| {
 //genned
 
 pub static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(|| {
-    CHATS_ID
-        .iter()
-        .map(|(collab, &id_str): (&Collab, &&str)| {
+    CHATS_ID.iter().map(|(collab, &id_str): (&Collab, &&str)| {
             let num = id_str.strip_prefix("chat").unwrap_or(id_str).parse().expect("INVALID ID");
-            (*collab, num)})
-        .collect()});
+            (*collab, num)}).collect()});
 
 
 pub static CHAT_NUM_ID_PROD: Lazy<RwLock<Vec<u64>>> = Lazy::new(|| RwLock::new(Vec::new()));
-
-
-
-
-
-
 //AUTHOR::Александр Минин, TEXT::Будет корректировка в большую сторону., UUID::597650e4-1faa-40da-ab05-350005abcbbb, ID::102072, CHAT_ID::9796
-
-
-
 pub fn reinit_CHAT_NUM() {
     let mut target = CHAT_NUM_ID_PROD.write().unwrap();
     target.clear();
     for collab in CONFIG.enabled_collabs.iter() {
-        if let Some(&num) = CHAT_NUM_ID.get(collab) {
-            target.push(num);
-        } else {
-            eprintln!("Warning: Collab {:?} not found in CHAT_NUM_ID", collab);
-        }
+        if let Some(&num) = CHAT_NUM_ID.get(collab) {            target.push(num);        } 
+        else {            eprintln!("Warning: Collab {:?} not found in CHAT_NUM_ID", collab);        }
     }
 }
 
@@ -94,11 +85,8 @@ pub fn reinit_CHAT_NUM__(config: ConfigProcess) {
     let mut target = CHAT_NUM_ID_PROD.write().unwrap();
     target.clear();
     for collab in config.enabled_collabs.iter() {
-        if let Some(&num) = CHAT_NUM_ID.get(collab) {
-            target.push(num);
-        } else {
-            eprintln!("Warning: Collab {:?} not found in CHAT_NUM_ID", collab);
-        }
+        if let Some(&num) = CHAT_NUM_ID.get(collab) {            target.push(num);        } 
+        else {            eprintln!("Warning: Collab {:?} not found in CHAT_NUM_ID", collab);        }
     }
 }
 
@@ -115,14 +103,9 @@ pub fn reinit_CHAT_NUM__(config: ConfigProcess) {
 // }
 
 
-pub static CONFIG: Lazy<ConfigProcess> = Lazy::new(|| ConfigProcess {    
-    switch_mode: common::SwitchIDMode::FROM_CURRENT,    
-    from: 0,    
-    to: 1000000,    
-    enabled_collabs: vec![Collab::OKLAND],
-});
+pub static CONFIG: Lazy<ConfigProcess> = Lazy::new(|| ConfigProcess {switch_mode: common::SwitchIDMode::FROM_CURRENT,from: 0,to: 1000000,enabled_collabs: vec![Collab::OKLAND],});
 
-pub fn process_msg(entry: ExtractedMessage)-> bool{    
+pub fn process_msg(entry: ExtractedMessage)-> bool{   
     let author = entry.author_name;    
     let collab = entry.chat_id;    
     true   
@@ -322,15 +305,7 @@ pub async fn update_param_2(client_reqwest: Client,params: &[(&str, &str)],) -> 
     Ok(body)
 }
 
-const SYSTEM_MESSAGE: &str = "0";
 
-const CREATE_QUEUE: &str = "CREATE_QUEUE";
-
-const RUN_QUEUE: &str = "RUN_QUEUE";
-
-const CONTENT_TYPE: &str = "Content-type";
-
-const APPROVED: &str = "СОГЛАСОВАНО";
 
 fn process_message2(msg: ExtractedMessage) -> u32 {
     if !msg.text.to_uppercase().contains(APPROVED) {
@@ -362,10 +337,7 @@ pub async fn get_text_via_chat_id_and_id(chat_name: String, message_id: u64) -> 
 
 pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
     let mut user_names = HashMap::new();
-    if let Some(users) = value["result"]["users"].as_array() {
-        for user in users {if let (Some(id), Some(name)) = (user["id"].as_u64(), user["name"].as_str()) {user_names.insert(id, name.to_string());}}
-    }
-
+    if let Some(users) = value["result"]["users"].as_array() {        for user in users {if let (Some(id), Some(name)) = (user["id"].as_u64(), user["name"].as_str()) {user_names.insert(id, name.to_string());}}}
     let mut result = Vec::new();
     if let Some(messages) = value["result"]["messages"].as_array() {
         for msg in messages {
@@ -373,10 +345,10 @@ pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
             if author_id == 0 {                continue;            }
             let id = msg["id"].as_u64().unwrap_or(0) as u32;
             let chat_id = msg["chat_id"].as_u64().unwrap_or(0) as u32;
-            let author_name = user_names                .get(&author_id)                .cloned()                .unwrap_or_else(|| format!("unknown_{}", author_id));
+            let author_name = user_names.get(&author_id).cloned().unwrap_or_else(|| format!("unknown_{}", author_id));
             let text = msg["text"].as_str().unwrap_or("").to_string();
             let uuid = msg["uuid"].as_str().map(|s| s.to_string());
-            result.push(ExtractedMessage {                author_name,                text,                uuid,                id,                chat_id,            });
+            result.push(ExtractedMessage {author_name,text,uuid,id,chat_id,});
         }
     }
     result
@@ -391,12 +363,18 @@ pub async fn get_last_id_for_collab(    collab: Collab,    client: Client,    we
         let item_type = item["type"].as_str().unwrap_or("");
         let title = item["title"].as_str().unwrap_or("");
         if item_type == "chat" && title == target_title {
-            let last_id = item["last_id"]                .as_u64()                .context("Поле last_id отсутствует или не число")?;
+            let last_id = item["last_id"].as_u64().context("Поле last_id отсутствует или не число")?;
             return Ok(last_id);
         }
     }
     anyhow::bail!("Чат с названием '{}' не найден", target_title);
 }
+
+
+fn approved_filter(msg: &ExtractedMessage) -> bool {
+    msg.text.to_uppercase().contains(APPROVED)
+}
+
 
 pub async fn __pull_messages_prod_throw_collab_and_filter(current_collab: Collab, config: ConfigProcess) -> Vec<ExtractedMessage> {
     let title = current_collab.title();
@@ -409,14 +387,12 @@ pub async fn __pull_messages_prod_throw_collab_and_filter(current_collab: Collab
         if diff < 0 {  return  Vec::new()}
         else {limit = diff as u32;}
     }
-
     let json_value:Value = pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
-    (id + 1) as i64,limit as u32,    ).await.unwrap();
- 
+    (id + 1) as i64,limit as u32,).await.unwrap(); 
     let messages = extract_messages_from_json(&json_value);
-    if config.switch_mode == common::SwitchIDMode::FROM_TO {
-        messages.into_iter().filter(|a| a.id >= config.from && a.id <= config.to).collect()} 
-    else {        messages    }
+    let filtered = messages.into_iter().filter(approved_filter);
+    if config.switch_mode == common::SwitchIDMode::FROM_TO {filtered.into_iter().filter(|a| a.id >= config.from && a.id <= config.to).collect()    } 
+    else {        filtered.collect()     }
 }
 
 pub async fn __pull_messages_prod_throw_collabs_and_filter__(config: ConfigProcess) -> Vec<ExtractedMessage>{
@@ -437,20 +413,15 @@ pub async fn __pull_messages_prod_throw_collabs_and_filter__(config: ConfigProce
 
 async fn processmsg(msg: KeyValueMessage,vec: &mut Vec<KeyValueMessage>,) -> Result<(), Box<dyn Error>> {
     println!("✅ Получено сообщение: {:?}", msg);
-
     let client_reqwest = Client::new();
-
     let id_str = msg.id.to_string();
     let key_str = msg.key.as_str();
     let value_str = msg.value.as_str();
-
     let item = [("ID", id_str.as_str()), (key_str, value_str)];
-
     if id_str == SYSTEM_MESSAGE.to_string() {
         println!("SYSTEM MESSAGE: {}", id_str);
         println!("VALUE MESSAGE: {}", key_str);
         if key_str == CREATE_QUEUE {IS_PENDING.store(true, Ordering::SeqCst);}
-
         if key_str == RUN_QUEUE {
             if vec.len() == 0 {
                 println!("\n\n\n\nאפס\n\n\n\n!!");
@@ -464,10 +435,7 @@ async fn processmsg(msg: KeyValueMessage,vec: &mut Vec<KeyValueMessage>,) -> Res
                 }
             };
 
-            let items: Vec<(i32, String, String)> = vec
-                .iter()
-                .map(|kv| (kv.id, kv.key.clone(), kv.value.clone()))
-                .collect();
+            let items: Vec<(i32, String, String)> = vec.iter().map(|kv| (kv.id, kv.key.clone(), kv.value.clone())).collect();
 
             let mut stream = stream::iter(items)
                 .map(|(id, key, value)| {
@@ -616,4 +584,21 @@ mod tests {
         });
     }
 
+
+    #[test]
+    fn test_bullshit_test2() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let conf = ConfigProcess {switch_mode: common::SwitchIDMode::FROM_TO,from: 10000,to: 122000,enabled_collabs: vec![
+                 Collab::OLIVIA,    Collab::BABEFA,    Collab::OKLAND,    Collab::RED,    Collab::TETRIS,
+                 Collab::SCANDINAVIA, Collab::KUIB,    Collab::POLZ,      Collab::ZVEZD,     Collab::SKY,   
+                ],};
+            let msg = __pull_messages_prod_throw_collabs_and_filter__( conf).await;
+            println!("SIZE arr::{}", msg.len());
+            assert_ne!(msg.len(), 0);
+            for m in msg{
+                println!("MSG::{}\n", m.to_string());
+            }
+        });
+    }
 }
