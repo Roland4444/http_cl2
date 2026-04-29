@@ -999,7 +999,7 @@ mod tests {
 
         let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
         (id + 1) as i64,limit,    ).await.unwrap();
-
+ 
         let messages = extract_messages_from_json(&json_value);
         println!("Извлечено {} сообщений", messages.len());
         for msg in messages.iter() {        println!("{:?}", msg);    }

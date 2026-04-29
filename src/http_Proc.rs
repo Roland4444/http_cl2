@@ -1,11 +1,5 @@
 use axum::extract::State;
-use axum::{
-    Router,
-    body::Bytes,
-    http::StatusCode,
-    response::IntoResponse,
-    routing::{get, post},
-};
+use axum::{    Router,    body::Bytes,    http::StatusCode,    response::IntoResponse,    routing::{get, post},};
 use futures_util::{SinkExt, StreamExt};
 use anyhow::{Context, Result};
 use futures::stream::{self,  TryStreamExt}; // в начало файла
@@ -39,17 +33,21 @@ pub struct KeyValueMessage {
 }
 
 
+#[derive(Debug, Serialize, PartialEq, Deserialize, Clone)]
+pub struct ConfigProcess {    pub switch_mode: SwitchIDMode,   pub from: u32,    pub to: u32, pub enabled_collabs: Vec<common::Collab>}
 
 
-pub fn process_msg(entry: ExtractedMessage)-> bool{
-    let author = entry.author_name;
-    let collab = entry.chat_id;
-    true
-    //entry.
+pub static CONFIG: ConfigProcess = ConfigProcess{switch_mode:common::FROM_CURRENT, from:0, to:1000000, enabled_collabs:vec![OKLAND]};
+
+pub fn process_msg(entry: ExtractedMessage)-> bool{    
+    let author = entry.author_name;    
+    let collab = entry.chat_id;    
+    true   
 }
 
 
-
+pub static ENABLED_COLLABS: Mutex2<Vec<common::Collab>> = Mutex2::new(Vec::new());
+pub static ID_FROM_TO: Mutex2<Vec<u32>> = Mutex2::new(Vec::new());
 
 pub fn process_message<F, R>(msg: ExtractedMessage, processor: F) -> R
 where
@@ -58,6 +56,8 @@ where
     processor(msg)
 }
 
+
+pub fn init_processing_config
 //pub static QUEUE: Lazy< std::sync::Mutex<Vec<ExtractedMessage>>> = Lazy::new(||  std::sync::Mutex::new(Vec::new()));
 
 pub static QUEUE: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
@@ -71,32 +71,26 @@ pub static QUEUE2: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
 //  iteration
 //  let mut queue = QUEUE.lock().unwrap();
 //  for item in queue.iter() { ... }
-pub fn copy_queue_to_queue2() {
-    let queue = QUEUE.lock();
-    let mut queue2 = QUEUE2.lock();
-    queue2.extend(queue.clone()); // требуется Clone для ExtractedMessage
+pub fn copy_queue_to_queue2() {    
+    let queue = QUEUE.lock();    
+    let mut queue2 = QUEUE2.lock();    
+    queue2.extend(queue.clone()); 
 }
 
-pub fn move_queue_to_queue2() -> usize {
-    let mut queue = QUEUE.lock();
-    let mut queue2 = QUEUE2.lock();
-    let len = queue.len();
-    queue2.extend(queue.drain(..));
-    len
+pub fn move_queue_to_queue2() -> usize {   
+     let mut queue = QUEUE.lock();    
+     let mut queue2 = QUEUE2.lock();    
+     let len = queue.len();    
+     queue2.extend(queue.drain(..));    len
 }
 
 
-pub fn adding_to_Pack(msg: ExtractedMessage) -> bool {
-    QUEUE.lock().push(msg);
-    true
-}
+pub fn adding_to_Pack(msg: ExtractedMessage) -> bool {    QUEUE.lock().push(msg);    true}
 
 // Синхронный просмотр очереди
 pub fn watch() {
     let queue = QUEUE.lock();
-    for item in queue.iter() {
-        println!("{}", item.to_string());
-    }
+    for item in queue.iter() {println!("{}", item.to_string());}
 }
 
 fn process_atom_queue(){
@@ -110,6 +104,12 @@ fn process_atom_queue(){
         None => {  }
     }        
 }
+
+
+
+
+
+
 
 pub fn __func1(mut counter1: u64){
         loop {
@@ -127,7 +127,6 @@ pub fn __func1(mut counter1: u64){
 
 pub fn __func2(mut counter2: u64){
         let queue2 = QUEUE2.lock();
-
         let mut counter = 0;
         let finish_index = queue2.len(); 
         loop {
@@ -156,122 +155,81 @@ pub fn process_function() {
     let  counter1 = 0;
     let  counter2 = 0;
     let __hndl1 = thread::spawn(move || {__func1(counter1);});
-
     let __hndl2 = thread::spawn(move || {__func2(counter2);});
-
-
     __hndl1.join();
     __hndl2.join();
    // loop {thread::sleep(Duration::from_secs(3));}
 
 }
 
-
-
-
 fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
     let mut bytes = buf;
     let mut id = None;
     let mut key = None;
     let mut value = None;
-
     while !bytes.is_empty() {
-        let (key_val, rest) =
-            read_varint(bytes).map_err(|e| format!("Ошибка чтения ключа: {}", e))?;
+        let (key_val, rest) =read_varint(bytes).map_err(|e| format!("Ошибка чтения ключа: {}", e))?;
         bytes = rest;
-
         let tag = key_val >> 3;
         let wire_type = key_val & 0x07;
-
         match (tag, wire_type) {
             (1, 0) => {
-                let (val, rest) =
-                    read_varint(bytes).map_err(|e| format!("Ошибка чтения id: {}", e))?;
+                let (val, rest) =read_varint(bytes).map_err(|e| format!("Ошибка чтения id: {}", e))?;
                 id = Some(val as i32);
                 bytes = rest;
             }
             (2, 2) => {
-                let (len, rest) =
-                    read_varint(bytes).map_err(|e| format!("Ошибка чтения длины key: {}", e))?;
-                if rest.len() < len as usize {
-                    return Err("Недостаточно байт для key".into());
-                }
+                let (len, rest) =read_varint(bytes).map_err(|e| format!("Ошибка чтения длины key: {}", e))?;
+                if rest.len() < len as usize {return Err("Недостаточно байт для key".into());}
                 let str_bytes = &rest[..len as usize];
-                let s = String::from_utf8(str_bytes.to_vec())
-                    .map_err(|e| format!("key не валидный UTF-8: {}", e))?;
+                let s = String::from_utf8(str_bytes.to_vec()).map_err(|e| format!("key не валидный UTF-8: {}", e))?;
                 key = Some(s);
                 bytes = &rest[len as usize..];
             }
             (3, 2) => {
-                let (len, rest) =
-                    read_varint(bytes).map_err(|e| format!("Ошибка чтения длины value: {}", e))?;
-                if rest.len() < len as usize {
-                    return Err("Недостаточно байт для value".into());
-                }
+                let (len, rest) =read_varint(bytes).map_err(|e| format!("Ошибка чтения длины value: {}", e))?;
+                if rest.len() < len as usize {return Err("Недостаточно байт для value".into());}
                 let str_bytes = &rest[..len as usize];
-                let s = String::from_utf8(str_bytes.to_vec())
-                    .map_err(|e| format!("value не валидный UTF-8: {}", e))?;
+                let s = String::from_utf8(str_bytes.to_vec()).map_err(|e| format!("value не валидный UTF-8: {}", e))?;
                 value = Some(s);
                 bytes = &rest[len as usize..];
             }
             _ => match wire_type {
                 0 => {
-                    let (_, rest) =
-                        read_varint(bytes).map_err(|e| format!("Ошибка пропуска varint: {}", e))?;
+                    let (_, rest) =read_varint(bytes).map_err(|e| format!("Ошибка пропуска varint: {}", e))?;
                     bytes = rest;
                 }
                 2 => {
-                    let (len, rest) = read_varint(bytes)
-                        .map_err(|e| format!("Ошибка чтения длины для пропуска: {}", e))?;
-                    if rest.len() < len as usize {
-                        return Err("Недостаточно байт для пропуска поля".into());
-                    }
+                    let (len, rest) = read_varint(bytes).map_err(|e| format!("Ошибка чтения длины для пропуска: {}", e))?;
+                    if rest.len() < len as usize {return Err("Недостаточно байт для пропуска поля".into());}
                     bytes = &rest[len as usize..];
                 }
-                _ => {
-                    return Err(format!(
-                        "Неподдерживаемый wire type {} для пропуска",
-                        wire_type
-                    ));
-                }
+                _ => {return Err(format!("Неподдерживаемый wire type {} для пропуска",wire_type));}
             },
         }
     }
 
-    Ok(KeyValueMessage {
-        id: id.ok_or("Отсутствует поле id")?,
-        key: key.ok_or("Отсутствует поле key")?,
-        value: value.ok_or("Отсутствует поле value")?,
-    })
+    Ok(KeyValueMessage {id: id.ok_or("Отсутствует поле id")?,key: key.ok_or("Отсутствует поле key")?,value: value.ok_or("Отсутствует поле value")?,    })
 }
 
 fn read_varint(buf: &[u8]) -> Result<(u64, &[u8]), &'static str> {
     let mut result = 0u64;
     let mut shift = 0;
     let mut pos = 0;
-
     while pos < buf.len() {
         let byte = buf[pos];
         result |= ((byte & 0x7F) as u64) << shift;
         pos += 1;
-        if byte & 0x80 == 0 {
-            return Ok((result, &buf[pos..]));
-        }
+        if byte & 0x80 == 0 {return Ok((result, &buf[pos..]));}
         shift += 7;
-        if shift > 63 {
-            return Err("varint слишком длинный");
-        }
+        if shift > 63 {return Err("varint слишком длинный");}
     }
     Err("неожиданный конец varint")
 }
 
-async fn hello_handler() -> &'static str {
-    "hello world"
-}
+async fn hello_handler() -> &'static str {    "hello world"}
 
-pub fn get_webhook() -> String {
-    get_webhook_(WEBHOOK_FILENAME)
-}
+pub fn get_webhook() -> String {    get_webhook_(WEBHOOK_FILENAME)}
 
 pub fn get_webhook_(filename: &str) -> String {
     let vec = read_lines(filename);
@@ -279,7 +237,7 @@ pub fn get_webhook_(filename: &str) -> String {
     elem
 }
 
-pub async fn update_param_2(    client_reqwest: Client,    params: &[(&str, &str)],) -> Result<String, Box<dyn Error>> {
+pub async fn update_param_2(client_reqwest: Client,params: &[(&str, &str)],) -> Result<String, Box<dyn Error>> {
     let url = get_webhook() + "user.update";
     println!("Resulted url: {}", url);
     let response = client_reqwest.post(url).form(params).send().await?;
@@ -310,37 +268,24 @@ fn process_message2(msg: ExtractedMessage) -> u64 {
 }
 
 pub async fn get_text_via_chat_id_and_id(chat_name: String, message_id: u64) -> Result<String> {
-    let (mut ws_stream, _) = connect_async("ws://127.0.0.1:3000/proc")
-        .await
-        .context("Не удалось подключиться к WebSocket")?;
+    let (mut ws_stream, _) = connect_async("ws://127.0.0.1:3000/proc").await.context("Не удалось подключиться к WebSocket")?;
 
-    let request = json!({
-        "collab": chat_name,
-        "message_id": message_id
-    });
+    let request = json!({"collab": chat_name,"message_id": message_id});
 
     let request_bytes = serde_json::to_vec(&request)?;
-    ws_stream
-        .send(Message::Binary(request_bytes.into()))
-        .await?;
+    ws_stream.send(Message::Binary(request_bytes.into())).await?;
 
     if let Some(Ok(Message::Text(resp_text))) = ws_stream.next().await {
         let resp: ExtractResp = serde_json::from_str(&resp_text)?;
-        if resp.success {
-            return Ok(resp.quoted_text.unwrap_or_default());
-        } else {
-            anyhow::bail!("Ошибка сервера: {}", resp.error.unwrap_or_default());
-        }
+        if resp.success {return Ok(resp.quoted_text.unwrap_or_default());} 
+        else {            anyhow::bail!("Ошибка сервера: {}", resp.error.unwrap_or_default());        }
     }
 
     anyhow::bail!("Не получен ответ от сервера");
 }
 
 
-async fn processmsg(
-    msg: KeyValueMessage,
-    vec: &mut Vec<KeyValueMessage>,
-) -> Result<(), Box<dyn Error>> {
+async fn processmsg(msg: KeyValueMessage,vec: &mut Vec<KeyValueMessage>,) -> Result<(), Box<dyn Error>> {
     println!("✅ Получено сообщение: {:?}", msg);
 
     let client_reqwest = Client::new();
@@ -354,9 +299,7 @@ async fn processmsg(
     if id_str == SYSTEM_MESSAGE.to_string() {
         println!("SYSTEM MESSAGE: {}", id_str);
         println!("VALUE MESSAGE: {}", key_str);
-        if key_str == CREATE_QUEUE {
-            IS_PENDING.store(true, Ordering::SeqCst);
-        }
+        if key_str == CREATE_QUEUE {IS_PENDING.store(true, Ordering::SeqCst);}
 
         if key_str == RUN_QUEUE {
             if vec.len() == 0 {
@@ -471,8 +414,7 @@ async fn fallback_handler() -> impl IntoResponse {
 pub async fn spawn() -> anyhow::Result<()> {
     let shared_state = Arc::new(Mutex::new(Vec::<KeyValueMessage>::new()));
 
-    let app = Router::new().route("/test", get(hello_handler)).route("/test", post(post_handler)).with_state(shared_state)
-        .fallback(fallback_handler);
+    let app = Router::new().route("/test", get(hello_handler)).route("/test", post(post_handler)).with_state(shared_state).fallback(fallback_handler);
 
     let port = 3000;
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
@@ -487,9 +429,7 @@ pub async fn spawn() -> anyhow::Result<()> {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    spawn().await
-}
+async fn main() -> anyhow::Result<()> {    spawn().await}
 
 #[cfg(test)]
 mod tests {
@@ -500,13 +440,8 @@ mod tests {
 
     #[test]
     fn test_process_msg() {
-        let msg = ExtractedMessage {
-            author_name: "Сергей Браташов".to_string(),
-            text: "Согласовано".to_string(),
-            uuid: Some("851fba1b-35d9-4b61-aaaa-0258fc093efd".to_string()),
-            id: 100822,
-            chat_id: 9796,
-        };
+        let msg = ExtractedMessage {author_name: "Сергей Браташов".to_string(),text: "Согласовано".to_string(),uuid: Some("851fba1b-35d9-4b61-aaaa-0258fc093efd".to_string()),
+            id: 100822,chat_id: 9796,};
         assert_eq!(100822, http_Proc::process_message2(msg));
     }
 
@@ -515,12 +450,8 @@ mod tests {
     async fn test_websocket_extract_quote() {
         let resp = get_text_via_chat_id_and_id(OKLAND.to_string(), 118782).await;
         match resp {
-            Ok(text) => {
-                println!("EXTRACTED::{}", text)
-            }
-            Err(_) => {
-                println!("FAILED!")
-            }
+            Ok(text) => {println!("EXTRACTED::{}", text)}
+            Err(_) => {println!("FAILED!")}
         }
     }
 }
