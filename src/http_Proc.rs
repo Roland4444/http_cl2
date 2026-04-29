@@ -88,8 +88,22 @@ pub fn reinit_CHAT_NUM() {
             eprintln!("Warning: Collab {:?} not found in CHAT_NUM_ID", collab);
         }
     }
-
 }
+
+pub fn reinit_CHAT_NUM__(config: ConfigProcess) {
+    let mut target = CHAT_NUM_ID_PROD.write().unwrap();
+    target.clear();
+    for collab in config.enabled_collabs.iter() {
+        if let Some(&num) = CHAT_NUM_ID.get(collab) {
+            target.push(num);
+        } else {
+            eprintln!("Warning: Collab {:?} not found in CHAT_NUM_ID", collab);
+        }
+    }
+}
+
+
+
 
 // pub fn predicate(input: ExtractedMessage) -> bool {
 //     reinit_CHAT_NUM();
@@ -384,22 +398,23 @@ pub async fn get_last_id_for_collab(    collab: Collab,    client: Client,    we
     anyhow::bail!("Чат с названием '{}' не найден", target_title);
 }
 
-pub async fn _pull_messages_prod_throw_collab_and_filter(current_collab: Collab, config: ConfigProcess) -> Vec<ExtractedMessage> {
+pub async fn __pull_messages_prod_throw_collab_and_filter(current_collab: Collab, config: ConfigProcess) -> Vec<ExtractedMessage> {
     let title = current_collab.title();
     let id = get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
     println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
     let mut  limit = 1;
     if config.switch_mode == common::SwitchIDMode::FROM_TO {
-        limit = id as u32 - config.from;
-        if limit < 0
-            {return Vec::new()}
+        let diff = (id as i64) - (config.from as i64);
+        if diff < 0 {  return  Vec::new()}
+        else {limit = diff as u32;
+}
     }
 
     let json_value:Value = pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
     (id + 1) as i64,limit as u32,    ).await.unwrap();
  
-    let mut messages = extract_messages_from_json(&json_value);
+    let messages = extract_messages_from_json(&json_value);
     if config.switch_mode == common::SwitchIDMode::FROM_TO {
         messages.into_iter().filter(|a| a.id >= config.from && a.id <= config.to).collect()} 
     else {        messages    }
@@ -580,4 +595,16 @@ mod tests {
             Err(_) => {println!("FAILED!")}
         }
     }
+
+    #[test]
+    fn test_bullshit_test() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            let conf = ConfigProcess {switch_mode: common::SwitchIDMode::FROM_TO,from: 10000,to: 122000,enabled_collabs: vec![Collab::OKLAND],};
+            let msg = __pull_messages_prod_throw_collab_and_filter(Collab::OKLAND, conf).await;
+            println!("SIZE arr::{}", msg.len());
+            assert_ne!(msg.len(), 0);
+        });
+    }
+
 }
