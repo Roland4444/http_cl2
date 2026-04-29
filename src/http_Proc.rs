@@ -23,6 +23,9 @@ use once_cell::sync::Lazy;
 use crate::thread;
 use parking_lot::Mutex as Mutex2;
 use crate::HashMap;
+use std::sync::RwLock;
+
+use crate::webhook_base_prod;
 
 static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
@@ -64,13 +67,38 @@ pub static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(|| {
         .collect()});
 
 
+pub static CHAT_NUM_ID_PROD: Lazy<RwLock<Vec<u64>>> = Lazy::new(|| RwLock::new(Vec::new()));
 
 
 
 
-pub fn predicate(input: ExtractedMessage) -> bool {
-    true
+
+
+//AUTHOR::Александр Минин, TEXT::Будет корректировка в большую сторону., UUID::597650e4-1faa-40da-ab05-350005abcbbb, ID::102072, CHAT_ID::9796
+
+
+
+pub fn reinit_CHAT_NUM() {
+    let mut target = CHAT_NUM_ID_PROD.write().unwrap();
+    target.clear();
+    for collab in CONFIG.enabled_collabs.iter() {
+        if let Some(&num) = CHAT_NUM_ID.get(collab) {
+            target.push(num);
+        } else {
+            eprintln!("Warning: Collab {:?} not found in CHAT_NUM_ID", collab);
+        }
+    }
+
 }
+
+// pub fn predicate(input: ExtractedMessage) -> bool {
+//     reinit_CHAT_NUM();
+//     let ids = CHAT_NUM_ID_PROD.read().unwrap();
+//     let filter_via_collabs = ids.contains(&input.chat_id);
+//     let mut filter_via_id = true;
+//     if (CONFIG.switch_mode == common::
+//     filter_via_collabs && filter_via_id
+// }
 
 
 pub static CONFIG: Lazy<ConfigProcess> = Lazy::new(|| ConfigProcess {    
@@ -290,7 +318,7 @@ const CONTENT_TYPE: &str = "Content-type";
 
 const APPROVED: &str = "СОГЛАСОВАНО";
 
-fn process_message2(msg: ExtractedMessage) -> u64 {
+fn process_message2(msg: ExtractedMessage) -> u32 {
     if !msg.text.to_uppercase().contains(APPROVED) {
         println!("SKIPPED");
         msg.id
@@ -316,6 +344,71 @@ pub async fn get_text_via_chat_id_and_id(chat_name: String, message_id: u64) -> 
 
     anyhow::bail!("Не получен ответ от сервера");
 }
+
+
+pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
+    let mut user_names = HashMap::new();
+    if let Some(users) = value["result"]["users"].as_array() {
+        for user in users {if let (Some(id), Some(name)) = (user["id"].as_u64(), user["name"].as_str()) {user_names.insert(id, name.to_string());}}
+    }
+
+    let mut result = Vec::new();
+    if let Some(messages) = value["result"]["messages"].as_array() {
+        for msg in messages {
+            let author_id = msg["author_id"].as_u64().unwrap_or(0);
+            if author_id == 0 {                continue;            }
+            let id = msg["id"].as_u64().unwrap_or(0) as u32;
+            let chat_id = msg["chat_id"].as_u64().unwrap_or(0) as u32;
+            let author_name = user_names                .get(&author_id)                .cloned()                .unwrap_or_else(|| format!("unknown_{}", author_id));
+            let text = msg["text"].as_str().unwrap_or("").to_string();
+            let uuid = msg["uuid"].as_str().map(|s| s.to_string());
+            result.push(ExtractedMessage {                author_name,                text,                uuid,                id,                chat_id,            });
+        }
+    }
+    result
+}
+
+
+pub async fn get_last_id_for_collab(    collab: Collab,    client: Client,    webhook_url: &str,) -> anyhow::Result<u64> {
+    let json = fetch_recent_list_raw(client, webhook_url, json!({})).await.context("Ошибка получения списка чатов")?;
+    let items = json["result"]["items"].as_array().context("Нет поля result.items в JSON")?;
+    let target_title = collab.title();
+    for item in items {
+        let item_type = item["type"].as_str().unwrap_or("");
+        let title = item["title"].as_str().unwrap_or("");
+        if item_type == "chat" && title == target_title {
+            let last_id = item["last_id"]                .as_u64()                .context("Поле last_id отсутствует или не число")?;
+            return Ok(last_id);
+        }
+    }
+    anyhow::bail!("Чат с названием '{}' не найден", target_title);
+}
+
+pub async fn _pull_messages_prod_throw_collab_and_filter(current_collab: Collab, config: ConfigProcess) -> Vec<ExtractedMessage> {
+    let title = current_collab.title();
+    let id = get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+
+    println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+    let mut  limit = 1;
+    if config.switch_mode == common::SwitchIDMode::FROM_TO {
+        limit = id as u32 - config.from;
+        if limit < 0
+            {return Vec::new()}
+    }
+
+    let json_value:Value = pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
+    (id + 1) as i64,limit as u32,    ).await.unwrap();
+ 
+    let mut messages = extract_messages_from_json(&json_value);
+    if config.switch_mode == common::SwitchIDMode::FROM_TO {
+        messages.into_iter().filter(|a| a.id >= config.from && a.id <= config.to).collect()} 
+    else {        messages    }
+}
+
+
+
+
+
 
 
 async fn processmsg(msg: KeyValueMessage,vec: &mut Vec<KeyValueMessage>,) -> Result<(), Box<dyn Error>> {

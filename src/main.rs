@@ -526,42 +526,13 @@ fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
     })
 }
 
-pub async fn get_last_id_for_collab(    collab: Collab,    client: Client,    webhook_url: &str,) -> anyhow::Result<u64> {
-    let json = http_Proc::fetch_recent_list_raw(client, webhook_url, json!({})).await.context("Ошибка получения списка чатов")?;
-    let items = json["result"]["items"].as_array().context("Нет поля result.items в JSON")?;
-    let target_title = collab.title();
-    for item in items {
-        let item_type = item["type"].as_str().unwrap_or("");
-        let title = item["title"].as_str().unwrap_or("");
-        if item_type == "chat" && title == target_title {
-            let last_id = item["last_id"]                .as_u64()                .context("Поле last_id отсутствует или не число")?;
-            return Ok(last_id);
-        }
-    }
-    anyhow::bail!("Чат с названием '{}' не найден", target_title);
-}
+    const WEBHOOK_TEST_BASE__: &str = "webhook.test";
+    const WEBHOOCK_PROD_CHAT__: &str = "webhook.prod";
 
-pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
-    let mut user_names = HashMap::new();
-    if let Some(users) = value["result"]["users"].as_array() {
-        for user in users {if let (Some(id), Some(name)) = (user["id"].as_u64(), user["name"].as_str()) {user_names.insert(id, name.to_string());}}
-    }
+    pub fn webhook_base_test() -> String {        http_Proc::get_webhook_(WEBHOOK_TEST_BASE__)    }
 
-    let mut result = Vec::new();
-    if let Some(messages) = value["result"]["messages"].as_array() {
-        for msg in messages {
-            let author_id = msg["author_id"].as_u64().unwrap_or(0);
-            if author_id == 0 {                continue;            }
-            let id = msg["id"].as_u64().unwrap_or(0);
-            let chat_id = msg["chat_id"].as_u64().unwrap_or(0);
-            let author_name = user_names                .get(&author_id)                .cloned()                .unwrap_or_else(|| format!("unknown_{}", author_id));
-            let text = msg["text"].as_str().unwrap_or("").to_string();
-            let uuid = msg["uuid"].as_str().map(|s| s.to_string());
-            result.push(ExtractedMessage {                author_name,                text,                uuid,                id,                chat_id,            });
-        }
-    }
-    result
-}
+    pub fn webhook_base_prod() -> String {        http_Proc::get_webhook_(WEBHOOCK_PROD_CHAT__)    }
+
 
 #[cfg(test)]
 mod tests {
@@ -741,12 +712,7 @@ mod tests {
         file.write_all(etalon.as_bytes());
         assert_eq!(etalon, synteka());
     }
-    const WEBHOOK_TEST_BASE__: &str = "webhook.test";
-    const WEBHOOCK_PROD_CHAT__: &str = "webhook.prod";
 
-    fn webhook_base_test() -> String {        http_Proc::get_webhook_(WEBHOOK_TEST_BASE__)    }
-
-    fn webhook_base_prod() -> String {        http_Proc::get_webhook_(WEBHOOCK_PROD_CHAT__)    }
 
     #[tokio::test]
     async fn test_pull_messages() {
@@ -772,7 +738,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_pull_messages_prod_okland() {
-        let id =get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+        let id =http_Proc::get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str()).await.unwrap();
         let limit = 120;
         let out = format!("{}_last{}.js", OKLAND, limit);
         let _ = http_Proc::pull_messages(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"),  id as i64,limit,&out,).await;
@@ -813,7 +779,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_pull_messages_prod_okland2() {
-        let id =            get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+        let id =   http_Proc::get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
         println!("\n\n\n\nLAST ID IN OKLAND:: {}\n\n\n", id);
         let limit = 1200;
@@ -821,7 +787,7 @@ mod tests {
         let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"),
             (id + 2) as i64,  limit,        ).await.unwrap();
 
-        let messages = extract_messages_from_json(&json_value);
+        let messages =  http_Proc::extract_messages_from_json(&json_value);
         println!("Извлечено {} сообщений", messages.len());
         for msg in messages.iter() {                     println!("{:?}", msg);        }
 
@@ -836,7 +802,7 @@ mod tests {
     async fn test_pull_messages_prod_Scandinavia2() {
         let current_collab = Collab::SCANDINAVIA;
         let title = current_collab.title();
-        let id =            get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+        let id =    http_Proc::         get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
         println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
         let limit = 1220;
@@ -844,7 +810,7 @@ mod tests {
         let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),(id + 1) as i64, // <=============== pull with last!
             limit,).await.unwrap();
 
-        let messages = extract_messages_from_json(&json_value);
+        let messages =  http_Proc::extract_messages_from_json(&json_value);
         println!("Извлечено {} сообщений", messages.len());
         for msg in messages.iter() {               println!("{:?}", msg);        }
 
@@ -859,7 +825,7 @@ mod tests {
     async fn test_pull_messages_prod_OWN() {
         let current_collab = Collab::OWN;
         let title = current_collab.title();
-        let id =get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+        let id = http_Proc::get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
         println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
         let limit = 120;
@@ -867,7 +833,7 @@ mod tests {
         let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab)
                 .expect(&format!("{} not found", title)),(id + 1) as i64,limit,).await.unwrap();
 
-        let messages = extract_messages_from_json(&json_value);
+        let messages =  http_Proc::extract_messages_from_json(&json_value);
         println!("Извлечено {} сообщений", messages.len());
         for msg in messages.iter() {                    println!("{:?}", msg);        }
 
@@ -972,7 +938,7 @@ mod tests {
     async fn test_pull_messages_prod_Scandinavia2_with_dump() {
         let current_collab = Collab::SCANDINAVIA;
         let title = current_collab.title();
-        let id = get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+        let id = http_Proc:: get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
         println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
         let limit = 1220;
@@ -980,7 +946,7 @@ mod tests {
         let json_value:Value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
         (id + 1) as i64,limit,    ).await.unwrap();
  
-        let messages = extract_messages_from_json(&json_value);
+        let messages =  http_Proc::extract_messages_from_json(&json_value);
         println!("Извлечено {} сообщений", messages.len());
         for msg in messages.iter() {        println!("{:?}", msg);    }
 
