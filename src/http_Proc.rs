@@ -37,7 +37,12 @@ pub struct KeyValueMessage {
 pub struct ConfigProcess {    pub switch_mode: SwitchIDMode,   pub from: u32,    pub to: u32, pub enabled_collabs: Vec<common::Collab>}
 
 
-pub static CONFIG: ConfigProcess = ConfigProcess{switch_mode:common::FROM_CURRENT, from:0, to:1000000, enabled_collabs:vec![OKLAND]};
+pub static CONFIG: Lazy<ConfigProcess> = Lazy::new(|| ConfigProcess {    
+    switch_mode: common::SwitchIDMode::FROM_CURRENT,    
+    from: 0,    
+    to: 1000000,    
+    enabled_collabs: vec![Collab::OKLAND],
+});
 
 pub fn process_msg(entry: ExtractedMessage)-> bool{    
     let author = entry.author_name;    
@@ -57,7 +62,6 @@ where
 }
 
 
-pub fn init_processing_config
 //pub static QUEUE: Lazy< std::sync::Mutex<Vec<ExtractedMessage>>> = Lazy::new(||  std::sync::Mutex::new(Vec::new()));
 
 pub static QUEUE: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());

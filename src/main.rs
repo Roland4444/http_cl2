@@ -997,7 +997,7 @@ mod tests {
         println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
         let limit = 1220;
 
-        let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
+        let json_value:Value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
         (id + 1) as i64,limit,    ).await.unwrap();
  
         let messages = extract_messages_from_json(&json_value);
