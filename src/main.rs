@@ -21,33 +21,13 @@ use once_cell::sync::Lazy;
 use std::thread;
 use std::time::Duration;
 use common::*;
+use crate::http_Proc::CHATS_ID;
+
+
 
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
 const SYNTEKA_TOKEN_FILE: &str = "synteka";
-
-
-macro_rules! hashmap {
-    ($($key: expr => $val: expr), *) => {
-        {
-            let mut map = ::std::collections::HashMap::new();
-            $(map.insert($key, $val); )*
-            map        }    };}
-//genned
-static CHATS_ID: Lazy<HashMap<Collab, &str>> = Lazy::new(|| {
-    hashmap!(
-        Collab::PAYMENTS => "chat9224",        Collab::OLIVIA => "chat6998",        Collab::BABEFA => "chat6974",        Collab::OKLAND => "chat6986",        Collab::RED => "chat7018",
-        Collab::TETRIS => "chat7014",          Collab::SCANDINAVIA => "chat9796",   Collab::KUIB => "chat7210",          Collab::POLZ => "chat7208",          Collab::ZVEZD => "chat7242",
-        Collab::SKY => "chat6966",             Collab::OWN => "chat13372"    )});
-//genned
-
-static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(|| {
-    CHATS_ID
-        .iter()
-        .map(|(collab, &id_str): (&Collab, &&str)| {
-            let num = id_str.strip_prefix("chat").unwrap_or(id_str).parse().expect("INVALID ID");
-            (*collab, num)})
-        .collect()});
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 enum ADDITIONAL_FIELDS {    WORK_POSITION,    PERSONAL_BIRTHDAY,    UF_DEPARTMENT,}

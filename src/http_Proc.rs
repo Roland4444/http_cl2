@@ -22,6 +22,7 @@ const WEBHOOK_FILENAME: &str = "webhook";
 use once_cell::sync::Lazy;
 use crate::thread;
 use parking_lot::Mutex as Mutex2;
+use crate::HashMap;
 
 static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
@@ -37,6 +38,41 @@ pub struct KeyValueMessage {
 pub struct ConfigProcess {    pub switch_mode: SwitchIDMode,   pub from: u32,    pub to: u32, pub enabled_collabs: Vec<common::Collab>}
 
 
+
+macro_rules! hashmap {
+    ($($key: expr => $val: expr), *) => {
+        {
+            let mut map = ::std::collections::HashMap::new();
+            $(map.insert($key, $val); )*
+            map        }    };}
+
+
+//genned
+pub static CHATS_ID: Lazy<HashMap<Collab, &str>> = Lazy::new(|| {
+    hashmap!(
+        Collab::PAYMENTS => "chat9224",        Collab::OLIVIA => "chat6998",        Collab::BABEFA => "chat6974",        Collab::OKLAND => "chat6986",        Collab::RED => "chat7018",
+        Collab::TETRIS => "chat7014",          Collab::SCANDINAVIA => "chat9796",   Collab::KUIB => "chat7210",          Collab::POLZ => "chat7208",          Collab::ZVEZD => "chat7242",
+        Collab::SKY => "chat6966",             Collab::OWN => "chat13372"    )});
+//genned
+
+pub static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(|| {
+    CHATS_ID
+        .iter()
+        .map(|(collab, &id_str): (&Collab, &&str)| {
+            let num = id_str.strip_prefix("chat").unwrap_or(id_str).parse().expect("INVALID ID");
+            (*collab, num)})
+        .collect()});
+
+
+
+
+
+
+pub fn predicate(input: ExtractedMessage) -> bool {
+    true
+}
+
+
 pub static CONFIG: Lazy<ConfigProcess> = Lazy::new(|| ConfigProcess {    
     switch_mode: common::SwitchIDMode::FROM_CURRENT,    
     from: 0,    
@@ -50,9 +86,8 @@ pub fn process_msg(entry: ExtractedMessage)-> bool{
     true   
 }
 
+ 
 
-pub static ENABLED_COLLABS: Mutex2<Vec<common::Collab>> = Mutex2::new(Vec::new());
-pub static ID_FROM_TO: Mutex2<Vec<u32>> = Mutex2::new(Vec::new());
 
 pub fn process_message<F, R>(msg: ExtractedMessage, processor: F) -> R
 where
@@ -108,12 +143,6 @@ fn process_atom_queue(){
         None => {  }
     }        
 }
-
-
-
-
-
-
 
 pub fn __func1(mut counter1: u64){
         loop {
