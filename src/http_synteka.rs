@@ -20,29 +20,19 @@ struct CreateOrderRequest {
 }
 
 #[derive(serde::Serialize)]
-struct Project {
-    id: u32,
-}
+struct Project {    id: u32,}
 
 #[derive(serde::Serialize)]
-struct SourceAccount {
-    id: u32,
-}
+struct SourceAccount {    id: u32,}
 
 #[derive(serde::Serialize)]
-struct Consignee {
-    id: u32,
-}
+struct Consignee {    id: u32,}
 
 #[derive(serde::Serialize)]
-struct Region {
-    id: u32,
-}
+struct Region {    id: u32,}
 
 #[derive(serde::Serialize)]
-struct Responsible {
-    id: u32,
-}
+struct Responsible {    id: u32,}
 
 #[derive(serde::Serialize)]
 struct OrderItem {
@@ -93,7 +83,6 @@ pub fn get_id_user_via_fio_cynteka(fio: Vec<String>, json__: &Value) -> Option<u
 
 pub async fn create_order_with_params(token: &str, client: &Client, responsible: u32, consignee: u32, finish_date: String, project_id: u32) -> Result<Value> {
     let url = "https://restetris.cynteka.ru/api/v1/orders?format=json&isoDate=true";
-
     let request_body = CreateOrderRequest {
         name: "Тестовый заказ".to_string(),
         project: Project { id: project_id },
@@ -134,17 +123,9 @@ pub async fn create_order_with_params(token: &str, client: &Client, responsible:
     let status = response.status();
     let body = response.text().await.context("Ошибка чтения тела ответа")?;
 
-    if status.is_success() {
-        let json: Value = serde_json::from_str(&body)
-            .with_context(|| format!("Ошибка парсинга JSON: {}", body))?;
-        Ok(json)
-    } else {
-        anyhow::bail!(
-            "HTTP request failed with status {}: {}",
-            status.as_u16(),
-            body
-        )
-    }
+    if status.is_success() {let json: Value = serde_json::from_str(&body).with_context(|| format!("Ошибка парсинга JSON: {}", body))?;Ok(json)} 
+    else {        anyhow::bail!("HTTP request failed with status {}: {}",status.as_u16(),body)    
+}
 }
 
 
@@ -181,30 +162,16 @@ pub async fn create_order(token: &str, client: &Client) -> Result<Value> {
         ],
     };
 
-    let response = client
-        .post(url)
-        .header("accept", "application/json")
-        .header("ZakupayToken", token)
-        .header("Content-Type", "application/json")
-        .json(&request_body)
-        .send()
-        .await
-        .context("Ошибка отправки запроса")?;
+    let response = client.post(url).header("accept", "application/json").header("ZakupayToken", token).header("Content-Type", "application/json")
+        .json(&request_body).send().await.context("Ошибка отправки запроса")?;
 
     let status = response.status();
     let body = response.text().await.context("Ошибка чтения тела ответа")?;
 
     if status.is_success() {
-        let json: Value = serde_json::from_str(&body)
-            .with_context(|| format!("Ошибка парсинга JSON: {}", body))?;
-        Ok(json)
-    } else {
-        anyhow::bail!(
-            "HTTP request failed with status {}: {}",
-            status.as_u16(),
-            body
-        )
-    }
+        let json: Value = serde_json::from_str(&body).with_context(|| format!("Ошибка парсинга JSON: {}", body))?;
+        Ok(json)} 
+    else {anyhow::bail!("HTTP request failed with status {}: {}",status.as_u16(),body)}
 }
 
 // Пример использования:

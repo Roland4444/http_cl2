@@ -33,14 +33,8 @@ static IS_PENDING: AtomicBool = AtomicBool::new(false);
 const SYSTEM_MESSAGE: &str = "0";    const CREATE_QUEUE: &str = "CREATE_QUEUE";         const RUN_QUEUE: &str = "RUN_QUEUE";   const CONTENT_TYPE: &str = "Content-type";
 const APPROVED: &str = "СОГЛАСОВАНО";
 
-
-
 #[derive(Debug, Clone, PartialEq)]
-pub struct KeyValueMessage {
-    pub id: i32,
-    pub key: String,
-    pub value: String,
-}
+pub struct KeyValueMessage {    pub id: i32,    pub key: String,    pub value: String,}
 
 
 #[derive(Debug, Serialize, PartialEq, Deserialize, Clone)]
@@ -90,9 +84,6 @@ pub fn reinit_CHAT_NUM__(config: ConfigProcess) {
     }
 }
 
-
-
-
 // pub fn predicate(input: ExtractedMessage) -> bool {
 //     reinit_CHAT_NUM();
 //     let ids = CHAT_NUM_ID_PROD.read().unwrap();
@@ -101,8 +92,6 @@ pub fn reinit_CHAT_NUM__(config: ConfigProcess) {
 //     if (CONFIG.switch_mode == common::
 //     filter_via_collabs && filter_via_id
 // }
-
-
 pub static CONFIG: Lazy<ConfigProcess> = Lazy::new(|| ConfigProcess {switch_mode: common::SwitchIDMode::FROM_CURRENT,from: 0,to: 1000000,enabled_collabs: vec![Collab::OKLAND],});
 
 pub fn process_msg(entry: ExtractedMessage)-> bool{   
@@ -110,9 +99,6 @@ pub fn process_msg(entry: ExtractedMessage)-> bool{
     let collab = entry.chat_id;    
     true   
 }
-
- 
-
 
 pub fn process_message<F, R>(msg: ExtractedMessage, processor: F) -> R
 where
@@ -200,11 +186,9 @@ pub fn __func2(mut counter2: u64){
                 println!("\n\n\nFUNC2 stopped\n\n\n\n");
                 break;
             }
-
             thread::sleep(Duration::from_millis(200));
             println!("THREAD2::{}\n\n\n", counter2);
             counter+=1;
-
         }
 }
 
@@ -217,7 +201,6 @@ pub fn process_function() {
     __hndl1.join();
     __hndl2.join();
    // loop {thread::sleep(Duration::from_secs(3));}
-
 }
 
 fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
@@ -319,21 +302,15 @@ fn process_message2(msg: ExtractedMessage) -> u32 {
 
 pub async fn get_text_via_chat_id_and_id(chat_name: String, message_id: u64) -> Result<String> {
     let (mut ws_stream, _) = connect_async("ws://127.0.0.1:3000/proc").await.context("Не удалось подключиться к WebSocket")?;
-
     let request = json!({"collab": chat_name,"message_id": message_id});
-
     let request_bytes = serde_json::to_vec(&request)?;
     ws_stream.send(Message::Binary(request_bytes.into())).await?;
-
     if let Some(Ok(Message::Text(resp_text))) = ws_stream.next().await {
         let resp: ExtractResp = serde_json::from_str(&resp_text)?;
         if resp.success {return Ok(resp.quoted_text.unwrap_or_default());} 
-        else {            anyhow::bail!("Ошибка сервера: {}", resp.error.unwrap_or_default());        }
-    }
-
+        else {            anyhow::bail!("Ошибка сервера: {}", resp.error.unwrap_or_default());        }}
     anyhow::bail!("Не получен ответ от сервера");
 }
-
 
 pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
     let mut user_names = HashMap::new();
@@ -371,10 +348,7 @@ pub async fn get_last_id_for_collab(    collab: Collab,    client: Client,    we
 }
 
 
-fn approved_filter(msg: &ExtractedMessage) -> bool {
-    msg.text.to_uppercase().contains(APPROVED)
-}
-
+fn approved_filter(msg: &ExtractedMessage) -> bool {    msg.text.to_uppercase().contains(APPROVED)}
 
 pub async fn __pull_messages_prod_throw_collab_and_filter(current_collab: Collab, config: ConfigProcess) -> Vec<ExtractedMessage> {
     let title = current_collab.title();
@@ -404,13 +378,6 @@ pub async fn __pull_messages_prod_throw_collabs_and_filter__(config: ConfigProce
     result.sort_by_key(|msg| msg.id);
     result
 }
-
-
-
-
-
-
-
 
 async fn processmsg(msg: KeyValueMessage,vec: &mut Vec<KeyValueMessage>,) -> Result<(), Box<dyn Error>> {
     println!("✅ Получено сообщение: {:?}", msg);
@@ -460,22 +427,17 @@ async fn processmsg(msg: KeyValueMessage,vec: &mut Vec<KeyValueMessage>,) -> Res
 
         return Ok(());
     }
-
     if !IS_PENDING.load(Ordering::SeqCst) {
         let result = update_param_2(client_reqwest.clone(), &item).await?;
         println!("Результат обновления: {}", result);
     }
-
     if IS_PENDING.load(Ordering::SeqCst) {
         vec.push(msg.clone());
         let result = 5;
         println!("WAITING RUN.......: {}", result);
     }
-
     Ok(())
 }
-
-
 
 type SharedState = Arc<Mutex<Vec<KeyValueMessage>>>;
 
@@ -532,16 +494,13 @@ async fn fallback_handler() -> impl IntoResponse {
 
 pub async fn spawn() -> anyhow::Result<()> {
     let shared_state = Arc::new(Mutex::new(Vec::<KeyValueMessage>::new()));
-
     let app = Router::new().route("/test", get(hello_handler)).route("/test", post(post_handler)).with_state(shared_state).fallback(fallback_handler);
-
     let port = 3000;
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     println!("🚀 Сервер запущен на http://localhost:{}/test", port);
     println!("   POST /test — принимает protobuf (id, key, value)");
     println!("   GET  /test — возвращает 'hello world'");
     println!("   (ручной декодер, без prost)");
-
     let listener = TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
     Ok(())

@@ -10,9 +10,7 @@ use std::path::Path;
 
 const WEBHOOK_FILENAME: &str = "webhook";
 
-pub fn read_bytes(filename: &str) -> Vec<u8> {
-    fs::read(filename).expect("Cant read files")
-}
+pub fn read_bytes(filename: &str) -> Vec<u8> {    fs::read(filename).expect("Cant read files")}
 
 pub fn read_lines_utf8(filename: &str) -> Vec<String> {
     match fs::read_to_string(filename) {
@@ -53,33 +51,16 @@ pub async fn read_tasks2(client_reqwest: &Client) -> Result<Value, Box<dyn Error
             }, "start":150
         });
 
-    let response = client_reqwest
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .header("Accept", "application/json")
-        .json(&body) // Автоматически сериализует в JSON и устанавливает Content-Type
-        .send()
-        .await?;
+    let response = client_reqwest.post(&url).header("Content-Type", "application/json").header("Accept", "application/json").json(&body).send().await?;
 
     // Проверяем статус ответа
-    if !response.status().is_success() {
-        return Err(format!("HTTP error: {}", response.status()).into());
-    }
-
+    if !response.status().is_success() {        return Err(format!("HTTP error: {}", response.status()).into());    }
     let json: Value = response.json().await?;
-
-    // Проверяем наличие ошибки в ответе Bitrix24
-    if let Some(error) = json.get("error") {
-        return Err(format!("Bitrix24 error: {}", error).into());
-    }
+    if let Some(error) = json.get("error") {        return Err(format!("Bitrix24 error: {}", error).into());    }
 
     // Также проверяем наличие поля "error" в result, если Bitrix24 так возвращает ошибки
     if let Some(result) = json.get("result") {
-        if let Some(error) = result.get("error") {
-            return Err(format!("Bitrix24 result error: {}", error).into());
-        }
-    }
-
+        if let Some(error) = result.get("error") {            return Err(format!("Bitrix24 result error: {}", error).into());        }}
     Ok(json)
 }
 
@@ -88,23 +69,15 @@ pub async fn read_tasks(client_reqwest: Client) -> Result<Value, Box<dyn Error>>
     let url = format!("{}/tasks.task.list", webhook.trim_end_matches('/'));
     let response = client_reqwest.post(&url).send().await?;
     let json: Value = response.json().await?;
-    if let Some(error) = json.get("error") {
-        return Err(format!("Bitrix24 error: {}", error).into());
-    }
+    if let Some(error) = json.get("error") {        return Err(format!("Bitrix24 error: {}", error).into());    }
     Ok(json)
 }
 
 pub fn read_lines(filename: &str) -> Vec<String> {
     let bytes = read_bytes(filename);
     let (decoded, _, had_errors) = WINDOWS_1251.decode(&bytes);
-    if had_errors {
-        println!("Some characters not decoded")
-    }
-    decoded
-        .to_string()
-        .lines()
-        .map(|line| line.to_string())
-        .collect()
+    if had_errors {        println!("Some characters not decoded")    }
+    decoded.to_string().lines().map(|line| line.to_string()).collect()
 }
 
 pub async fn get_user_by_id(client_reqwest: Client, user_id: i32) -> Result<Value, Box<dyn Error>> {
@@ -116,9 +89,7 @@ pub async fn get_user_by_id(client_reqwest: Client, user_id: i32) -> Result<Valu
         return Err(format!("HTTP error: {}", response.status()).into());
     }
     let json: Value = response.json().await?;
-    if let Some(error) = json.get("error") {
-        return Err(format!("Bitrix24 error: {}", error).into());
-    }
+    if let Some(error) = json.get("error") {return Err(format!("Bitrix24 error: {}", error).into());}
     Ok(json)
 }
 
@@ -132,10 +103,7 @@ pub fn get_webhook_(filename: &str) -> String {
     elem
 }
 
-pub async fn update_param_(
-    client_reqwest: Client,
-    params: &[(&str, &str)],
-) -> Result<String, Box<dyn std::error::Error>> {
+pub async fn update_param_(client_reqwest: Client,params: &[(&str, &str)],) -> Result<String, Box<dyn std::error::Error>> {
     let url = get_webhook() + "user.update";
     println!("Resulted url{}", url);
     let responce = client_reqwest.post(url).form(params).send().await?;
@@ -150,36 +118,20 @@ pub async fn update_param_(
 //     "MESSAGE": "ghghghghghghghghgghgggghgg"
 //   }'
 
-pub async fn send_notification_to_user(
-    client_reqwest: Client,
-    id: &str,
-    message: &str,
-) -> Result<String, Box<dyn std::error::Error>> {
+pub async fn send_notification_to_user(client_reqwest: Client,id: &str,message: &str,) -> Result<String, Box<dyn std::error::Error>> {
     let base_url = get_webhook();
     let url = format!("{}im.message.add", base_url);
     println!("Resulted url: {}", url);
-    let request_body = json!({
-        "DIALOG_ID": id,
-        "MESSAGE": message
-    });
-
+    let request_body = json!({"DIALOG_ID": id,"MESSAGE": message});
     println!("IN SEND NOTIFICATION {}", request_body.to_string());
-    let response = client_reqwest
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .json(&request_body)
-        .send()
-        .await?;
+    let response = client_reqwest.post(&url).header("Content-Type", "application/json").json(&request_body).send().await?;
     println!("Status: {}", response.status());
     println!("Headers: {:#?}", response.headers());
     let body = response.text().await?;
     Ok(body)
 }
 
-pub async fn get_multiple_users(
-    client_reqwest: Client,
-    user_ids: &[i32],
-) -> Result<Value, Box<dyn Error>> {
+pub async fn get_multiple_users(client_reqwest: Client,user_ids: &[i32],) -> Result<Value, Box<dyn Error>> {
     let webhook = get_webhook();
     let mut params = vec![];
     for (i, &id) in user_ids.iter().enumerate() {
@@ -189,31 +141,16 @@ pub async fn get_multiple_users(
     let url = format!("{}/user.get", webhook.trim_end_matches('/'));
     let response = client_reqwest.post(&url).form(&params).send().await?;
     let json: Value = response.json().await?;
-    if let Some(error) = json.get("error") {
-        return Err(format!("Bitrix24 error: {}", error).into());
-    }
+    if let Some(error) = json.get("error") {return Err(format!("Bitrix24 error: {}", error).into());}
     Ok(json)
 }
 
-pub async fn get_user_with_fields(
-    client_reqwest: Client,
-    user_id: i32,
-    fields: &[&str],
-) -> Result<Value, Box<dyn Error>> {
+pub async fn get_user_with_fields(    client_reqwest: Client,    user_id: i32,    fields: &[&str],) -> Result<Value, Box<dyn Error>> {
     let webhook = get_webhook();
-    let params: Vec<(String, String)> = std::iter::once(("ID".to_string(), user_id.to_string()))
-        .chain(
-            fields
-                .iter()
-                .enumerate()
-                .map(|(i, field)| (format!("SELECT[{}]", i), field.to_string())),
-        )
-        .collect();
+    let params: Vec<(String, String)> = std::iter::once(("ID".to_string(), user_id.to_string())).chain(fields.iter().enumerate().map(|(i, field)| (format!("SELECT[{}]", i), field.to_string())),).collect();
     let url = format!("{}/user.get", webhook.trim_end_matches('/'));
     let response = client_reqwest.post(&url).form(&params).send().await?;
     let json: Value = response.json().await?;
-    if let Some(error) = json.get("error") {
-        return Err(format!("Bitrix24 error: {}", error).into());
-    }
+    if let Some(error) = json.get("error") {        return Err(format!("Bitrix24 error: {}", error).into());}
     Ok(json)
 }

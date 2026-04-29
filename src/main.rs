@@ -795,7 +795,7 @@ mod tests {
         let json_output = serde_json::to_string_pretty(&messages).unwrap();
         std::fs::write(out_extracted, json_output).unwrap();
 
-        let _ = std::fs::write(            format!("{}_last{}_extracted_FULL.json", "OKLAND", limit),serde_json::to_string_pretty(&json_value).unwrap(),        );
+        let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", "OKLAND", limit),serde_json::to_string_pretty(&json_value).unwrap(),        );
     }
 
     #[tokio::test]
@@ -880,16 +880,9 @@ mod tests {
     #[tokio::test]
     async fn test_pull_collegues() -> Result<() , anyhow::Error> {
         let client = Client::new();
-        let response = client
-            .get(URL)
-            .header("accept", "application/json")
-            .header("ZakupayToken", synteka())
-            .send()
-            .await?;
+        let response = client.get(URL).header("accept", "application/json").header("ZakupayToken", synteka()).send().await?;
 
-    if !response.status().is_success() {
-        anyhow::bail!("HTTP error: {}", response.status());
-    }
+    if !response.status().is_success() {        anyhow::bail!("HTTP error: {}", response.status());    }
 
     let body = response.text().await?;
     let json: Value = serde_json::from_str(&body)?;
