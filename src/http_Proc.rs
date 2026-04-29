@@ -399,8 +399,9 @@ pub async fn __pull_messages_prod_throw_collabs_and_filter__(config: ConfigProce
     let mut result: Vec<ExtractedMessage> = Vec::new();
     for item in &config.enabled_collabs{
         let res = __pull_messages_prod_throw_collab_and_filter(*item, config.clone()).await;
-        result.extend(res)
+        result.extend(res);
     }
+    result.sort_by_key(|msg| msg.id);
     result
 }
 
