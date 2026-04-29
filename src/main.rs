@@ -1028,8 +1028,9 @@ mod tests {
         std::fs::write(out_extracted, json_output).unwrap();
 
         let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit),serde_json::to_string_pretty(&json_value).unwrap(),);
-        //let handle = thread::spawn(http_Proc::process_function);//<===good
-        //handle.join();  //process
+        http_Proc::move_queue_to_queue2();
+        let handle = thread::spawn(http_Proc::process_function);//<===good
+        handle.join();  //process
 }
     }
 

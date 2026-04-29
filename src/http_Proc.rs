@@ -61,6 +61,8 @@ where
 //pub static QUEUE: Lazy< std::sync::Mutex<Vec<ExtractedMessage>>> = Lazy::new(||  std::sync::Mutex::new(Vec::new()));
 
 pub static QUEUE: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
+pub static QUEUE2: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
+
 //pub static QUEUE__: Lazy<Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 //   add::             QUEUE.lock().unwrap().push(msg);
@@ -69,6 +71,21 @@ pub static QUEUE: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
 //  iteration
 //  let mut queue = QUEUE.lock().unwrap();
 //  for item in queue.iter() { ... }
+pub fn copy_queue_to_queue2() {
+    let queue = QUEUE.lock();
+    let mut queue2 = QUEUE2.lock();
+    queue2.extend(queue.clone()); // требуется Clone для ExtractedMessage
+}
+
+pub fn move_queue_to_queue2() -> usize {
+    let mut queue = QUEUE.lock();
+    let mut queue2 = QUEUE2.lock();
+    let len = queue.len();
+    queue2.extend(queue.drain(..));
+    len
+}
+
+
 pub fn adding_to_Pack(msg: ExtractedMessage) -> bool {
     QUEUE.lock().push(msg);
     true
@@ -99,19 +116,38 @@ pub fn __func1(mut counter1: u64){
             counter1+=1;
             thread::sleep(Duration::from_secs(3));
             process_atom_queue();
-            println!("THREAD1::{}\n\n\n", counter1)
-            
+            println!("THREAD1::{}\n\n\n", counter1);
+            {
+                  let mut queue = QUEUE.lock();
+                  println!("SIZE QUEUE: {}", queue.len());
+                  if queue.len()==0 {break;}
+            }
         }
 }
 
 pub fn __func2(mut counter2: u64){
-        loop {
-            counter2+=3;
-            let queue = QUEUE.lock();
+        let queue2 = QUEUE2.lock();
 
-            println!("SIZE QUE:{}, size", queue.len());
-            thread::sleep(Duration::from_secs(2));
-            println!("THREAD2::{}\n\n\n", counter2)
+        let mut counter = 0;
+        let finish_index = queue2.len(); 
+        loop {
+            if counter < finish_index{
+               if let Some(item) = queue2.get(counter) {
+                    let mut queue = QUEUE.lock();
+                    queue.push(item.clone());
+                    println!("SIZE QUEUE: {}", queue.len());
+                    println!("SIZE QUE:{}, size", queue.len());
+                } 
+            }
+            else {
+                println!("\n\n\nFUNC2 stopped\n\n\n\n");
+                break;
+            }
+
+            thread::sleep(Duration::from_millis(200));
+            println!("THREAD2::{}\n\n\n", counter2);
+            counter+=1;
+
         }
 }
 
@@ -123,7 +159,10 @@ pub fn process_function() {
 
     let __hndl2 = thread::spawn(move || {__func2(counter2);});
 
-    loop {thread::sleep(Duration::from_secs(3));}
+
+    __hndl1.join();
+    __hndl2.join();
+   // loop {thread::sleep(Duration::from_secs(3));}
 
 }
 
