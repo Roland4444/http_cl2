@@ -407,8 +407,7 @@ pub async fn __pull_messages_prod_throw_collab_and_filter(current_collab: Collab
     if config.switch_mode == common::SwitchIDMode::FROM_TO {
         let diff = (id as i64) - (config.from as i64);
         if diff < 0 {  return  Vec::new()}
-        else {limit = diff as u32;
-}
+        else {limit = diff as u32;}
     }
 
     let json_value:Value = pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
@@ -419,6 +418,16 @@ pub async fn __pull_messages_prod_throw_collab_and_filter(current_collab: Collab
         messages.into_iter().filter(|a| a.id >= config.from && a.id <= config.to).collect()} 
     else {        messages    }
 }
+
+pub async fn __pull_messages_prod_throw_collabs_and_filter__(config: ConfigProcess) -> Vec<ExtractedMessage>{
+    let mut result: Vec<ExtractedMessage> = Vec::new();
+    for item in &config.enabled_collabs{
+        let res = __pull_messages_prod_throw_collab_and_filter(*item, config.clone()).await;
+        result.extend(res)
+    }
+    result
+}
+
 
 
 
