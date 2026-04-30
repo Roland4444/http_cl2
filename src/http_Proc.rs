@@ -80,13 +80,11 @@ pub fn suspend_processed_ids() -> Result<()>{
     *set = ids.into_iter().collect();
     Ok(())
 }
-#[derive(Debug, Clone, PartialEq)]
-pub struct KeyValueMessage {    pub id: i32,    pub key: String,    pub value: String,}
 
 
-#[derive(Debug, Serialize, PartialEq, Deserialize, Clone)]
-pub struct ConfigProcess {    pub switch_mode: SwitchIDMode,   pub from: u32,    pub to: u32, pub enabled_collabs: Vec<common::Collab>}
+#[derive(Debug, Clone, PartialEq)]  pub struct KeyValueMessage {    pub id: i32,    pub key: String,    pub value: String,}
 
+#[derive(Debug, Serialize, PartialEq, Deserialize, Clone)] pub struct ConfigProcess {    pub switch_mode: SwitchIDMode,   pub from: u32,    pub to: u32, pub enabled_collabs: Vec<common::Collab>}
 
 
 macro_rules! hashmap {
@@ -153,18 +151,12 @@ where
 {
     processor(msg)
 }
-
-
 //pub static QUEUE: Lazy< std::sync::Mutex<Vec<ExtractedMessage>>> = Lazy::new(||  std::sync::Mutex::new(Vec::new()));
-
 pub static QUEUE: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
 pub static QUEUE2: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
-
 //pub static QUEUE__: Lazy<Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| Mutex::new(Vec::new()));
-
 //   add::             QUEUE.lock().unwrap().push(msg);
 //   remove::             QUEUE.lock().unwrap().remove(index);
-
 //  iteration
 //  let mut queue = QUEUE.lock().unwrap();
 //  for item in queue.iter() { ... }
