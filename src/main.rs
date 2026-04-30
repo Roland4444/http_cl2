@@ -32,22 +32,14 @@ const SYNTEKA_TOKEN_FILE: &str = "synteka";
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 enum ADDITIONAL_FIELDS {    WORK_POSITION,    PERSONAL_BIRTHDAY,    UF_DEPARTMENT,}
 
-impl ADDITIONAL_FIELDS {
-    fn all_values() -> Vec<Self> {vec![ADDITIONAL_FIELDS::WORK_POSITION,ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY,ADDITIONAL_FIELDS::UF_DEPARTMENT,]    }
+impl ADDITIONAL_FIELDS { fn all_values() -> Vec<Self> {vec![ADDITIONAL_FIELDS::WORK_POSITION,ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY,ADDITIONAL_FIELDS::UF_DEPARTMENT,]    }
 
-    fn to_string(&self) -> String {
-        match self {ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => "PERSONAL_BIRTHDAY",ADDITIONAL_FIELDS::UF_DEPARTMENT => "UF_DEPARTMENT",}.to_string()
-    }
+    fn to_string(&self) -> String {match self {ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => "PERSONAL_BIRTHDAY",ADDITIONAL_FIELDS::UF_DEPARTMENT => "UF_DEPARTMENT",}.to_string()}
 }
 
-struct Operation {
-    id_for_item: i32,
-    map_params: HashMap<String, String>,
-}
+struct Operation {    id_for_item: i32,    map_params: HashMap<String, String>,}
 
-struct Operations {
-    data: Vec<Operation>,
-}
+struct Operations {    data: Vec<Operation>,}
 
 impl Operation {
     fn new(id: i32, m: HashMap<String, String>) -> Self {    Operation {            id_for_item: id,            map_params: m,        }    }
@@ -64,9 +56,7 @@ impl std::fmt::Display for ADDITIONAL_FIELDS {
     }
 }
 
-fn deserialize_from_file<T: DeserializeOwned>(
-    filename: &str,
-) -> Result<T, Box<dyn std::error::Error>> {   
+fn deserialize_from_file<T: DeserializeOwned>(    filename: &str,) -> Result<T, Box<dyn std::error::Error>> {   
     let mut file: File = File::open(filename)?;   
     let mut buffer: Vec<u8> = Vec::new();   
     file.read_to_end(&mut buffer)?;

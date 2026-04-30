@@ -128,10 +128,6 @@ pub async fn create_order_with_params(token: &str, client: &Client, responsible:
 }
 }
 
-
-
-
-
 pub async fn create_order(token: &str, client: &Client) -> Result<Value> {
     let url = "https://restetris.cynteka.ru/api/v1/orders?format=json&isoDate=true";
 

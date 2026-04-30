@@ -5,6 +5,7 @@ use anyhow::{Context, Result};
 use futures::stream::{self,  TryStreamExt}; // в начало файла
 use reqwest::Client;
 use serde_json::{Value, json};
+use std::collections::HashSet;
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
@@ -24,6 +25,7 @@ use crate::thread;
 use parking_lot::Mutex as Mutex2;
 use crate::HashMap;
 use std::sync::RwLock;
+use std::fs;
 
 use crate::webhook_base_prod;
 
@@ -32,6 +34,35 @@ static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
 const SYSTEM_MESSAGE: &str = "0";    const CREATE_QUEUE: &str = "CREATE_QUEUE";         const RUN_QUEUE: &str = "RUN_QUEUE";   const CONTENT_TYPE: &str = "Content-type";
 const APPROVED: &str = "СОГЛАСОВАНО";
+
+
+pub static PROCESSED_IDS: Lazy<RwLock<HashSet<u32>>> = Lazy::new(|| RwLock::new(HashSet::new()));
+
+pub fn add_processed_id(id: u32){
+    let mut set  = PROCESSED_IDS.write().unwrap();
+    set.insert(id);
+}
+
+pub fn is_processed(id: u32) -> bool {
+    let set = PROCESSED_IDS.read().unwrap();
+    set.contains(&id)
+}
+
+pub fn suspend_to_file(path: &str) -> Result<()>{
+    let set = PROCESSED_IDS.read().unwrap();
+    let ids: Vec<u32> = set.iter().copied().collect();
+    let encoded = bincode::serialize(&ids)?;
+    fs::write(path, encoded)?;
+    Ok(())
+}
+
+pub fn restore_processed_ids_from_file(path: &str) -> Result<()>{
+    let data = fs::read(path)?;
+    let ids: Vec<u32> = bincode::deserialize(&data)?;
+    let mut set = PROCESSED_IDS.write().unwrap();
+    *set = ids.into_iter().collect();
+    Ok(())
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyValueMessage {    pub id: i32,    pub key: String,    pub value: String,}
