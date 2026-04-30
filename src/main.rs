@@ -25,6 +25,11 @@ use crate::http_Proc::CHATS_ID;
 
 
 
+pub    const EMPLOYES_FILE_NAME_JS : &str = "employess_cynteka.json";
+pub    const COLLEGUES_FILE_NAME_JS : &str = "collegues_cynteka.json";
+
+
+
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
 const SYNTEKA_TOKEN_FILE: &str = "synteka";
@@ -904,8 +909,6 @@ mod tests {
     Ok(())
     }
     
-    const EMPLOYES_FILE_NAME_JS : &str = "employess_cynteka.json";
-    const COLLEGUES_FILE_NAME_JS : &str = "collegues_cynteka.json";
 
 
     #[test]

@@ -2,7 +2,6 @@ use reqwest::Client;
 use serde_json::{json, Value};
 use std::{collections::HashMap, option};
 use anyhow::{Context, Result};
-
 // Структуры для сериализации тела запроса (можно использовать и json! макрос, но с типами надёжнее)
 #[derive(serde::Serialize)]
 struct CreateOrderRequest {
@@ -170,4 +169,26 @@ pub async fn create_order(token: &str, client: &Client) -> Result<Value> {
     else {anyhow::bail!("HTTP request failed with status {}: {}",status.as_u16(),body)}
 }
 
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::EMPLOYES_FILE_NAME_JS;
+    use std::fs;
+
+#[test]
+fn test_get_id_skutin() {
+    let etalon_id = 222;
+    let js_content = fs::read_to_string(EMPLOYES_FILE_NAME_JS).expect("Не удалось прочитать файл");
+    let json_value: Value = serde_json::from_str(&js_content).expect("Ошибка парсинга JSON");
+    let fio = "Скутин Дмитрий".to_string();
+    // Преобразуем &str в String
+    let parts: Vec<String> = fio.split_whitespace().map(|s| s.to_string()).collect();
+    let result = get_id_user_via_fio_cynteka(parts, &json_value).unwrap();
+    assert_eq!(etalon_id, result);
+}
+
+
+
+}
 // Пример использования:
