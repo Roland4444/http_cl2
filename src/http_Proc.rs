@@ -115,8 +115,8 @@ pub fn reinit_CHAT_NUM() {
     let mut target = CHAT_NUM_ID_PROD.write().unwrap();
     target.clear();
     for collab in CONFIG.enabled_collabs.iter() {
-        if let Some(&num) = CHAT_NUM_ID.get(collab) {            target.push(num);        } 
-        else {            eprintln!("Warning: Collab {:?} not found in CHAT_NUM_ID", collab);        }
+        if let Some(&num) = CHAT_NUM_ID.get(collab) {target.push(num);} 
+        else {eprintln!("Warning: Collab {:?} not found in CHAT_NUM_ID", collab);}
     }
 }
 

@@ -161,6 +161,15 @@ impl Pack {
         result
     }
 
+    fn  to_string_poetic34(&self, ender: String) -> String {
+        let mut result = String::from("");
+        for emp in &self.pack {
+            result.push_str(&&emp._to_string_poetic34());
+            result.push_str(&ender);
+        }
+        result
+    }
+
     fn get_id_by_fi(&self, fi: String) -> Option<i32> {
         let splitted: Vec<String> = split_to_fi(fi);
         if splitted.len() < 3 {            return None;        }
@@ -197,6 +206,9 @@ impl Employee {
     fn _to_string(&self) -> String {format!("{} {} {} {} {}",self.id,self.last_name,self.name,self.middle_name,format!("<{}>", Employee::map_to_string(self.map_add.clone())))}
 
     fn _to_string_poetic(&self) -> String {format!( "{} {} {} {} {}",  self.id,  self.name,  self.middle_name,  self.last_name,  format!("<{}>", Employee::map_to_string(self.map_add.clone())))}
+
+    fn _to_string_poetic34(&self) -> String {format!( "{} {} {} {} ",  self.id,  self.name,  self.middle_name,  self.last_name)}
+
 
     fn map_to_string(m: HashMap<ADDITIONAL_FIELDS, String>) -> String {m.iter().map(|(key, value)| format!("{}: {}", key, value)).collect::<Vec<String>>().join(", ")}
 }
@@ -666,6 +678,16 @@ mod tests {
         println!("{}", pack.to_string_poetic("\n".to_string()));
         assert_eq!(            1,            pack.get_id_by_fi("Цыбульский Сергей".to_string())                .expect("shit")        );
     }
+
+
+    #[test]    ////////// To ThirtyFOUR APP WEBDRIVER
+    fn test_get_id2_poetic34() {
+        let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+        println!("{}", pack.to_string_poetic34("\n".to_string()));
+        assert_eq!(            1,            pack.get_id_by_fi("Цыбульский Сергей".to_string())                .expect("shit")        );
+    }
+
+
 
     #[test]
     fn test_fi() {
