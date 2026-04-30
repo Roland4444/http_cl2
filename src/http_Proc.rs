@@ -34,7 +34,7 @@ static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
 const SYSTEM_MESSAGE: &str = "0";    const CREATE_QUEUE: &str = "CREATE_QUEUE";         const RUN_QUEUE: &str = "RUN_QUEUE";   const CONTENT_TYPE: &str = "Content-type";
 const APPROVED: &str = "СОГЛАСОВАНО";
-
+pub const  FILE_NAME_4_HASHSET: &str = "processed.bin";
 
 pub static PROCESSED_IDS: Lazy<RwLock<HashSet<u32>>> = Lazy::new(|| RwLock::new(HashSet::new()));
 
@@ -64,6 +64,22 @@ pub fn restore_processed_ids_from_file(path: &str) -> Result<()>{
     Ok(())
 }
 
+pub fn restore_processed_ids() -> Result<()>{
+    let data = fs::read(FILE_NAME_4_HASHSET)?;
+    let ids: Vec<u32> = bincode::deserialize(&data)?;
+    let mut set = PROCESSED_IDS.write().unwrap();
+    *set = ids.into_iter().collect();
+    Ok(())
+}
+
+
+pub fn suspend_processed_ids() -> Result<()>{
+    let data = fs::read(FILE_NAME_4_HASHSET)?;
+    let ids: Vec<u32> = bincode::deserialize(&data)?;
+    let mut set = PROCESSED_IDS.write().unwrap();
+    *set = ids.into_iter().collect();
+    Ok(())
+}
 #[derive(Debug, Clone, PartialEq)]
 pub struct KeyValueMessage {    pub id: i32,    pub key: String,    pub value: String,}
 
