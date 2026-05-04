@@ -227,3 +227,6 @@ curl -X 'GET' \
 
  curl --request GET --url 'https://restetris.cynteka.ru/api/v1/deliveries?format=json'  --header "accept: application/json" --header "ZakupayToken: 4eu92qp4vquikinkjqnqc7bifivtqd23652msghr1vfhfa8bi1cl"
 
+
+
+https://youtu.be/U_c2hdOpGT0?list=RDjHYSahSUG38
