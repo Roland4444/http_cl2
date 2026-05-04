@@ -338,8 +338,25 @@ fn process_message2(msg: ExtractedMessage) -> u32 {
         msg.id
     }
 }
+const URL_WS_CONNECT: &str = "ws://127.0.0.1:3000/proc";
+
 
 pub async fn get_text_via_chat_id_and_id(chat_name: String, message_id: u64) -> Result<String> {
+    let (mut ws_stream, _) = connect_async(URL_WS_CONNECT).await.context("Не удалось подключиться к WebSocket")?;
+    let request = json!({        "collab": chat_name,        "message_id": message_id, "type__":  "ExtractFull" });
+    let request_bytes = serde_json::to_vec(&request)?;
+    ws_stream.send(Message::Binary(request_bytes.into())).await?;
+
+    if let Some(Ok(Message::Text(resp_text))) = ws_stream.next().await {
+        let resp: ExtractResp = serde_json::from_str(&resp_text)?;
+        if resp.success {
+            if let Some(text) = resp.quoted_text {                println!("EXTRACTED: {}", text);                return Ok(text);            } 
+            else {                anyhow::bail!("Ответ не содержит текста");            }}
+        else {            anyhow::bail!("Ошибка сервера: {}", resp.error.unwrap_or_default());        }}
+    anyhow::bail!("Не получен ответ от сервера");
+}
+
+pub async fn get_text_via_chat_id_and_id2(chat_name: String, message_id: u64) -> Result<String> {
     let (mut ws_stream, _) = connect_async("ws://127.0.0.1:3000/proc").await.context("Не удалось подключиться к WebSocket")?;
     let request = json!({"collab": chat_name,"message_id": message_id});
     let request_bytes = serde_json::to_vec(&request)?;
@@ -550,6 +567,8 @@ async fn main() -> anyhow::Result<()> {    spawn().await}
 
 #[cfg(test)]
 mod tests {
+    use core::panic;
+
     use crate::http_Proc;
 
     use super::*;
@@ -568,7 +587,11 @@ mod tests {
         let resp = get_text_via_chat_id_and_id(OKLAND.to_string(), 118782).await;
         match resp {
             Ok(text) => {println!("EXTRACTED::{}", text)}
-            Err(_) => {println!("FAILED!")}
+            Err(_) => {
+                println!("FAILED!"); 
+                panic!("SHIT HAPPENS! Seems websocket not works!");
+            }
+
         }
     }
 
@@ -582,6 +605,25 @@ mod tests {
             assert_ne!(msg.len(), 0);
         });
     }
+
+
+    #[tokio::test]
+    async fn test_websocket_extract_quote22() {
+        let id_old = 118782;
+        let id__ = 123820;
+        let resp: std::result::Result<String, anyhow::Error> = get_text_via_chat_id_and_id(OKLAND.to_string(), id_old).await;
+        match resp {
+            Ok(text) => {             println!("EXTRACTED::>>>{}", text)            }
+            Err(e) => {                println!("FAILED!, error::{}", e)            }
+        }
+        let resp2: std::result::Result<String, anyhow::Error> = get_text_via_chat_id_and_id(OKLAND.to_string(), id__).await;
+        match resp2 {
+            Ok(text) => {                println!("EXTRACTED::>>>{}", text)            }
+            Err(e) => {                   println!("FAILED!, error::{}", e)            }
+        }
+    }
+
+
 
 
     #[test]

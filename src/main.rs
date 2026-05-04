@@ -958,13 +958,11 @@ mod tests {
         println!("Извлечено {} сообщений", messages.len());
         for msg in messages.iter() {        println!("{:?}", msg);    }
 
-        // 1. Добавляем сообщения в глобальную очередь (синхронно)
         {
             let mut queue = http_Proc::QUEUE.lock();
             queue.extend(messages.clone());
         }
 
-    // 2. Сериализуем текущее состояние очереди в бинарный файл
         let bin_filename = format!("{}_queue.bin", current_collab.title());
         {
             let queue_data = http_Proc::QUEUE.lock();
@@ -974,9 +972,8 @@ mod tests {
         println!("Очередь сохранена в {}", bin_filename);
 
         println!("\n\n\nSTARING WATCH!\n\n\n");
-        http_Proc::watch(); // синхронный вызов
+        http_Proc::watch(); 
 
-    // Сохраняем JSON-файлы
         let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
         let json_output = serde_json::to_string_pretty(&messages).unwrap();
         std::fs::write(out_extracted, json_output).unwrap();

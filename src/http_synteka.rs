@@ -191,4 +191,4 @@ fn test_get_id_skutin() {
 
 
 }
-// Пример использования:
+//             https://app.swaggerhub.com/apis-docs/Cynteka/cynteka/Cynteka#/
