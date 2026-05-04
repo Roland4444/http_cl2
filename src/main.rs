@@ -546,7 +546,7 @@ mod tests {
 
     use chrono::format;
     use futures::TryFutureExt;
-
+    use crate::File;
     use crate::http_Proc::fetch_recent_list_raw;
 
     use super::*;
@@ -869,6 +869,22 @@ mod tests {
             println!("Ответ сервера: {:#?}", result);
            // Ok(())
     }
+
+
+    #[tokio::test]
+    async fn test_get_deliver(){          ///////////DELIVERIES
+            let token = synteka(); // можно взять из конфига
+            let client = Client::new();
+            let out = "./delivery.js";
+            let result = http_synteka::fetch_and_save_deliveries(&token, &client, out).await;
+            println!("Ответ сервера: {:#?}", result);
+           // Ok(())
+    }
+
+ 
+
+    
+
 
     use std::fs;
 

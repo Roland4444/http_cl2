@@ -230,3 +230,10 @@ curl -X 'GET' \
 
 
 https://youtu.be/U_c2hdOpGT0?list=RDjHYSahSUG38
+
+
+
+
+curl -X 'GET' \
+  'https://restetris.cynteka.ru/api/v1/deliveries?page=1&pageSize=15&ids=677&offerId=1&include=orderTemplateInfo&updatedTimeFrom=2019-02-01T14%3A46%3A10.852%2B0300&updatedTimeTo=2019-02-01T14%3A46%3A10.852%2B0300&project=56&sourceProject=97&provider=765&payer=286&transporter=286&types=6&responsible=575&orderId=9163&spotDeliveryIn=23&spotDeliveryOut=32&destinationUnit=7&sourceUnit=2&weightFrom=45&weightTo=54&plannedDateFrom=2020-12-01&plannedDateTo=2020-12-01&plannedDeliveredDateFrom=2020-07-07&plannedDeliveredDateTo=2019-07-07&plannedDeliveredDate=true&shippingDateFrom=2020-07-07&shippingDateTo=2019-07-07&shippingDate=true&plannedTransportationDateTo=2021-06-07&plannedTransportationDate=true&deliveryDateFrom=2021-12-01&deliveryDateTo=2021-12-07&files=true&dontIncludeTypes=true&states=PLANNED&deliveryTypes=DELIVERY_RELOCATE&category=5&sourceRegion=78&destinationRegion=49&sourceDepotResponsible=37&sourceStatus=3&destinationStatus=1&totalCount=true&sentToFaceKit=true&includeIconId=27&excludeIconId=23' \
+  -H 'accept: application/json'

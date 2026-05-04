@@ -1,7 +1,11 @@
 use reqwest::Client;
 use serde_json::{json, Value};
-use std::{collections::HashMap, option};
+use std::{collections::HashMap, io::Write, option};
 use anyhow::{Context, Result};
+use reqwest::header::{ACCEPT, HeaderValue};
+use crate::File;
+
+
 // Структуры для сериализации тела запроса (можно использовать и json! макрос, но с типами надёжнее)
 #[derive(serde::Serialize)]
 struct CreateOrderRequest {
@@ -167,6 +171,38 @@ pub async fn create_order(token: &str, client: &Client) -> Result<Value> {
         let json: Value = serde_json::from_str(&body).with_context(|| format!("Ошибка парсинга JSON: {}", body))?;
         Ok(json)} 
     else {anyhow::bail!("HTTP request failed with status {}: {}",status.as_u16(),body)}
+}
+
+
+
+pub async fn fetch_and_save_deliveries(token: &str, client: &Client, output_path: &str) -> Result<()> {
+    let url = "https://restetris.cynteka.ru/api/v1/deliveries?format=json";
+
+    let response = client
+        .get(url)
+        .header(ACCEPT, "application/json")
+        .header("ZakupayToken", HeaderValue::from_str(&token)?)
+        .send()
+        .await
+        .context("Не удалось выполнить запрос")?;
+
+    if !response.status().is_success() {
+        anyhow::bail!("HTTP ошибка: {} — {}", response.status(), response.text().await?);
+    }
+
+    let json_text = response.text().await?;
+    let json_value: Value = serde_json::from_str(&json_text)
+        .with_context(|| "Ответ не является валидным JSON")?;
+
+    let pretty_json = serde_json::to_string_pretty(&json_value)?;
+
+    let mut file = File::create(output_path)
+        .with_context(|| format!("Не удалось создать файл: {}", output_path))?;
+    file.write_all(pretty_json.as_bytes())
+        .context("Ошибка записи в файл")?;
+
+    println!("✅ JSON успешно сохранён в {}", output_path);
+    Ok(())
 }
 
 
