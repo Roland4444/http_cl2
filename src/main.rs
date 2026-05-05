@@ -999,6 +999,49 @@ mod tests {
         let handle = thread::spawn(http_Proc::process_function);//<===good
         handle.join();  //process
 }
+
+
+ #[tokio::test]
+    async fn test_pull_messages_prod_OKLAND_with_dump() {
+        let current_collab = Collab::OKLAND;
+        let title = current_collab.title();
+        let id = http_Proc:: get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+
+        println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+        let limit = 1220;
+
+        let json_value:Value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
+        (id + 1) as i64,limit,    ).await.unwrap();
+ 
+        let messages =  http_Proc::extract_messages_from_json(&json_value);
+        println!("Извлечено {} сообщений", messages.len());
+        for msg in messages.iter() {        println!("{:?}", msg);    }
+
+        {
+            let mut queue = http_Proc::QUEUE.lock();
+            queue.extend(messages.clone());
+        }
+
+        let bin_filename = format!("{}_queue.bin", current_collab.title());
+        {
+            let queue_data = http_Proc::QUEUE.lock();
+            let serialized = bincode::serialize(&*queue_data).expect("Ошибка сериализации");
+            std::fs::write(&bin_filename, serialized).expect("Не удалось записать бинарный файл");
+        }
+        println!("Очередь сохранена в {}", bin_filename);
+
+        println!("\n\n\nSTARING WATCH!\n\n\n");
+        http_Proc::watch(); 
+
+        let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
+        let json_output = serde_json::to_string_pretty(&messages).unwrap();
+        std::fs::write(out_extracted, json_output).unwrap();
+
+        let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit),serde_json::to_string_pretty(&json_value).unwrap(),);
+        // http_Proc::move_queue_to_queue2();
+        // let handle = thread::spawn(http_Proc::process_function);//<===good
+        // handle.join();  //process
+}
     }
 
 

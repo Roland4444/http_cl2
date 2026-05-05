@@ -70,6 +70,38 @@ struct GoodPosition {
 }
 
 
+fn unit_to_code(unit: &str) -> Option<u32> {
+    let normalized = unit.trim_matches('.');
+    match normalized {
+        "шт" | "штук" | "штуки" => Some(1),
+        "м" | "метр" | "метра" => Some(2),
+        "м.п" | "п.м" | "пог.м" | "мп" => Some(3),
+        "л" | "литр" | "литра" => Some(4),
+        "кг" | "килограмм" | "килограмма" => Some(5),
+        "м2" | "кв.м" | "квадратный метр" => Some(6),
+        "м3" | "куб.м" | "кубический метр" => Some(7),
+        _ => None,
+    }
+}
+
+fn parse_item_line(line: &str) -> Option<(String, u32, u32)> {
+    let paren_pos = line.find(')')?;
+    let name_start = paren_pos + 1;
+    let dash_pos = line[name_start..].find(" - ")?;
+    let dash_abs = name_start + dash_pos;
+    let name = line[name_start..dash_abs].trim().to_string();
+    let rest = &line[dash_abs + 3..];
+    let space_pos = rest.rfind(' ')?;
+    let quantity_str = rest[..space_pos].trim().replace(',', ".");
+    let quantity = quantity_str.parse().ok()?;
+    let unit = rest[space_pos + 1..].trim();
+    let code = unit_to_code(unit)?;
+    Some((name, quantity, code))
+}
+
+
+
+
 pub fn get_id_user_via_fio_cynteka(fio: Vec<String>, json__: &Value) -> Option<u64> {
     let employees = json__.get("employees")?.as_array()?;
     let last_name = fio.get(0)?;
@@ -206,6 +238,65 @@ pub async fn fetch_and_save_deliveries(token: &str, client: &Client, output_path
 }
 
 
+pub async fn create_order_from_cl(token: &str, title: String) -> Result<serde_json::Value> {
+    let url = "https://restetris.cynteka.ru/api/v1/orders?format=json&isoDate=true";
+    let client = Client::new();
+
+    let payload = json!({
+        "name": title,
+        "project": { "id": 12 },
+        "state": "DRAFT",
+        "finishDate": "2026-06-10",
+        "sourceAccount": { "id": 34 },
+        "consignee": { "id": 4 },
+        "region": { "id": 30 },
+        "responsible": { "id": 353 },
+        "delay": 30,
+        "externalId": 1744320000,
+        "orderItems": [
+            {
+                "goodName": "Тестовый товар",
+                "count": 1,
+                "unit": { "id": 1 },
+                "analogAllow": false,
+                "innerComment": "Тест",
+                "goodPosition": { "externalId": "000000004100008693" }
+            },
+            {
+                "goodName": "Crude Oil2",
+                "count": 1,
+                "unit": { "id": 1 },
+                "analogAllow": false,
+                "innerComment": "",
+                "goodPosition": { "externalId": "000000004100008693" }
+            }
+        ]
+    });
+
+    let response = client
+        .post(url)
+        .header("accept", "application/json")
+        .header("ZakupayToken", token)
+        .header("Content-Type", "application/json")
+        .json(&payload)
+        .send()
+        .await
+        .context("Ошибка отправки запроса")?;
+
+    let status = response.status();
+    let body = response.text().await.context("Ошибка чтения тела ответа")?;
+
+    if status.is_success() {
+        let json: serde_json::Value = serde_json::from_str(&body)
+            .with_context(|| format!("Ошибка парсинга JSON: {}", body))?;
+        Ok(json)
+    } else {
+        anyhow::bail!("HTTP request failed with status {}: {}", status, body)
+    }
+}
+
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -224,6 +315,26 @@ fn test_get_id_skutin() {
     assert_eq!(etalon_id, result);
 }
 
+
+
+use crate::synteka;
+#[tokio::test]
+async fn test_create_order() -> Result<()>{    
+    let token = &synteka();
+    let result = create_order_from_cl(token, "RUST CREATE".to_string()).await?;
+    println!("Ответ сервера: {:#?}", result);
+    Ok(())
+}
+
+
+#[test]
+fn test_parse_item_line() {
+    let line = "1) Доска 25х100 - 20 шт.";
+    let (name, qty, code) = parse_item_line(line).unwrap();
+    assert_eq!(name, "Доска 25х100");
+    assert_eq!(qty, 20);
+    assert_eq!(code, 1);
+}
 
 
 }

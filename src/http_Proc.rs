@@ -624,6 +624,15 @@ mod tests {
     }
 
 
+    #[tokio::test]
+    async fn extract_text_4_cl(){
+        let id = 125212;
+        let resp: std::result::Result<String, anyhow::Error> = get_text_via_chat_id_and_id(OKLAND.to_string(), id).await;
+        match resp {
+            Ok(text) => {             println!("EXTRACTED::>>>{}", text)            }
+            Err(e) => {                println!("FAILED!, error::{}", e)            }
+        }
+    }
 
 
     #[test]
