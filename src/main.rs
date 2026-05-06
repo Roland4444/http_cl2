@@ -33,6 +33,8 @@ pub    const COLLEGUES_FILE_NAME_JS : &str = "collegues_cynteka.json";
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
 const SYNTEKA_TOKEN_FILE: &str = "synteka";
+const CL_ADDRESS_FILE: &str = "cl_address";
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 enum ADDITIONAL_FIELDS {    WORK_POSITION,    PERSONAL_BIRTHDAY,    UF_DEPARTMENT,}
@@ -521,7 +523,9 @@ fn get_index_via_fio_result(fio: Vec<String>, filename: &str) -> Option<i32> {
     None
 }
 
-fn synteka() -> String {    return http_Test::get_webhook_(SYNTEKA_TOKEN_FILE);}
+pub fn synteka() -> String {    return http_Test::get_webhook_(SYNTEKA_TOKEN_FILE);}
+pub fn cl_address() -> String {    return http_Test::get_webhook_(CL_ADDRESS_FILE);}
+
 
 fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
     let full = lines.concat();

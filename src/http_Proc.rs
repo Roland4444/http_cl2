@@ -28,7 +28,7 @@ use std::sync::RwLock;
 use std::fs;
 
 use crate::webhook_base_prod;
-
+use crate::cl_address;
 static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
 
@@ -548,6 +548,9 @@ async fn fallback_handler() -> impl IntoResponse {
     (StatusCode::NOT_FOUND, "Страница не найдена")
 }
 
+
+
+
 pub async fn spawn() -> anyhow::Result<()> {
     let shared_state = Arc::new(Mutex::new(Vec::<KeyValueMessage>::new()));
     let app = Router::new().route("/test", get(hello_handler)).route("/test", post(post_handler)).with_state(shared_state).fallback(fallback_handler);
@@ -566,7 +569,7 @@ pub async fn spawn() -> anyhow::Result<()> {
 async fn send_to_decode(text: &str) -> Result<String, Box<dyn Error>> {
     let client = reqwest::Client::new();
     let response = client
-        .post("http://localhost:11111/decode")
+        .post(cl_address())
         .form(&[("input", text)])
         .send()
         .await?;
@@ -653,7 +656,7 @@ mod tests {
 
 
     #[tokio::test]
-    async fn test_send_to_decode() {
+    async fn test_send_to_decode() {    //append address cl in cl_address file
         let text = "1) Доска 25х100 - 20 шт.\n2) Саморезы 3,5x51 - 1000 шт.\n3) Гвозди 100 мм. - 10 кг.";
         let response = send_to_decode(text).await.unwrap();
         println!("Ответ сервера: {}", response);
