@@ -84,6 +84,12 @@ fn unit_to_code(unit: &str) -> Option<u32> {
     }
 }
 
+
+const ITEMS: &str = r#"Для производства работ по объекту Рыбацкая прошу согласовать :\n1) Клей для газоблока - 240 кулей\n\nКонт. тел. 89170911410 Дмитрий"#;
+
+
+
+
 fn parse_item_line(line: &str) -> Option<(String, u32, u32)> {
     let paren_pos = line.find(')')?;
     let name_start = paren_pos + 1;

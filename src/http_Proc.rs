@@ -562,6 +562,23 @@ pub async fn spawn() -> anyhow::Result<()> {
     Ok(())
 }
 
+
+async fn send_to_decode(text: &str) -> Result<String, Box<dyn Error>> {
+    let client = reqwest::Client::new();
+    let response = client
+        .post("http://localhost:11111/decode")
+        .form(&[("input", text)])
+        .send()
+        .await?;
+    let body = response.text().await?;
+    Ok(body)
+}
+
+
+
+
+
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {    spawn().await}
 
@@ -632,6 +649,16 @@ mod tests {
             Ok(text) => {             println!("EXTRACTED::>>>{}", text)            }
             Err(e) => {                println!("FAILED!, error::{}", e)            }
         }
+    }
+
+
+    #[tokio::test]
+    async fn test_send_to_decode() {
+        let text = "1) Доска 25х100 - 20 шт.\n2) Саморезы 3,5x51 - 1000 шт.\n3) Гвозди 100 мм. - 10 кг.";
+        let response = send_to_decode(text).await.unwrap();
+        println!("Ответ сервера: {}", response);
+        // Проверяем, что ответ содержит хотя бы одну позицию
+        assert!(response.contains("Доска"));
     }
 
 
