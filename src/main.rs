@@ -1074,6 +1074,64 @@ use http_Proc::consumer_loop;
 }
 
 
+/////////////////  TO RESEARCH
+
+// use tokio::time::Duration;
+// use std::sync::Mutex; // предполагаем, что QUEUE – Mutex
+
+// lazy_static::lazy_static! {
+//     static ref QUEUE: Mutex<Vec<Message>> = Mutex::new(Vec::new());
+// }
+
+// async fn consumer_loop() {
+//     loop {
+//         let has_message = {
+//             let queue = QUEUE.lock().unwrap();
+//             !queue.is_empty()
+//         };
+//         if has_message {
+//             process_atom_queue().await;
+//         } else {
+//             tokio::time::sleep(Duration::from_millis(200)).await;
+//         }
+//     }
+// }
+
+// async fn print_hello() {
+//     let mut interval = tokio::time::interval(Duration::from_secs(5));
+//     loop {
+//         interval.tick().await;
+//         println!("привет");
+//     }
+// }
+
+// #[tokio::main]
+// async fn main() {
+//     let consumer = tokio::spawn(consumer_loop());
+//     let hello = tokio::spawn(print_hello());
+
+//     // Ждём опустошения очереди (блокирующей проверки нет, всё асинхронно)
+//     while !QUEUE.lock().unwrap().is_empty() {
+//         tokio::time::sleep(Duration::from_millis(5000)).await;
+//     }
+
+//     // Останавливаем фоновые задачи
+//     consumer.abort();
+//     hello.abort();
+
+//     // Даём им время на чистый выход (необязательно)
+//     tokio::time::sleep(Duration::from_millis(100)).await;
+//     println!("Очередь обработана, фоновые задачи остановлены");
+// }
+
+
+
+
+
+
+
+
+////////////////////
 
 
 //   let consumer_handle = tokio::spawn(http_Proc::__func1(0));
