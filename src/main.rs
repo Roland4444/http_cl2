@@ -1,5 +1,4 @@
-use crate::http_Proc::get_webhook;
-use crate::http_Test::{read_lines, read_lines_utf8};
+use crate::http_Test::{read_lines_utf8};
 use bincode;
 use reqwest;
 use reqwest::Client;
@@ -8,27 +7,17 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, from_str, json};
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::BufReader;
 use std::io::{Read, Write};
-use std::process::id;
-use std::ptr::hash;
 pub mod http_Parser;
 pub mod http_Proc;
 pub mod http_Test;
 pub mod http_synteka;
-use anyhow::Context;
-use once_cell::sync::Lazy;
 use std::thread;
 use std::time::Duration;
 use common::*;
-use crate::http_Proc::CHATS_ID;
 
-
-
-pub    const EMPLOYES_FILE_NAME_JS : &str = "employess_cynteka.json";
+pub    const EMPLOYES_FILE_NAME_JS  : &str = "employess_cynteka.json";
 pub    const COLLEGUES_FILE_NAME_JS : &str = "collegues_cynteka.json";
-
-
 
 const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
@@ -49,7 +38,7 @@ struct Operation {    id_for_item: i32,    map_params: HashMap<String, String>,}
 struct Operations {    data: Vec<Operation>,}
 
 impl Operation {
-    fn new(id: i32, m: HashMap<String, String>) -> Self {    Operation {            id_for_item: id,            map_params: m,        }    }
+    fn new(id: i32, m: HashMap<String, String>) -> Self {Operation {id_for_item: id,map_params: m}}
     fn to_string(&self) -> String {format!("Struct Operation::\nid::{}, params::{}", self.id_for_item,  Operation::map_to_string(self.map_params.clone()) ) }
     fn map_to_string(m: HashMap<String, String>) -> String {m.iter().map(|(key, value)| format!("{}: {}", key, value)).collect::<Vec<String>>().join(", ")    }
 }
@@ -58,8 +47,7 @@ fn get_enum__by_string(target: &str) -> ADDITIONAL_FIELDS {    ADDITIONAL_FIELDS
 
 impl std::fmt::Display for ADDITIONAL_FIELDS {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {  ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность"),  ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения"),  ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя"),
-        }
+        match self {  ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность"),  ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения"),  ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя"),}
     }
 }
 
@@ -75,7 +63,7 @@ fn deserialize_from_file<T: DeserializeOwned>(    filename: &str,) -> Result<T, 
 struct MsgPack {    pack: Vec<ExtractedMessage>,}
 
 impl MsgPack {
-    fn new(pack: Vec<ExtractedMessage>) -> Self {        MsgPack { pack }    }
+    fn new(pack: Vec<ExtractedMessage>) -> Self {MsgPack { pack }}
 
     fn serialize_to_file(&self, filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         let encoded = bincode::serialize(self)?;
@@ -87,20 +75,20 @@ impl MsgPack {
     fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>> {        deserialize_from_file(filename)    }
 
     fn push_and_update(&mut self, entry: ExtractedMessage) {
-        if self.is_contains(&entry) {            self.remove(&entry);        }
+        if self.is_contains(&entry) {self.remove(&entry);}
         self.pack.push(entry);
     }
 
     fn is_contains(&self, entry: &ExtractedMessage) -> bool {
-        if let Some(uuid) = &entry.uuid {            self.pack.iter().any(|msg| msg.uuid.as_ref() == Some(uuid))        } 
-        else {            false        }
+        if let Some(uuid) = &entry.uuid {self.pack.iter().any(|msg| msg.uuid.as_ref() == Some(uuid))        } 
+        else {false}
     }
 
     fn remove(&mut self, entry: &ExtractedMessage) -> bool {
         if let Some(pos) = self.pack.iter().position(|msg| msg.uuid == entry.uuid) {
             self.pack.remove(pos);
             true} 
-        else {            false         }
+        else {false}
     }
 }
 
@@ -112,7 +100,6 @@ struct Pack {    pack: Vec<Employee>,}
 
 impl Pack {
     fn new(pack: Vec<Employee>) -> Self {        Pack { pack }    }
-
     fn serialize_to_file(&self, filename: &str) -> Result<(), Box<dyn std::error::Error>> {
         let encoded: Vec<u8> = bincode::serialize(self)?;
         let mut file = File::create(filename)?;
@@ -120,10 +107,10 @@ impl Pack {
         Ok(())
     }
 
-    fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>> {        deserialize_from_file(filename)    }
+    fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>> {deserialize_from_file(filename)}
 
     fn push_and_update(&mut self, entry: Employee) -> () {
-        if self.is_contains(&entry) {            self.remove(&entry);        }
+        if self.is_contains(&entry) {self.remove(&entry);}
         self.pack.push(entry);
     }
 
@@ -137,9 +124,9 @@ impl Pack {
             let cur_name = &emp.name;
             let cur_last_name = &emp.last_name;
 
-            if cur_id == entry_id {                return true;            }
+            if cur_id == entry_id {return true;}
 
-            if (cur_name == entry_name) && (cur_last_name == entry_last_name) {                return true;            }
+            if (cur_name == entry_name) && (cur_last_name == entry_last_name) {return true;}
         }
         false
     }
@@ -148,9 +135,8 @@ impl Pack {
         let index = self.pack.iter().position(|emp| {
             emp.id == entry.id || (emp.name == entry.name && emp.last_name == entry.last_name)
         });
-
-        if let Some(idx) = index {            self.pack.remove(idx);            true} 
-        else {            false        }
+        if let Some(idx) = index {self.pack.remove(idx);true} 
+        else {false}
     }
 
     fn to_string(&self, ender: String) -> String {
@@ -190,7 +176,7 @@ impl Pack {
         for employee in &self.pack {
             println!("EMPLOYEE    F:{}", employee.last_name.to_string());
             println!("EMPLOYEE    I:{}", employee.name.to_string());
-            if employee.last_name == last_name.to_string()  && employee.name == first_name.to_string()  {                return Some(employee.id);            }
+            if employee.last_name == last_name.to_string()  && employee.name == first_name.to_string()  {return Some(employee.id);}
         }
         None
     }
@@ -244,17 +230,17 @@ fn codegen2(data: String, collabs: &[Collab]) {
                 title_to_id.insert(title, id);
             }
         }} 
-    else {        eprintln!("Не найден массив items");        return;}
+    else {eprintln!("Не найден массив items");return;}
 
     println!("const CHATS_ID: std::collections::HashMap<Collab, &str> = hashmap!(");
     for collab in collabs {
         let title = collab.title(); // &str
-        if let Some(&id) = title_to_id.get(title) {            println!("    Collab::{:?} => {:?},", collab, id);        }
+        if let Some(&id) = title_to_id.get(title) {println!("Collab::{:?} => {:?},", collab, id);}
     }
     println!(");");
 }
 
-fn p(s: &Value) -> String {    s.to_string().replace("\"", "")}
+fn p(s: &Value) -> String {s.to_string().replace("\"", "")}
 
 fn process_no_mobile(arr_list: Vec<String>, pack: Pack, filename_out: String) -> Pack {
     //filename_out :: Binary Pack
@@ -818,7 +804,7 @@ mod tests {
 
         let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", "OKLAND", limit),serde_json::to_string_pretty(&json_value).unwrap(),        );
     }
-
+    use crate::http_Proc::CHATS_ID;
     #[tokio::test]
     async fn test_pull_messages_prod_Scandinavia2() {
         let current_collab = Collab::SCANDINAVIA;
@@ -1005,6 +991,10 @@ mod tests {
 }
 
 
+
+
+use http_Proc::consumer_loop;
+
  #[tokio::test]
     async fn test_pull_messages_prod_OKLAND_with_dump() {
         let current_collab = Collab::OKLAND;
@@ -1042,9 +1032,58 @@ mod tests {
         std::fs::write(out_extracted, json_output).unwrap();
 
         let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit),serde_json::to_string_pretty(&json_value).unwrap(),);
-        // http_Proc::move_queue_to_queue2();
-        // let handle = thread::spawn(http_Proc::process_function);//<===good
-        // handle.join();  //process
+    //    http_Proc::move_queue_to_queue2();
+      {  
+
+        let queue_data2 = http_Proc::QUEUE.lock();
+        println!("\n\n\nQUEUE SIZE::{}\n\n\n\n", queue_data2.len());
+
+      }  
+
+////////////TEST WORK up to empty
+{
+
+    //   while !http_Proc::QUEUE.lock().is_empty() {
+    //     if let Err(e) = http_Proc::process_atom_queue().await {            eprintln!("Ошибка при обработке сообщения: {}", e);        }
+    //     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    //   }
+    //   println!("All messages processed, queue is empty");
+
+
+
+}
+
+
+
+////////////////PROD LOOP
+{
+
+   let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop());
+
+   while !http_Proc::QUEUE.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;}
+   consumer.abort(); // прерываем бесконечный цикл
+   println!("Очередь обработана, фоновый поток остановлен");
+
+
+    ///// Ждём сигнала завершения (Ctrl+C)
+   ///// // tokio::signal::ctrl_c().await?;
+  ///////  // consumer.abort();
+ /////////   // Ok(())
+
+
+}
+
+
+
+
+//   let consumer_handle = tokio::spawn(http_Proc::__func1(0));
+
+//     // Ждём, пока __func1 завершится (когда очередь опустеет)
+//     consumer_handle.await.unwrap();
+
+    // println!("All messages processed, queue is empty");
+    //     let handle = thread::spawn(http_Proc::process_function);//<===good
+    //     handle.join();  //process
 }
     }
 

@@ -109,6 +109,15 @@ pub static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(|| {
             (*collab, num)}).collect()});
 
 
+pub static CHAT_NUM_TO_COLLAB: Lazy<HashMap<u64, Collab>> = Lazy::new(|| {
+    CHAT_NUM_ID.iter().map(|(&collab, &id)| (id, collab)).collect()
+});
+
+pub fn collab_by_num_id(id: u64) -> Option<Collab> {
+    CHAT_NUM_TO_COLLAB.get(&id).copied()
+}
+
+
 pub static CHAT_NUM_ID_PROD: Lazy<RwLock<Vec<u64>>> = Lazy::new(|| RwLock::new(Vec::new()));
 //AUTHOR::Александр Минин, TEXT::Будет корректировка в большую сторону., UUID::597650e4-1faa-40da-ab05-350005abcbbb, ID::102072, CHAT_ID::9796
 pub fn reinit_CHAT_NUM() {
@@ -182,69 +191,250 @@ pub fn watch() {
     for item in queue.iter() {println!("{}", item.to_string());}
 }
 
-async fn process_atom_queue(){
-    let mut queue: parking_lot::lock_api::MutexGuard<'_, parking_lot::RawMutex, Vec<ExtractedMessage>> = QUEUE.lock();
-    let elem = queue.first();
-    match elem{
-        Some(el__) => {
-            let text = el__.text.as_str();
-            let response = send_to_decode(text).await.unwrap();
-            println!("Ответ сервера: {}", response);
-            // Проверяем, что ответ содержит хотя бы одну позицию
-            println!("DROPPED:{}", el__.to_string());
+pub async fn get_full_info_via_id_and_chat(chat_name: String, message_id: u64) -> Result<QuoteInfo> {
+    let (mut ws_stream, _) = connect_async(URL_WS_CONNECT)        .await        .context("Не удалось подключиться к WebSocket")?;
+
+    let req = json!({        "collab": chat_name,        "message_id": message_id,        "type__": "ExtractFull"    });
+    let req_bytes = serde_json::to_vec(&req)?;
+    ws_stream.send(Message::Binary(req_bytes.into())).await?;
+
+    if let Some(Ok(Message::Text(resp_text))) = ws_stream.next().await {
+        let resp: ExtractResp = serde_json::from_str(&resp_text)?;  // сначала разбираем обёртку
+        if resp.success {
+            if let Some(json_str) = resp.quoted_text {
+                let quote_info: QuoteInfo = serde_json::from_str(&json_str)?; // потом внутренность
+                println!("Полная информация: {:?}", quote_info);
+                return Ok(quote_info);
+            } else {
+                anyhow::bail!("Ответ не содержит данных");
+            }
+        } else {
+            anyhow::bail!("Ошибка сервера: {}", resp.error.unwrap_or_default());
+        }
+    }
+    anyhow::bail!("Не получен ответ от сервера");
+}
+
+
+// async fn process_atom_queue() -> Result<()>{
+//     let mut queue: parking_lot::lock_api::MutexGuard<'_, parking_lot::RawMutex, Vec<ExtractedMessage>> = QUEUE.lock();
+//     let elem = queue.first();
+//     match elem{
+//         Some(el__) => {
+//             let text = el__.text.as_str();
+//             println!("text:{}",text);
+// ////////   GET QUOTES  //////////////////////////////////////////////////////////////////////////////////
+// //  ==================>>>>>>>>>>>>>>>>>>>>      WEBSOCKET    AGENT RUST
+// // example agent::main.rs::test_websocket_extract_full_info() {            //                         cargo test test_websocket_extract_full_info -- --nocapture
+//             let resp = get_full_info_via_id_and_chat(collab_by_num_id(el__.chat_id.into()).unwrap().title().to_string(), el__.id.into()).await;
+//             match resp {
+//                     Ok(qi) => {
+//                         println!("ID: {}", qi.message_id);
+//                         println!("Автор цитаты: {}", qi.quoted_author);
+//                         println!("Текст цитаты: {}", qi.quoted_text);
+//                         println!("Текст ответа: {:?}", qi.reply_text);
+//                     }
+//                     Err(e) => eprintln!("Ошибка: {}", e),
+//             }
+//         }
+//         None => {  eprintln!("Ошибка:") }
+
+// ///            ///////////////////////////////////////// /////////////////////////////////////////////////
+// ///   SEND TO CL QUEUE 
+// ///   =====>>>>>>>>>>>>>>> GET REQUEST
+// //////////////////////////////////////
+
+//         }
+//         Ok(())
+//     }        
+
+pub async fn consumer_loop() {
+    loop {
+        // Проверяем наличие сообщений
+        let has_message = {
+            let queue = QUEUE.lock();
+            !queue.is_empty()
+        };
+        if has_message {
+            if let Err(e) = process_atom_queue().await {
+                eprintln!("Ошибка при обработке сообщения: {}", e);
+            }
+        } else {
+            // Очередь пуста – ждём появления новых сообщений
+            tokio::time::sleep(Duration::from_millis(200)).await;
+        }
+    }
+}
+
+
+
+pub async fn process_atom_queue() -> Result<()> {
+
+    println!("PROCESS AROM QUEUE\n");
+    // Извлекаем элемент из очереди (блокировка удерживается короткое время)
+    let msg = {
+        let mut queue = QUEUE.lock();
+        let first = queue.first().cloned();
+        if let Some(msg) = first {
             queue.remove(0);
-        },
-        None => {  }
-    }        
-}
-
-pub async fn __func1(mut counter1: u64){
-        loop {
-            counter1+=1;
-            thread::sleep(Duration::from_secs(3));
-            process_atom_queue().await;
-            println!("THREAD1::{}\n\n\n", counter1);
-            {
-                  let mut queue = QUEUE.lock();
-                  println!("SIZE QUEUE: {}", queue.len());
-                  if queue.len()==0 {break;}
-            }
+            msg
+        } else {
+            return Ok(()); // очередь пуста
         }
-}
+    };
 
-pub fn __func2(mut counter2: u64){
-        let queue2 = QUEUE2.lock();
-        let mut counter = 0;
-        let finish_index = queue2.len(); 
-        loop {
-            if counter < finish_index{
-               if let Some(item) = queue2.get(counter) {
-                    let mut queue = QUEUE.lock();
-                    queue.push(item.clone());
-                    println!("SIZE QUEUE: {}", queue.len());
-                    println!("SIZE QUE:{}, size", queue.len());
-                } 
-            }
-            else {
-                println!("\n\n\nFUNC2 stopped\n\n\n\n");
-                break;
-            }
-            thread::sleep(Duration::from_millis(200));
-            println!("THREAD2::{}\n\n\n", counter2);
-            counter+=1;
+    // Копируем строку, чтобы избежать проблем с заимствованием
+    let initial_author = msg.author_name.clone();
+
+    println!("text: {}", msg.text);
+
+    // Получаем Collab по chat_id
+    let collab = collab_by_num_id(msg.chat_id.into())
+        .ok_or_else(|| anyhow::anyhow!("Collab not found for chat_id {}", msg.chat_id))?;
+
+    let resp = get_full_info_via_id_and_chat(collab.title().to_string(), msg.id.into()).await;
+
+    match resp {
+        Ok(qi) => {
+            println!("ID: {}", qi.message_id);
+            println!("Автор цитаты: {}", qi.quoted_author);
+            println!("Текст цитаты: {}", qi.quoted_text);
+            println!("Текст ответа: {:?}", qi.reply_text);
+
+            // Безопасно извлекаем uuid (если None, передаём пустую строку)
+            let uuid_str = msg.uuid.unwrap_or_default();
+
+            // Отправляем данные в CL Queue
+            let _ = send_to_cl_queue(
+                &qi.quoted_text,
+                &initial_author,
+                &qi.quoted_author,
+                &uuid_str,
+            ).await;
         }
+        Err(e) => eprintln!("Ошибка: {}", e),
+    }
+
+    Ok(())
+}
+
+async fn send_to_cl_queue(quotes: &str, author: &str, quotes_author: &str, uuid: &str) -> Result<String, Box<dyn Error>> {
+    let client = reqwest::Client::new();
+    let response = client
+        .post(cl_address().replace("decode", "reqpr"))
+        .form(&[("input", quotes),                 ("author", author), 
+                ("quotes_author", quotes_author),  ("uuid", uuid) ])
+        .send()
+        .await?;
+    let body = response.text().await?;
+    Ok(body)
 }
 
 
-pub fn process_function() {
-    let  counter1 = 0;
-    let  counter2 = 0;
-    let __hndl1 = thread::spawn(move || {__func1(counter1);});   //processed messages   CONSUMER
-    let __hndl2 = thread::spawn(move || {__func2(counter2);});   //adding messages PRODUCER
-    __hndl1.join();
-    __hndl2.join();
-   // loop {thread::sleep(Duration::from_secs(3));}
+
+pub async fn __func2(_counter2: u64) {
+    loop {
+        tokio::time::sleep(Duration::from_secs(10)).await;
+        println!("PRODUCER: no new messages, sleeping");
+    }
 }
+
+// pub async fn __func2(mut counter2: u64) {
+//     // Даём фору, чтобы другие потоки успели инициализироваться
+//     tokio::time::sleep(Duration::from_millis(500)).await;
+//     println!("FUNC2 started – will move items from QUEUE2 to QUEUE");
+
+//     loop {
+//         counter2 += 1;
+//         // Забираем всё, что есть в QUEUE2
+//         let items_to_move = {
+//             let mut queue2 = QUEUE2.lock();
+//             if queue2.is_empty() {
+//                 None
+//             } else {
+//                 let items: Vec<_> = queue2.drain(..).collect();
+//                 Some(items)
+//             }
+//         };
+
+//         if let Some(mut items) = items_to_move {
+//             let mut queue = QUEUE.lock();
+//             queue.append(&mut items);
+//             println!("FUNC2: moved {} items to QUEUE, new QUEUE size: {}", items.len(), queue.len());
+//         } else {
+//             // QUEUE2 пуста – ждём и ничего не делаем
+//             if counter2 % 5 == 0 {
+//                 println!("FUNC2: QUEUE2 is empty, waiting... (counter={})", counter2);
+//             }
+//         }
+
+//         tokio::time::sleep(Duration::from_secs(2)).await;
+//     }
+// }
+
+/// Функция-потребитель: обрабатывает сообщения из QUEUE
+// pub async fn __func1(mut counter1: u64) {
+//     // Начальный размер очереди
+//     {
+//         let queue = QUEUE.lock();
+//         println!("INITIAL QUEUE SIZE: {}", queue.len());
+//     }
+
+//     loop {
+//         counter1 += 1;
+//         println!("THREAD1: processing iteration {}", counter1);
+//         // Обработка одного элемента (если есть)
+//         process_atom_queue().await;
+
+//         // Проверяем, опустела ли очередь
+//         let is_empty = {
+//             let queue = QUEUE.lock();
+//             queue.is_empty()
+//         };
+//         if is_empty {
+//             println!("QUEUE is empty, exiting __func1");
+//             break;
+//         }
+
+//         tokio::time::sleep(Duration::from_secs(1)).await;
+//     }
+// }
+
+pub async fn __func1(mut counter1: u64) {
+    println!("CONSUMER started (QUEUE will be processed until empty)");
+    loop {
+        // Проверяем, есть ли элементы в QUEUE
+        let is_empty = {
+            let queue = QUEUE.lock();
+            queue.is_empty()
+        };
+        if is_empty {
+            println!("QUEUE is empty, consumer finished");
+            break;
+        }
+
+        counter1 += 1;
+        println!("Processing iteration {}", counter1);
+        process_atom_queue().await; // обрабатывает один элемент
+
+        // Небольшая пауза, чтобы не нагружать CPU
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    }
+}
+
+
+
+
+
+
+/// Асинхронная точка входа для двух задач
+pub async fn process_function() {
+    println!("Starting async tasks: CONSUMER (__func1) and PRODUCER (__func2)");
+    let task1 = tokio::spawn(__func1(0));
+    let task2 = tokio::spawn(__func2(0));
+    let _ = tokio::join!(task1, task2);
+}
+
 
 fn decode_key_value_message(buf: &[u8]) -> Result<KeyValueMessage, String> {
     let mut bytes = buf;
@@ -551,8 +741,6 @@ pub async fn fetch_recent_list_raw(    client: Client,    base_webhook_url: &str
 async fn fallback_handler() -> impl IntoResponse {
     (StatusCode::NOT_FOUND, "Страница не найдена")
 }
-
-
 
 
 pub async fn spawn() -> anyhow::Result<()> {
