@@ -182,11 +182,15 @@ pub fn watch() {
     for item in queue.iter() {println!("{}", item.to_string());}
 }
 
-fn process_atom_queue(){
+async fn process_atom_queue(){
     let mut queue: parking_lot::lock_api::MutexGuard<'_, parking_lot::RawMutex, Vec<ExtractedMessage>> = QUEUE.lock();
     let elem = queue.first();
     match elem{
         Some(el__) => {
+            let text = el__.text.as_str();
+            let response = send_to_decode(text).await.unwrap();
+            println!("Ответ сервера: {}", response);
+            // Проверяем, что ответ содержит хотя бы одну позицию
             println!("DROPPED:{}", el__.to_string());
             queue.remove(0);
         },
@@ -194,11 +198,11 @@ fn process_atom_queue(){
     }        
 }
 
-pub fn __func1(mut counter1: u64){
+pub async fn __func1(mut counter1: u64){
         loop {
             counter1+=1;
             thread::sleep(Duration::from_secs(3));
-            process_atom_queue();
+            process_atom_queue().await;
             println!("THREAD1::{}\n\n\n", counter1);
             {
                   let mut queue = QUEUE.lock();
@@ -235,8 +239,8 @@ pub fn __func2(mut counter2: u64){
 pub fn process_function() {
     let  counter1 = 0;
     let  counter2 = 0;
-    let __hndl1 = thread::spawn(move || {__func1(counter1);});
-    let __hndl2 = thread::spawn(move || {__func2(counter2);});
+    let __hndl1 = thread::spawn(move || {__func1(counter1);});   //processed messages   CONSUMER
+    let __hndl2 = thread::spawn(move || {__func2(counter2);});   //adding messages PRODUCER
     __hndl1.join();
     __hndl2.join();
    // loop {thread::sleep(Duration::from_secs(3));}
