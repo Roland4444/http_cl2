@@ -1006,7 +1006,7 @@ use http_Proc::consumer_loop;
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async {
                 let mut interval = tokio::time::interval(Duration::from_secs(1));
-                let mut  condition =  !flag_clone.load(Ordering::Relaxed);
+                let mut condition =  !flag_clone.load(Ordering::Relaxed);
                 while condition {
                     interval.tick().await;
                     println!("привет");
@@ -1052,116 +1052,22 @@ use http_Proc::consumer_loop;
         let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit),serde_json::to_string_pretty(&json_value).unwrap(),);
     //    http_Proc::move_queue_to_queue2();
       {  
-
         let queue_data2 = http_Proc::QUEUE.lock();
         println!("\n\n\nQUEUE SIZE::{}\n\n\n\n", queue_data2.len());
 
       }  
 
-////////////TEST WORK up to empty
-{
-
-    //   while !http_Proc::QUEUE.lock().is_empty() {
-    //     if let Err(e) = http_Proc::process_atom_queue().await {            eprintln!("Ошибка при обработке сообщения: {}", e);        }
-    //     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-    //   }
-    //   println!("All messages processed, queue is empty");
-
-
-
-}
+       {
+            let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop());
+            while !http_Proc::QUEUE.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;}
+            consumer.abort(); // прерываем бесконечный цикл
+            println!("Очередь обработана, фоновый поток остановлен");
+            stop_flag.store(true, Ordering::Relaxed);
+            hello_task.await.unwrap(); // дождаться завершения
+        }
 
 
 
-////////////////PROD LOOP
-{
-
-   let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop());
-
-   while !http_Proc::QUEUE.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;}
-   consumer.abort(); // прерываем бесконечный цикл
-   println!("Очередь обработана, фоновый поток остановлен");
-
-    stop_flag.store(true, Ordering::Relaxed);
-    hello_task.await.unwrap(); // дождаться завершения
-
-    ///// Ждём сигнала завершения (Ctrl+C)
-   ///// // tokio::signal::ctrl_c().await?;
-  ///////  // consumer.abort();
- /////////   // Ok(())
-
-
-}
-
-
-/////////////////  TO RESEARCH
-
-// use tokio::time::Duration;
-// use std::sync::Mutex; // предполагаем, что QUEUE – Mutex
-
-// lazy_static::lazy_static! {
-//     static ref QUEUE: Mutex<Vec<Message>> = Mutex::new(Vec::new());
-// }
-
-// async fn consumer_loop() {
-//     loop {
-//         let has_message = {
-//             let queue = QUEUE.lock().unwrap();
-//             !queue.is_empty()
-//         };
-//         if has_message {
-//             process_atom_queue().await;
-//         } else {
-//             tokio::time::sleep(Duration::from_millis(200)).await;
-//         }
-//     }
-// }
-
-// async fn print_hello() {
-//     let mut interval = tokio::time::interval(Duration::from_secs(5));
-//     loop {
-//         interval.tick().await;
-//         println!("привет");
-//     }
-// }
-
-// #[tokio::main]
-// async fn main() {
-//     let consumer = tokio::spawn(consumer_loop());
-//     let hello = tokio::spawn(print_hello());
-
-//     // Ждём опустошения очереди (блокирующей проверки нет, всё асинхронно)
-//     while !QUEUE.lock().unwrap().is_empty() {
-//         tokio::time::sleep(Duration::from_millis(5000)).await;
-//     }
-
-//     // Останавливаем фоновые задачи
-//     consumer.abort();
-//     hello.abort();
-
-//     // Даём им время на чистый выход (необязательно)
-//     tokio::time::sleep(Duration::from_millis(100)).await;
-//     println!("Очередь обработана, фоновые задачи остановлены");
-// }
-
-
-
-
-
-
-
-
-////////////////////
-
-
-//   let consumer_handle = tokio::spawn(http_Proc::__func1(0));
-
-//     // Ждём, пока __func1 завершится (когда очередь опустеет)
-//     consumer_handle.await.unwrap();
-
-    // println!("All messages processed, queue is empty");
-    //     let handle = thread::spawn(http_Proc::process_function);//<===good
-    //     handle.join();  //process
 }
     }
 
