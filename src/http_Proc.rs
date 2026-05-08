@@ -268,6 +268,9 @@ pub async fn consumer_loop() {
 
 
 
+pub fn check_target(input: &str) -> bool {    input.to_uppercase()==APPROVED || input.to_uppercase().contains(APPROVED)  }
+
+
 pub async fn process_atom_queue() -> Result<()> {
 
     println!("PROCESS AROM QUEUE\n");
@@ -287,6 +290,8 @@ pub async fn process_atom_queue() -> Result<()> {
     let initial_author = msg.author_name.clone();
 
     println!("text: {}", msg.text);
+    if !check_target(&msg.text) {return Ok(())}     //drop not target message    with filter  test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 80.74s
+ // without filter    test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 220.78s
 
     // Получаем Collab по chat_id
     let collab = collab_by_num_id(msg.chat_id.into())
@@ -816,6 +821,12 @@ mod tests {
             println!("SIZE arr::{}", msg.len());
             assert_ne!(msg.len(), 0);
         });
+    }
+
+    #[test]
+    fn test_target_msg(){
+        let txt = "Согласовано";
+        assert_eq!(true, check_target(txt))
     }
 
 
