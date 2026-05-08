@@ -1006,9 +1006,11 @@ use http_Proc::consumer_loop;
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(async {
                 let mut interval = tokio::time::interval(Duration::from_secs(1));
-                while !flag_clone.load(Ordering::Relaxed) {
+                let mut  condition =  !flag_clone.load(Ordering::Relaxed);
+                while condition {
                     interval.tick().await;
                     println!("привет");
+                    condition =  !flag_clone.load(Ordering::Relaxed);   //comment to loop
                 }
             });
         });
