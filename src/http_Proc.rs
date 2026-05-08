@@ -162,7 +162,7 @@ where
 }
 //pub static QUEUE: Lazy< std::sync::Mutex<Vec<ExtractedMessage>>> = Lazy::new(||  std::sync::Mutex::new(Vec::new()));
 pub static QUEUE: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
-pub static QUEUE2: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
+pub static QUEUE_PROC: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
 //pub static QUEUE__: Lazy<Mutex<Vec<ExtractedMessage>>> = Lazy::new(|| Mutex::new(Vec::new()));
 //   add::             QUEUE.lock().unwrap().push(msg);
 //   remove::             QUEUE.lock().unwrap().remove(index);
@@ -171,13 +171,13 @@ pub static QUEUE2: Mutex2<Vec<ExtractedMessage>> = Mutex2::new(Vec::new());
 //  for item in queue.iter() { ... }
 pub fn copy_queue_to_queue2() {    
     let queue = QUEUE.lock();    
-    let mut queue2 = QUEUE2.lock();    
+    let mut queue2 = QUEUE_PROC.lock();    
     queue2.extend(queue.clone()); 
 }
 
 pub fn move_queue_to_queue2() -> usize {   
      let mut queue = QUEUE.lock();    
-     let mut queue2 = QUEUE2.lock();    
+     let mut queue2 = QUEUE_PROC.lock();    
      let len = queue.len();    
      queue2.extend(queue.drain(..));    len
 }
@@ -268,7 +268,96 @@ pub async fn consumer_loop() {
 
 
 
+pub async fn consumer_loop_proc() {
+    loop {
+        // Проверяем наличие сообщений
+        let has_message = {
+            let queue = QUEUE_PROC.lock();
+            !queue.is_empty()
+        };
+        if has_message {
+            if let Err(e) = process_atom_queue_proc().await {
+                eprintln!("Ошибка при обработке сообщения: {}", e);
+            }
+        } else {
+            // Очередь пуста – ждём появления новых сообщений
+            tokio::time::sleep(Duration::from_millis(200)).await;
+        }
+    }
+}
+
+
+
+
+
+
+
 pub fn check_target(input: &str) -> bool {    input.to_uppercase()==APPROVED || input.to_uppercase().contains(APPROVED)  }
+
+
+
+pub async fn process_atom_queue_proc() -> Result<()> {
+
+    println!("PROCESS AROM QUEUE\n");
+    // Извлекаем элемент из очереди (блокировка удерживается короткое время)
+    let msg = {
+        let mut queue = QUEUE_PROC.lock();
+        let first = queue.first().cloned();
+        if let Some(msg) = first {
+            queue.remove(0);
+            msg
+        } else {
+            return Ok(()); // очередь пуста
+        }
+    };
+
+    // Копируем строку, чтобы избежать проблем с заимствованием
+    let initial_author = msg.author_name.clone();
+
+    println!("text: {}", msg.text);
+    if !check_target(&msg.text) {return Ok(())}     //drop not target message    with filter  test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 80.74s
+ // without filter    test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 220.78s
+
+    // Получаем Collab по chat_id
+    let collab = collab_by_num_id(msg.chat_id.into())
+        .ok_or_else(|| anyhow::anyhow!("Collab not found for chat_id {}", msg.chat_id))?;
+
+    let resp = get_full_info_via_id_and_chat(collab.title().to_string(), msg.id.into()).await;
+    let acc_id = 7;
+    match resp {
+        Ok(qi) => {
+            println!("ID: {}", qi.message_id);
+            println!("Автор цитаты: {}", qi.quoted_author);
+            println!("Текст цитаты: {}", qi.quoted_text);
+            println!("Текст ответа: {:?}", qi.reply_text);
+            println!("collab: {:?}", collab.title());
+
+            // Безопасно извлекаем uuid (если None, передаём пустую строку)
+            let uuid_str = msg.uuid.unwrap_or_default();
+
+            // Отправляем данные в CL Queue
+            let resp_______ = send_to_cl_queue_proc(
+                &qi.quoted_text,
+                &initial_author,
+                &qi.quoted_author,
+                &uuid_str,  
+                &collab.title(),
+                acc_id
+            ).await;
+            println!("resp::{}\n\n", resp_______.unwrap());
+        }
+        Err(e) => eprintln!("Ошибка: {}", e),
+    }
+
+    Ok(())
+}
+
+
+
+
+
+
+
 
 
 pub async fn process_atom_queue() -> Result<()> {
@@ -327,10 +416,29 @@ pub async fn process_atom_queue() -> Result<()> {
     Ok(())
 }
 
+
+
+const LOG: &str = "reqpr";
 async fn send_to_cl_queue(quotes: &str, author: &str, quotes_author: &str, uuid: &str,  collab: &str, source_acc: u32 )-> Result<String, Box<dyn Error>> {
     let client = reqwest::Client::new();
     let response = client
-        .post(cl_address().replace("decode", "reqpr"))
+        .post(cl_address().replace("decode", LOG))
+        .form(&[("input", quotes),                 ("author", author), 
+                ("quotes_author", quotes_author),  ("uuid", uuid),
+                ("collab", collab),                ("source_acc", source_acc.to_string().as_str())                                 ])
+                
+        .send()
+        .await?;
+    let body = response.text().await?;
+    Ok(body)
+}
+
+
+const PROC: &str = "reqprc";
+async fn send_to_cl_queue_proc(quotes: &str, author: &str, quotes_author: &str, uuid: &str,  collab: &str, source_acc: u32 )-> Result<String, Box<dyn Error>> {
+    let client = reqwest::Client::new();
+    let response = client
+        .post(cl_address().replace("decode", PROC))
         .form(&[("input", quotes),                 ("author", author), 
                 ("quotes_author", quotes_author),  ("uuid", uuid),
                 ("collab", collab),                ("source_acc", source_acc.to_string().as_str())                                 ])

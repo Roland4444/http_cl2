@@ -537,7 +537,7 @@ mod tests {
     use chrono::format;
     use futures::TryFutureExt;
     use crate::File;
-    use crate::http_Proc::fetch_recent_list_raw;
+    use crate::http_Proc::{consumer_loop_proc, fetch_recent_list_raw};
 
     use super::*;
 
@@ -994,12 +994,11 @@ mod tests {
 
 
 use http_Proc::consumer_loop;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 #[tokio::test]
     async fn test_pull_messages_prod_OKLAND_with_dump() {
-        use std::sync::Arc;
-        use std::sync::atomic::{AtomicBool, Ordering};
-        let mut x = 0;
         let stop_flag = Arc::new(AtomicBool::new(false));
         let flag_clone = stop_flag.clone();
         let hello_task = tokio::task::spawn_blocking(move || {
@@ -1069,6 +1068,53 @@ use http_Proc::consumer_loop;
 
 
 }
+
+#[tokio::test]
+async fn test_1_msg(){
+    let extracted: ExtractedMessage = ExtractedMessage { author_name: "Артур Сераждинов".to_string(), 
+        text: "Согласовано".to_string(), 
+        uuid: Some("aa2fe320-f7f1-4c3d-9028-75848448ac6d".to_string()), 
+        id: 123820, 
+        chat_id: 6986 };
+    let stop_flag = Arc::new(AtomicBool::new(false));
+    let flag_clone = stop_flag.clone();    
+    let msgs = vec![extracted];
+    {
+            let mut queue = http_Proc::QUEUE_PROC.lock();
+            queue.extend(msgs.clone());
+    }
+
+
+    {
+        let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc());
+        while !http_Proc::QUEUE_PROC.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;}
+        consumer.abort(); // прерываем бесконечный цикл
+        println!("Очередь обработана, фоновый поток остановлен");
+        stop_flag.store(true, Ordering::Relaxed);
+        //hello_task.await.unwrap(); // дождаться завершения
+    }
+
+
+//     Автор цитаты: Артур Сераждинов
+// Текст цитаты: Прошу согласовать материал
+// 1.кругляк металлический 16-ый-120м
+// 2.полоса металлическая 40/5-100м
+// 3.мастика-2кг
+// 4.электроды 3ка-3кг
+// Текст ответа: Some("Согласовано")
+// collab: "ОКЛАНД РЫБАЦКАЯ"
+// resp::{"error":"Missing parameters"}
+
+
+// Очередь обработана, фоновый поток остановлен
+// test tests::test_1_msg ... ok
+
+
+
+}
+
+
+
     }
 
 
