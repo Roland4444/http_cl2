@@ -311,13 +311,14 @@ pub async fn process_atom_queue() -> Result<()> {
             let uuid_str = msg.uuid.unwrap_or_default();
 
             // Отправляем данные в CL Queue
-            let _ = send_to_cl_queue(
+            let resp_______ = send_to_cl_queue(
                 &qi.quoted_text,
                 &initial_author,
                 &qi.quoted_author,
                 &uuid_str,  
                 &collab.title()
             ).await;
+            println!("resp::{}\n\n", resp_______.unwrap());
         }
         Err(e) => eprintln!("Ошибка: {}", e),
     }
