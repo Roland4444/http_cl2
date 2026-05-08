@@ -298,7 +298,7 @@ pub async fn process_atom_queue() -> Result<()> {
         .ok_or_else(|| anyhow::anyhow!("Collab not found for chat_id {}", msg.chat_id))?;
 
     let resp = get_full_info_via_id_and_chat(collab.title().to_string(), msg.id.into()).await;
-
+    let acc_id = 7;
     match resp {
         Ok(qi) => {
             println!("ID: {}", qi.message_id);
@@ -316,7 +316,8 @@ pub async fn process_atom_queue() -> Result<()> {
                 &initial_author,
                 &qi.quoted_author,
                 &uuid_str,  
-                &collab.title()
+                &collab.title(),
+                acc_id
             ).await;
             println!("resp::{}\n\n", resp_______.unwrap());
         }
@@ -326,13 +327,13 @@ pub async fn process_atom_queue() -> Result<()> {
     Ok(())
 }
 
-async fn send_to_cl_queue(quotes: &str, author: &str, quotes_author: &str, uuid: &str,  collab: &str )-> Result<String, Box<dyn Error>> {
+async fn send_to_cl_queue(quotes: &str, author: &str, quotes_author: &str, uuid: &str,  collab: &str, source_acc: u32 )-> Result<String, Box<dyn Error>> {
     let client = reqwest::Client::new();
     let response = client
         .post(cl_address().replace("decode", "reqpr"))
         .form(&[("input", quotes),                 ("author", author), 
                 ("quotes_author", quotes_author),  ("uuid", uuid),
-                ("collab", collab)                                 ])
+                ("collab", collab),                ("source_acc", source_acc.to_string().as_str())                                 ])
                 
         .send()
         .await?;
