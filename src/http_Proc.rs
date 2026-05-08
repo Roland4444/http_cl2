@@ -305,6 +305,7 @@ pub async fn process_atom_queue() -> Result<()> {
             println!("Автор цитаты: {}", qi.quoted_author);
             println!("Текст цитаты: {}", qi.quoted_text);
             println!("Текст ответа: {:?}", qi.reply_text);
+            println!("collab: {:?}", collab.title());
 
             // Безопасно извлекаем uuid (если None, передаём пустую строку)
             let uuid_str = msg.uuid.unwrap_or_default();
@@ -314,7 +315,8 @@ pub async fn process_atom_queue() -> Result<()> {
                 &qi.quoted_text,
                 &initial_author,
                 &qi.quoted_author,
-                &uuid_str,
+                &uuid_str,  
+                &collab.title()
             ).await;
         }
         Err(e) => eprintln!("Ошибка: {}", e),
@@ -323,12 +325,14 @@ pub async fn process_atom_queue() -> Result<()> {
     Ok(())
 }
 
-async fn send_to_cl_queue(quotes: &str, author: &str, quotes_author: &str, uuid: &str) -> Result<String, Box<dyn Error>> {
+async fn send_to_cl_queue(quotes: &str, author: &str, quotes_author: &str, uuid: &str,  collab: &str )-> Result<String, Box<dyn Error>> {
     let client = reqwest::Client::new();
     let response = client
         .post(cl_address().replace("decode", "reqpr"))
         .form(&[("input", quotes),                 ("author", author), 
-                ("quotes_author", quotes_author),  ("uuid", uuid) ])
+                ("quotes_author", quotes_author),  ("uuid", uuid),
+                ("collab", collab)                                 ])
+                
         .send()
         .await?;
     let body = response.text().await?;
