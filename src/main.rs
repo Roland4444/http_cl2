@@ -995,8 +995,24 @@ mod tests {
 
 use http_Proc::consumer_loop;
 
- #[tokio::test]
+#[tokio::test]
     async fn test_pull_messages_prod_OKLAND_with_dump() {
+        use std::sync::Arc;
+        use std::sync::atomic::{AtomicBool, Ordering};
+        let mut x = 0;
+        let stop_flag = Arc::new(AtomicBool::new(false));
+        let flag_clone = stop_flag.clone();
+        let hello_task = tokio::task::spawn_blocking(move || {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async {
+                let mut interval = tokio::time::interval(Duration::from_secs(1));
+                while !flag_clone.load(Ordering::Relaxed) {
+                    interval.tick().await;
+                    println!("привет");
+                }
+            });
+        });
+
         let current_collab = Collab::OKLAND;
         let title = current_collab.title();
         let id = http_Proc:: get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
@@ -1064,6 +1080,8 @@ use http_Proc::consumer_loop;
    consumer.abort(); // прерываем бесконечный цикл
    println!("Очередь обработана, фоновый поток остановлен");
 
+    stop_flag.store(true, Ordering::Relaxed);
+    hello_task.await.unwrap(); // дождаться завершения
 
     ///// Ждём сигнала завершения (Ctrl+C)
    ///// // tokio::signal::ctrl_c().await?;
