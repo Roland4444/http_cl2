@@ -942,9 +942,9 @@ mod tests {
 
     }
 
-    #[test]
-    fn test_thread_call(){ 
-        let handle = thread::spawn(http_Proc::process_function);
+    #[tokio::test]
+    async fn test_thread_call(){ 
+        http_Proc::process_function("FILENAME.bin".to_string()).await;
         std::thread::sleep(Duration::from_secs(5));//handle.join();
     }
 
@@ -986,8 +986,11 @@ mod tests {
 
         let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit),serde_json::to_string_pretty(&json_value).unwrap(),);
         http_Proc::move_queue_to_queue2();
-        let handle = thread::spawn(http_Proc::process_function);//<===good
-        handle.join();  //process
+        // let handle = thread::spawn(http_Proc::process_function());//<===good
+        // handle.join();  //process
+
+        http_Proc::process_function("FILENAME.bin".to_string()).await;
+
 }
 
 
@@ -998,7 +1001,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 #[tokio::test]
-    async fn test_pull_messages_prod_OKLAND_with_dump() {
+    async fn test_pull_messages_test_OKLAND_with_dump() {
         let stop_flag = Arc::new(AtomicBool::new(false));
         let flag_clone = stop_flag.clone();
         let hello_task = tokio::task::spawn_blocking(move || {
@@ -1057,7 +1060,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
       }  
 
        {
-            let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop());
+            let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop(TEST_DUMP_FILE));
             while !http_Proc::QUEUE.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;}
             consumer.abort(); // прерываем бесконечный цикл
             println!("Очередь обработана, фоновый поток остановлен");
@@ -1070,7 +1073,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 }
 
 
-
+const TEST_DUMP_FILE: &str = "2test.bin";
 
 #[tokio::test]
     async fn test_pull_messages_prod_OKLAND_with_dump_via_prod_queue() {
@@ -1131,7 +1134,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
       }  
 
        {
-            let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc());
+            let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc(TEST_DUMP_FILE));
             while !http_Proc::QUEUE_PROC.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;}
             consumer.abort(); // прерываем бесконечный цикл
             println!("Очередь обработана, фоновый поток остановлен");
@@ -1157,7 +1160,7 @@ async fn test_1_msg(){
 
 
     {
-        let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc());
+        let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc(TEST_DUMP_FILE));
         while !http_Proc::QUEUE_PROC.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;}
         consumer.abort(); // прерываем бесконечный цикл
         println!("Очередь обработана, фоновый поток остановлен");
@@ -1182,7 +1185,7 @@ async fn test_1_msg_test(){
             queue.extend(msgs.clone());
     }
     {
-        let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc());
+        let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc(TEST_DUMP_FILE));
         while !http_Proc::QUEUE_PROC.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(30000)).await;}
         consumer.abort(); // прерываем бесконечный цикл
         println!("Очередь обработана, фоновый поток остановлен");

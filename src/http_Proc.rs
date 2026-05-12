@@ -64,8 +64,8 @@ pub fn restore_processed_ids_from_file(path: &str) -> Result<()>{
     Ok(())
 }
 
-pub fn restore_processed_ids() -> Result<()>{
-    let data = fs::read(FILE_NAME_4_HASHSET)?;
+pub fn restore_processed_ids(input_file: &str) -> Result<()>{
+    let data = fs::read(input_file)?;
     let ids: Vec<u32> = bincode::deserialize(&data)?;
     let mut set = PROCESSED_IDS.write().unwrap();
     *set = ids.into_iter().collect();
@@ -248,7 +248,9 @@ pub async fn get_full_info_via_id_and_chat(chat_name: String, message_id: u64) -
 //         Ok(())
 //     }        
 
-pub async fn consumer_loop() {
+pub async fn consumer_loop(name_4_idfile: &str) {
+    restore_processed_ids(name_4_idfile);
+
     loop {
         // Проверяем наличие сообщений
         let has_message = {
@@ -256,7 +258,7 @@ pub async fn consumer_loop() {
             !queue.is_empty()
         };
         if has_message {
-            if let Err(e) = process_atom_queue().await {
+            if let Err(e) = process_atom_queue(name_4_idfile).await {
                 eprintln!("Ошибка при обработке сообщения: {}", e);
             }
         } else {
@@ -268,7 +270,8 @@ pub async fn consumer_loop() {
 
 
 
-pub async fn consumer_loop_proc() {
+pub async fn consumer_loop_proc(name_4_idfile: &str) {
+    restore_processed_ids(name_4_idfile);
     loop {
 
         println!("LOOP! consumer-prod\n");
@@ -277,7 +280,7 @@ pub async fn consumer_loop_proc() {
             !queue.is_empty()
         };
         if has_message {
-            if let Err(e) = process_atom_queue_proc().await {
+            if let Err(e) = process_atom_queue_proc(name_4_idfile).await {
                 eprintln!("Ошибка при обработке сообщения: {}", e);
             }
         } else {
@@ -296,7 +299,7 @@ pub fn check_target(input: &str) -> bool {    input.to_uppercase()==APPROVED || 
 
 
 
-pub async fn process_atom_queue_proc() -> Result<()> {
+pub async fn process_atom_queue_proc(name_4_idfile: &str) -> Result<()> {
 
     println!("PROCESS FROM PROD QUEUE\n");
     // Извлекаем элемент из очереди (блокировка удерживается короткое время)
@@ -315,20 +318,15 @@ pub async fn process_atom_queue_proc() -> Result<()> {
     let initial_author = msg.author_name.clone();
 
     println!("text: {}", msg.text);
-    if !check_target(&msg.text) {println!("DROP NOT TARGET!\n\n"); return Ok(())}     //drop not target message    with filter  test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 80.74s
+    if !check_target(&msg.text) {        println!("DROP NOT TARGET!\n\n");         return Ok(())}     //drop not target message    with filter  test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 80.74s
  // without filter    test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 220.78s
+    if is_processed(msg.id){println!("ID msg {} already processed, skipped...", msg.id);  return Ok(())} 
     println!("100!\n\n");
     // Получаем Collab по chat_id
     let collab = collab_by_num_id(msg.chat_id.into())
         .ok_or_else(|| anyhow::anyhow!("Collab not found for chat_id {}", msg.chat_id))?;
-    println!("200!\n\n");
-
     let resp = get_full_info_via_id_and_chat(collab.title().to_string(), msg.id.into()).await;
-    println!("300!\n\n");
-
     let acc_id = 7;
-    println!("400!\n\n");
-
     match resp {
         Ok(qi) => {
             println!("ID: {}", qi.message_id);
@@ -350,6 +348,9 @@ pub async fn process_atom_queue_proc() -> Result<()> {
                 acc_id
             ).await;
             println!("resp::{}\n\n", resp_______.unwrap());
+            add_processed_id(msg.id);
+            suspend_to_file(name_4_idfile);
+
         }
         Err(e) => eprintln!("Ошибка: {}", e),
     }
@@ -358,16 +359,9 @@ pub async fn process_atom_queue_proc() -> Result<()> {
 }
 
 
+pub async fn process_atom_queue(name_4_idfile: &str) -> Result<()> {
 
-
-
-
-
-
-
-pub async fn process_atom_queue() -> Result<()> {
-
-    println!("PROCESS AROM QUEUE\n");
+    println!("PROCESS FROM QUEUE\n");
     // Извлекаем элемент из очереди (блокировка удерживается короткое время)
     let msg = {
         let mut queue = QUEUE.lock();
@@ -386,7 +380,7 @@ pub async fn process_atom_queue() -> Result<()> {
     println!("text: {}", msg.text);
     if !check_target(&msg.text) {return Ok(())}     //drop not target message    with filter  test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 80.74s
  // without filter    test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 220.78s
-
+    if is_processed(msg.id){println!("ID msg {} already processed, skipped...", msg.id);  return Ok(())} 
     // Получаем Collab по chat_id
     let collab = collab_by_num_id(msg.chat_id.into())
         .ok_or_else(|| anyhow::anyhow!("Collab not found for chat_id {}", msg.chat_id))?;
@@ -414,6 +408,8 @@ pub async fn process_atom_queue() -> Result<()> {
                 acc_id
             ).await;
             println!("resp::{}\n\n", resp_______.unwrap());
+            add_processed_id(msg.id);
+            suspend_to_file(name_4_idfile);
         }
         Err(e) => eprintln!("Ошибка: {}", e),
     }
@@ -525,7 +521,7 @@ pub async fn __func2(_counter2: u64) {
 //     }
 // }
 
-pub async fn __func1(mut counter1: u64) {
+pub async fn __func1(mut counter1: u64, filename: String) {
     println!("CONSUMER started (QUEUE will be processed until empty)");
     loop {
         // Проверяем, есть ли элементы в QUEUE
@@ -540,7 +536,7 @@ pub async fn __func1(mut counter1: u64) {
 
         counter1 += 1;
         println!("Processing iteration {}", counter1);
-        process_atom_queue().await; // обрабатывает один элемент
+        process_atom_queue(filename.as_str()).await; // обрабатывает один элемент
 
         // Небольшая пауза, чтобы не нагружать CPU
         tokio::time::sleep(Duration::from_millis(100)).await;
@@ -553,9 +549,10 @@ pub async fn __func1(mut counter1: u64) {
 
 
 /// Асинхронная точка входа для двух задач
-pub async fn process_function() {
+pub async fn process_function(filename: String) {
     println!("Starting async tasks: CONSUMER (__func1) and PRODUCER (__func2)");
-    let task1 = tokio::spawn(__func1(0));
+    let borrowed =     filename.to_string();
+    let task1 = tokio::spawn(__func1(0, filename));
     let task2 = tokio::spawn(__func2(0));
     let _ = tokio::join!(task1, task2);
 }
