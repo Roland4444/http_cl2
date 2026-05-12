@@ -995,11 +995,11 @@ mod tests {
 
 
 
+const TEST_DUMP_FILE: &str = "3test.bin";
 
 use http_Proc::consumer_loop;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
-
+use std::sync::atomic::{AtomicBool, Ordering}; 
 #[tokio::test]
     async fn test_pull_messages_test_OKLAND_with_dump() {
         let stop_flag = Arc::new(AtomicBool::new(false));
@@ -1021,20 +1021,20 @@ use std::sync::atomic::{AtomicBool, Ordering};
         let title = current_collab.title();
         let id = http_Proc:: get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
-        println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+        // println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
         let limit = 1220;
 
         let json_value:Value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
         (id + 1) as i64,limit,    ).await.unwrap();
  
-        let messages =  http_Proc::extract_messages_from_json(&json_value);
-        println!("Извлечено {} сообщений", messages.len());
-        for msg in messages.iter() {        println!("{:?}", msg);    }
+        let messages = http_Proc::fn_to_produce_msg_to_collab(current_collab, &http_Proc::QUEUE).await;// http_Proc::extract_messages_from_json(&json_value);
+        // println!("Извлечено {} сообщений", messages.len());
+        // for msg in messages.iter() {        println!("{:?}", msg);    }
 
-        {
-            let mut queue = http_Proc::QUEUE.lock();
-            queue.extend(messages.clone());
-        }
+        // {
+        //     let mut queue = http_Proc::QUEUE.lock();
+        //     queue.extend(messages.clone());
+        // }
 
         let bin_filename = format!("{}_queue.bin", current_collab.title());
         {
@@ -1073,7 +1073,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 }
 
 
-const TEST_DUMP_FILE: &str = "2test.bin";
 
 #[tokio::test]
     async fn test_pull_messages_prod_OKLAND_with_dump_via_prod_queue() {

@@ -269,9 +269,26 @@ pub async fn consumer_loop(name_4_idfile: &str) {
 }
 
 
+pub async fn fn_to_produce_msg_to_collab(current_collab: Collab,    queue: &Mutex2<Vec<ExtractedMessage>>,) -> Vec<ExtractedMessage> {
+    let title = current_collab.title();
+    let id = get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+    println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+    let limit = 1220;
+    let json_value: Value = pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
+        (id + 1) as i64,limit,).await.unwrap();
+    let messages = extract_messages_from_json(&json_value);
+    println!("Извлечено {} сообщений", messages.len());
+    for msg in messages.iter() {        println!("{:?}", msg);    }
+    {
+        let mut queue_guard = queue.lock();  
+        queue_guard.extend(messages.clone());
+    }
+    messages
+}
+
 
 pub async fn consumer_loop_proc(name_4_idfile: &str) {
-    restore_processed_ids(name_4_idfile);
+    let _ = restore_processed_ids(name_4_idfile);
     loop {
 
         println!("LOOP! consumer-prod\n");
