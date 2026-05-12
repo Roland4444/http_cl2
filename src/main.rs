@@ -1069,6 +1069,77 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 }
 
+
+
+
+#[tokio::test]
+    async fn test_pull_messages_prod_OKLAND_with_dump_via_prod_queue() {
+        let stop_flag = Arc::new(AtomicBool::new(false));
+        let flag_clone = stop_flag.clone();
+        let hello_task = tokio::task::spawn_blocking(move || {
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async {
+                let mut interval = tokio::time::interval(Duration::from_secs(1));
+                let mut condition =  !flag_clone.load(Ordering::Relaxed);
+                while condition {
+                    interval.tick().await;
+                    println!("привет");
+                    condition =  !flag_clone.load(Ordering::Relaxed);   //comment to loop
+                }
+            });
+        });
+
+        let current_collab = Collab::OKLAND;
+        let title = current_collab.title();
+        let id = http_Proc:: get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+
+        println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+        let limit = 1220;
+
+        let json_value:Value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
+        (id + 1) as i64,limit,    ).await.unwrap();
+ 
+        let messages =  http_Proc::extract_messages_from_json(&json_value);
+        println!("Извлечено {} сообщений", messages.len());
+        for msg in messages.iter() {        println!("{:?}", msg);    }
+
+        {
+            let mut queue = http_Proc::QUEUE_PROC.lock();
+            queue.extend(messages.clone());
+        }
+
+        let bin_filename = format!("{}_queue.bin", current_collab.title());
+        {
+            let queue_data = http_Proc::QUEUE_PROC.lock();
+            let serialized = bincode::serialize(&*queue_data).expect("Ошибка сериализации");
+            std::fs::write(&bin_filename, serialized).expect("Не удалось записать бинарный файл");
+        }
+        println!("Очередь сохранена в {}", bin_filename);
+
+        println!("\n\n\nSTARING WATCH!\n\n\n");
+        http_Proc::watch(); 
+
+        let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
+        let json_output = serde_json::to_string_pretty(&messages).unwrap();
+        std::fs::write(out_extracted, json_output).unwrap();
+
+        let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit),serde_json::to_string_pretty(&json_value).unwrap(),);
+    //    http_Proc::move_queue_to_queue2();
+      {  
+        let queue_data2 = http_Proc::QUEUE_PROC.lock();
+        println!("\n\n\nQUEUE SIZE::{}\n\n\n\n", queue_data2.len());
+      }  
+
+       {
+            let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc());
+            while !http_Proc::QUEUE_PROC.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(5000)).await;}
+            consumer.abort(); // прерываем бесконечный цикл
+            println!("Очередь обработана, фоновый поток остановлен");
+            stop_flag.store(true, Ordering::Relaxed);
+            hello_task.await.unwrap(); // дождаться завершения
+        }
+}
+
 #[tokio::test]
 async fn test_1_msg(){
     let extracted: ExtractedMessage = ExtractedMessage { author_name: "Артур Сераждинов".to_string(), 
@@ -1093,26 +1164,32 @@ async fn test_1_msg(){
         stop_flag.store(true, Ordering::Relaxed);
         //hello_task.await.unwrap(); // дождаться завершения
     }
-
-
-//     Автор цитаты: Артур Сераждинов
-// Текст цитаты: Прошу согласовать материал
-// 1.кругляк металлический 16-ый-120м
-// 2.полоса металлическая 40/5-100м
-// 3.мастика-2кг
-// 4.электроды 3ка-3кг
-// Текст ответа: Some("Согласовано")
-// collab: "ОКЛАНД РЫБАЦКАЯ"
-// resp::{"error":"Missing parameters"}
-
-
-// Очередь обработана, фоновый поток остановлен
-// test tests::test_1_msg ... ok
-
-
-
 }
 
+
+#[tokio::test]
+async fn test_1_msg_test(){
+    let extracted: ExtractedMessage = ExtractedMessage { author_name: "Артур Сераждинов".to_string(), 
+        text: "Согласовано".to_string(), 
+        uuid: Some("aa2fe320-f7f1-4c3d-9028-75848448ac6d".to_string()), 
+        id: 123820, 
+        chat_id: 6986 };
+    let stop_flag = Arc::new(AtomicBool::new(false));
+    let flag_clone = stop_flag.clone();    
+    let msgs = vec![extracted];
+    {
+            let mut queue = http_Proc::QUEUE_PROC.lock();
+            queue.extend(msgs.clone());
+    }
+    {
+        let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc());
+        while !http_Proc::QUEUE_PROC.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(30000)).await;}
+        consumer.abort(); // прерываем бесконечный цикл
+        println!("Очередь обработана, фоновый поток остановлен");
+        stop_flag.store(true, Ordering::Relaxed);
+        //hello_task.await.unwrap(); // дождаться завершения
+    }
+}
 
 
     }
