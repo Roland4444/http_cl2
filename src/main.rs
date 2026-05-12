@@ -995,12 +995,12 @@ mod tests {
 
 
 
-const TEST_DUMP_FILE: &str = "3test.bin";
+    const TEST_DUMP_FILE: &str = "3test.bin";
 
-use http_Proc::consumer_loop;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering}; 
-#[tokio::test]
+    use http_Proc::consumer_loop;
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};   
+    #[tokio::test]
     async fn test_pull_messages_test_OKLAND_with_dump() {
         let stop_flag = Arc::new(AtomicBool::new(false));
         let flag_clone = stop_flag.clone();
@@ -1022,7 +1022,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
         let id = http_Proc:: get_last_id_for_collab(current_collab, Client::new(), webhook_base_prod().as_str()).await.unwrap();
 
         // println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
-        let limit = 1220;
+        let limit: u32 = 1220;
 
         let json_value:Value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
         (id + 1) as i64,limit,    ).await.unwrap();
@@ -1074,7 +1074,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 
 
-#[tokio::test]
+    #[tokio::test]
     async fn test_pull_messages_prod_OKLAND_with_dump_via_prod_queue() {
         let stop_flag = Arc::new(AtomicBool::new(false));
         let flag_clone = stop_flag.clone();
@@ -1142,8 +1142,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
         }
 }
 
-#[tokio::test]
-async fn test_1_msg(){
+    #[tokio::test]
+    async fn test_1_msg(){
     let extracted: ExtractedMessage = ExtractedMessage { author_name: "Артур Сераждинов".to_string(), 
         text: "Согласовано".to_string(), 
         uuid: Some("aa2fe320-f7f1-4c3d-9028-75848448ac6d".to_string()), 
@@ -1169,8 +1169,8 @@ async fn test_1_msg(){
 }
 
 
-#[tokio::test]
-async fn test_1_msg_test(){
+    #[tokio::test]
+    async fn test_1_msg_test(){
     let extracted: ExtractedMessage = ExtractedMessage { author_name: "Артур Сераждинов".to_string(), 
         text: "Согласовано".to_string(), 
         uuid: Some("aa2fe320-f7f1-4c3d-9028-75848448ac6d".to_string()), 
