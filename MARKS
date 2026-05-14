@@ -251,3 +251,24 @@ curl -X 'GET' \
 
 
   chat8138   ИТ ОТДЕЛ
+
+
+
+curl -X POST \
+-H "Content-Type: application/json" \
+-d '{
+    "type": "user",
+    "ownerId": 1,
+    "name": "Государственный праздник",
+    "from": "2026-06-12",
+    "to": "2026-06-12",
+    "skip_time": "Y",
+    "color": "%23FF0000",
+    "text_color": "%23FFFFFF"
+}' \
+  https://relits.bitrix24.ru/rest/336/rabusv8v4xz2p7yi/calendar.event.add
+
+
+
+
+  https://relits.bitrix24.ru/rest/336/rabusv8v4xz2p7yi/
