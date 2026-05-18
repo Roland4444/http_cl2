@@ -796,7 +796,7 @@ mod tests {
 
         let messages =  http_Proc::extract_messages_from_json(&json_value);
         println!("Извлечено {} сообщений", messages.len());
-        for msg in messages.iter() {                     println!("{:?}", msg);        }
+        for msg in messages.iter() {                     println!("{:?}", msg);        } 
 
         let out_extracted = format!("{}_last{}_extracted.json", "OKLAND", limit);
         let json_output = serde_json::to_string_pretty(&messages).unwrap();
@@ -1193,8 +1193,50 @@ mod tests {
     }
 }
 
+//                        cargo test test_embed_queue_test -- --nocapture --test-threads=1
 
-    }
+#[tokio::test]
+async fn test_embed_queue_test() {
+    let current_collab = Collab::OKLAND;
+    let stop_flag = Arc::new(AtomicBool::new(false));
+    let flag_clone = stop_flag.clone();
+
+    // Генератор сообщений (бесконечный цикл)
+    let msg_task = tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(60));
+        while !flag_clone.load(Ordering::Relaxed) {
+            interval.tick().await;
+            println!("QUEUE Produce messages run!");
+            let msgs = http_Proc::fn_to_produce_msg_to_collab(current_collab, &http_Proc::QUEUE).await;
+            {
+                let mut queue = http_Proc::QUEUE_PROC.lock(); // .await не нужен – мьютекс синхронный
+                queue.extend(msgs);
+            }
+        }
+    });
+
+    // Потребитель (бесконечный цикл) – предполагается, что consumer_loop_proc работает постоянно
+    let consumer_task = tokio::spawn(async move {
+        consumer_loop_proc(TEST_DUMP_FILE).await;
+    });
+
+    // Ждём сигнала завершения (Ctrl+C)
+    tokio::signal::ctrl_c().await.expect("Failed to listen for Ctrl+C");
+    println!("Shutting down...");
+    stop_flag.store(true, Ordering::Relaxed);
+
+    // Прерываем задачи (они могут завершиться сами)
+    msg_task.abort();
+    consumer_task.abort();
+    // Даём задачам время на завершение (опционально)
+    tokio::time::sleep(Duration::from_millis(100)).await;
+}
+
+    // #[tokio::test]
+    // async fn test_prod_emu
+
+
+     }
 
 
 ////
