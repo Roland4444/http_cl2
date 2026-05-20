@@ -1168,6 +1168,7 @@ mod tests {
     }
 }
 
+    const TEST_DUMP_FILE_TEMP: &str = "77test.bin";
 
     #[tokio::test]
     async fn test_1_msg_test(){
@@ -1184,7 +1185,7 @@ mod tests {
             queue.extend(msgs.clone());
     }
     {
-        let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc(TEST_DUMP_FILE));
+        let consumer: tokio::task::JoinHandle<()> = tokio::spawn(consumer_loop_proc(TEST_DUMP_FILE_TEMP));
         while !http_Proc::QUEUE_PROC.lock().is_empty() {    tokio::time::sleep(tokio::time::Duration::from_millis(30000)).await;}
         consumer.abort(); // прерываем бесконечный цикл
         println!("Очередь обработана, фоновый поток остановлен");
