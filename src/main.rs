@@ -1,4 +1,4 @@
-use crate::http_Test::{read_lines_utf8};
+use crate::http_test::{read_lines_utf8};
 use bincode;
 use reqwest;
 use reqwest::Client;
@@ -10,7 +10,7 @@ use std::fs::File;
 use std::io::{Read, Write};
 pub mod http_Parser;
 pub mod http_Proc;
-pub mod http_Test;
+pub mod http_test;
 pub mod http_synteka;
 use std::thread;
 use std::time::Duration;
@@ -253,7 +253,7 @@ async fn grub_data(    index_start: i32,    index_stop: i32,    filename_to_dump
     let mut pack = Pack::new(init_buffer);
     let client_reqwest: Client = reqwest::Client::new();
     for _i in index_start..index_stop {
-        match http_Test::get_user_by_id(client_reqwest.clone(), _i).await {
+        match http_test::get_user_by_id(client_reqwest.clone(), _i).await {
             Ok(data) => {
                 if let Some(users) = data.get("result") {
                     if users.is_array() {
@@ -293,7 +293,7 @@ async fn grub_data_with_add_params(    index_start: i32,    index_stop: i32,    
     let mut pack = Pack::new(init_buffer);
     let client_reqwest: Client = reqwest::Client::new();
     for _i in index_start..index_stop {
-        match http_Test::get_user_by_id(client_reqwest.clone(), _i).await {
+        match http_test::get_user_by_id(client_reqwest.clone(), _i).await {
             Ok(data) => {
                 if let Some(users) = data.get("result") {
                     if users.is_array() {
@@ -350,7 +350,7 @@ async fn try_grub() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn send_message(msg: &str, id_to_send: i32) -> Result<(), Box<dyn std::error::Error>> {
-    http_Test::send_notification_to_user(reqwest::Client::new(), &id_to_send.to_string(), msg).await?;
+    http_test::send_notification_to_user(reqwest::Client::new(), &id_to_send.to_string(), msg).await?;
     Ok(())
 }
 
@@ -400,12 +400,12 @@ async fn process(client_reqwest: Client) -> Result<(), Box<dyn std::error::Error
     let arr2: Vec<[(&str, &str); 2]> = vec![z20, z21, z22];
 
     for item in arr.iter() {
-        let result = http_Test::update_param_(client_reqwest.clone(), item).await?;
+        let result = http_test::update_param_(client_reqwest.clone(), item).await?;
         println!("Response body: {}", result);
     }
 
     for item in arr2.iter() {
-        let result = http_Test::update_param_(client_reqwest.clone(), item).await?;
+        let result = http_test::update_param_(client_reqwest.clone(), item).await?;
         println!("Response body: {}", result);
     }
     Ok(())
@@ -415,7 +415,7 @@ fn gen_batch_str(input: String, pack: Pack, _1c_info_file: String) -> String {  
 
 async fn getting_users(client_reqwest: Client) -> () {
     println!("=== Получение пользователя по ID 111111111111111111111===");
-    match http_Test::get_user_by_id(client_reqwest.clone(), 1).await {
+    match http_test::get_user_by_id(client_reqwest.clone(), 1).await {
         Ok(data) => {
             if let Some(users) = data.get("result") {
                 if users.is_array() {
@@ -439,14 +439,14 @@ async fn getting_users(client_reqwest: Client) -> () {
 
     println!("\n=== Получение пользователя с определенными полями    222222222222222222 ===");
     let fields = vec!["ID", "NAME", "LAST_NAME", "EMAIL", "PERSONAL_MOBILE"];
-    match http_Test::get_user_with_fields(client_reqwest.clone(), 1, &fields).await {
+    match http_test::get_user_with_fields(client_reqwest.clone(), 1, &fields).await {
         Ok(data) => println!("{:#?}", data),
         Err(e) => println!("Ошибка: {}", e),
     }
 
     println!("\n=== Получение нескольких пользователей 333333333333333333333333333333===");
     let user_ids = vec![1, 2, 3];
-    match http_Test::get_multiple_users(client_reqwest.clone(), &user_ids).await {
+    match http_test::get_multiple_users(client_reqwest.clone(), &user_ids).await {
         Ok(data) => {
             if let Some(result) = data.get("result") {
                 println!(
@@ -494,7 +494,7 @@ fn write_js_to_file(filename: &str, json: Value) -> Result<(), Box<dyn std::erro
 
 async fn get_tasks_to_file() -> Result<(), Box<dyn std::error::Error>> {
     let client_reqwest: Client = reqwest::Client::new();
-    let value = http_Test::read_tasks2(&client_reqwest).await?;
+    let value = http_test::read_tasks2(&client_reqwest).await?;
     write_js_to_file("dump2.js", value)
 }
 
@@ -509,8 +509,8 @@ fn get_index_via_fio_result(fio: Vec<String>, filename: &str) -> Option<i32> {
     None
 }
 
-pub fn synteka() -> String {    return http_Test::get_webhook_(SYNTEKA_TOKEN_FILE);}
-pub fn cl_address() -> String {    return http_Test::get_webhook_(CL_ADDRESS_FILE);}
+pub fn synteka() -> String {    return http_test::get_webhook_(SYNTEKA_TOKEN_FILE);}
+pub fn cl_address() -> String {    return http_test::get_webhook_(CL_ADDRESS_FILE);}
 
 
 fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
@@ -579,7 +579,7 @@ mod tests {
     fn test_read_str() {
         let filename = "lstdata.csv";
         let etalon = ";ФИО;Должность;;;;телефон;юр. лицо";
-        let vect = http_Test::read_lines(filename);
+        let vect = http_test::read_lines(filename);
         let line0 = vect[0].clone();
         assert_eq!(etalon, line0);
     }
@@ -587,7 +587,7 @@ mod tests {
     #[test]
     fn test_read_webbhook() {
         const WEBHOOK_FILENAME_TEST: &str = "webhook_test";
-        let test_webhook = http_Test::get_webhook_(WEBHOOK_FILENAME_TEST);
+        let test_webhook = http_test::get_webhook_(WEBHOOK_FILENAME_TEST);
         let etalon = "http://google.com";
         assert_eq!(etalon, test_webhook);
     }
