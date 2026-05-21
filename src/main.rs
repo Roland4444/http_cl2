@@ -10,7 +10,7 @@ use std::fs::File;
 use std::io::{Read, Write};
 pub mod http_Parser;
 pub mod http_Proc;
-pub mod http_test;
+pub mod http_Test;
 pub mod http_synteka;
 use std::thread;
 use std::time::Duration;
