@@ -32,7 +32,10 @@ use crate::cl_address;
 static IS_PENDING: AtomicBool = AtomicBool::new(false);
 
 
-const SYSTEM_MESSAGE: &str = "0";    const CREATE_QUEUE: &str = "CREATE_QUEUE";         const RUN_QUEUE: &str = "RUN_QUEUE";   const CONTENT_TYPE: &str = "Content-type";
+const SYSTEM_MESSAGE: &str = "0";    
+const CREATE_QUEUE: &str = "CREATE_QUEUE";         
+const RUN_QUEUE: &str = "RUN_QUEUE";   
+const CONTENT_TYPE: &str = "Content-type";
 const APPROVED: &str = "СОГЛАСОВАНО";
 pub const  FILE_NAME_4_HASHSET: &str = "processed.bin";
 
@@ -92,7 +95,8 @@ macro_rules! hashmap {
         {
             let mut map = ::std::collections::HashMap::new();
             $(map.insert($key, $val); )*
-            map        }    };}
+            map        }    };
+        }
 
 
 //genned
