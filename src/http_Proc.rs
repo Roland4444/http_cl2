@@ -37,6 +37,7 @@ const CREATE_QUEUE: &str = "CREATE_QUEUE";
 const RUN_QUEUE: &str = "RUN_QUEUE";   
 const CONTENT_TYPE: &str = "Content-type";
 const APPROVED: &str = "СОГЛАСОВАНО";
+
 pub const  FILE_NAME_4_HASHSET: &str = "processed.bin";
 
 pub static PROCESSED_IDS: Lazy<RwLock<HashSet<u32>>> = Lazy::new(|| RwLock::new(HashSet::new()));
@@ -319,6 +320,17 @@ pub async fn consumer_loop_proc(name_4_idfile: &str) {
 pub fn check_target(input: &str) -> bool {    input.to_uppercase()==APPROVED || input.to_uppercase().contains(APPROVED)  }
 
 
+pub fn check_body(input: &str, resctrictors: Vec<String>) -> bool {  
+
+    let mut result = true;
+    for i in  resctrictors {
+        result = result && !(input.to_uppercase().contains(&i));
+    }
+    result
+  }
+
+
+
 
 pub async fn process_atom_queue_proc(name_4_idfile: &str) -> Result<()> {
 
@@ -342,6 +354,9 @@ pub async fn process_atom_queue_proc(name_4_idfile: &str) -> Result<()> {
     if !check_target(&msg.text) {        println!("DROP NOT TARGET!\n\n");         return Ok(())}     //drop not target message    with filter  test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 80.74s
  // without filter    test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 220.78s
     if is_processed(msg.id){println!("ID msg {} already processed, skipped...", msg.id);  return Ok(())} 
+
+    let skipped_words: Vec<String> = vec! ["ШАХМАН".to_string(), "ГАЗЕЛЬ".to_string(), "МАНИПУЛЯТОР".to_string(),];
+
     println!("100!\n\n");
     // Получаем Collab по chat_id
     let collab = collab_by_num_id(msg.chat_id.into())
@@ -358,7 +373,12 @@ pub async fn process_atom_queue_proc(name_4_idfile: &str) -> Result<()> {
 
             // Безопасно извлекаем uuid (если None, передаём пустую строку)
             let uuid_str = msg.uuid.unwrap_or_default();
-
+            if !check_body(&qi.quoted_text, skipped_words) {
+                println!("DROP REQUEST TRANSPORT :: {:?}",  qi.quoted_text);
+                add_processed_id(msg.id);
+                suspend_to_file(name_4_idfile);
+                return Ok(())
+            }
             // Отправляем данные в CL Queue
             let resp_______ = send_to_cl_queue_proc(
                 &qi.quoted_text,
@@ -1022,4 +1042,19 @@ mod tests {
             }
         });
     }
+
+    #[test]
+    fn test_body_check() {
+        let input = r#"Прошу согласовать манипулятор на 16.06.26 к 08:00 на Школьная 7Я для завоза опалубки на З-Рыбацкая 41
+                                    конт. тел. Школьная 8999-645-07-21 Иван
+                                    Конт.тел. Рыбацкая 8917-091-14-10 Дмитрий"#;
+
+        let input_good = r#"	Для производства работ по объекту Рыбацкая, прошу согласовать: 1. Песок строительный - 20 тн. Конт. тел 8917-091-14-10 Дмитрий"#;                                    
+        let skipped_words: Vec<String> = vec! ["ШАХМАН".to_string(), "ГАЗЕЛЬ".to_string(), "МАНИПУЛЯТОР".to_string(),];
+                            
+        assert_eq!(false, check_body(input, skipped_words.clone()))   ;        
+        assert_eq!(true, check_body(input_good, skipped_words.clone())) ;                          
+                  
+    }
+
 }
