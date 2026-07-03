@@ -1249,3 +1249,14 @@ async fn test_embed_queue_test() {
 ////
 ////
 ////<div class="bx-im-message-base__body"><div class="bx-im-message-default__container"><div class="bx-im-message-author-title__container --clickable"><div class="bx-im-chat-title__scope bx-im-chat-title__container"><span class="bx-im-chat-title__content"><!----><span class="bx-im-chat-title__text" title="Сергей Музданбаев" style="color: rgb(88, 204, 71);">Сергей Музданбаев</span><!----><!----><!----></span></div></div><div class="bx-im-message-default-content__container bx-im-message-default-content__scope"><div class="bx-im-message-quote --reply --collapsed --clickable" data-context="chat6986/119486"><div class="bx-im-message-quote__wrap"><div class="bx-im-message-quote__name"><div class="bx-im-message-quote__name-text">Артур Сераждинов</div></div><div class="bx-im-message-quote__text">Прошу согласовать материал <br>1.гофра серая 20-ый диаметр-5000м</div><!----></div></div><div class="bx-im-message-default-content__text">Согласовано</div><!----><div class="bx-im-message-default-content__bottom-panel"><!----><div class="bx-im-message-default-content__status-container"><div class="bx-im-message-status__container"><!----><div class="bx-im-message-status__date">11:25</div><!----></div></div></div></div></div><!----><div class="bx-im-reaction-selector__container"><div class="bx-im-reaction-selector__selector"><div class="bx-im-reaction-selector__icon"></div></div></div></div>
+/// 
+/// 
+/// 
+/// 
+/// 
+/// 
+/// 
+// Извлечено 50 сообщений
+// ExtractedMessage { author_name: "Сергей Музданбаев", text: "Прошу поставить:\n1. бетономешалку код в Добрострой 3016584.\n2. УШМ-230 Ресанта код 3003088.", uuid: Some("00d99f7b-2fcf-4932-96ad-ab7cd4964dc8"), id: 180296, chat_id: 6986 }
+// regerenced to phpto ExtractedMessage { author_name: "Сергей Музданбаев", text: "Согласовано", uuid: Some("71fc41f8-2f53-4612-ba11-3b79d5575f8a"), id: 180274, chat_id: 6986 }
+// with photo scana   ExtractedMessage { author_name: "Артур Сераждинов", text: "Прошу согласовать материал", uuid: None, id: 180232, chat_id: 6986 }
