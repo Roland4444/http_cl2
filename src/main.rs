@@ -12,6 +12,7 @@ pub mod http_Parser;
 pub mod http_Proc;
 pub mod http_test;
 pub mod http_synteka;
+pub mod r_oc;
 use std::thread;
 use std::time::Duration;
 use common::*;
@@ -525,10 +526,85 @@ fn find_dep_name_by_id(target_id: i32, lines: &[String]) -> Option<String> {
 
     const WEBHOOK_TEST_BASE__: &str = "webhook.test";
     const WEBHOOCK_PROD_CHAT__: &str = "webhook.prod";
+    const WEBHOOCK_PROC__: &str = "web2";
+    const WEBHOOCK_DISK__: &str = "webhook.disk";
+
+
 
     pub fn webhook_base_test() -> String {        http_Proc::get_webhook_(WEBHOOK_TEST_BASE__)    }
 
     pub fn webhook_base_prod() -> String {        http_Proc::get_webhook_(WEBHOOCK_PROD_CHAT__)    }
+
+    pub fn webhook_base_bp() -> String {        http_Proc::get_webhook_(WEBHOOCK_PROC__)    }
+
+    pub fn webhook_disk() -> String {        http_Proc::get_webhook_(WEBHOOCK_DISK__)    }
+
+
+
+    
+
+pub async fn get_file_by_attached_id(
+    client: &Client,
+    base_webhook_url: &str,
+    attached_id: i32,
+) -> Result<(String, Vec<u8>), Box<dyn std::error::Error>> {
+
+let info_url = format!("{}/disk.file.get",  webhook_disk());
+let req_info = json!({ "id": attached_id });
+
+    // let info_url = format!("{}/disk.attachedObject.get", webhook_disk());
+    // let req_info = json!({ "id": attached_id });
+
+    let resp_info = client
+        .post(&info_url)
+        .header("Content-Type", "application/json")
+        .json(&req_info)
+        .send()
+        .await?;
+
+    let json_info: Value = resp_info.json().await?;
+
+    if let Some(error) = json_info.get("error").and_then(|e| e.as_str()) {
+        let desc = json_info
+            .get("error_description")
+            .and_then(|d| d.as_str())
+            .unwrap_or("без описания");
+        return Err(format!("Ошибка Bitrix24: {} - {}", error, desc).into());
+    }
+
+    let result = json_info
+        .get("result")
+        .ok_or("Нет поля 'result' в ответе")?;
+
+    let download_url = result
+        .get("DOWNLOAD_URL")
+        .and_then(|v| v.as_str())
+        .ok_or("Нет поля DOWNLOAD_URL")?;
+
+    let filename = result
+        .get("NAME")
+        .and_then(|v| v.as_str())
+        .unwrap_or("file.bin")
+        .to_string();
+
+    let download_full = if download_url.starts_with("http") {
+        download_url.to_string()
+    } else {
+        let base = reqwest::Url::parse(base_webhook_url)?;
+        let full = base.join(download_url)?;
+        full.to_string()
+    };
+
+    let resp_file = client.get(&download_full).send().await?;
+    if !resp_file.status().is_success() {
+        return Err(format!("Ошибка скачивания: {}", resp_file.status()).into());
+    }
+
+    let file_bytes = resp_file.bytes().await?.to_vec();
+    Ok((filename, file_bytes))
+}
+
+
 
 
 #[cfg(test)]
@@ -742,7 +818,7 @@ mod tests {
         let chatid = CHATS_ID.get(&Collab::OKLAND).unwrap().to_string();
         http_Proc::pull_messages(Client::new(),webhook_base_prod().as_str(),&chatid,id,limit,out,        ).await;
     }
-
+ 
     #[tokio::test]
     async fn test_pull_messages_prod_okland() {
         let id =http_Proc::get_last_id_for_collab(Collab::OKLAND, Client::new(), webhook_base_prod().as_str()).await.unwrap();
@@ -871,7 +947,68 @@ mod tests {
            // Ok(())
     }
 
- 
+    
+
+
+     #[tokio::test]
+    async fn test_download_attached_file() {
+        // Получаем URL вебхука из переменной окружения (не храним в коде!)
+        let webhook_url = webhook_disk();
+
+        // ID прикреплённого файла из вашего примера
+        let attached_id = 40582;
+
+        let client = Client::new();
+        let result = get_file_by_attached_id(&client, &webhook_url, attached_id).await;
+
+        match result {
+            Ok((filename, data)) => {
+                // Проверяем, что файл не пустой
+                assert!(!data.is_empty(), "Файл не должен быть пустым");
+                println!("Файл '{}' успешно загружен, размер {} байт", filename, data.len());
+
+                // Можно сохранить файл в папку test_output для визуальной проверки
+                let output_dir = std::path::Path::new("./test_output");
+                if !output_dir.exists() {
+                    std::fs::create_dir_all(output_dir).unwrap();
+                }
+                std::fs::write(output_dir.join(&filename), data).unwrap();
+            }
+            Err(e) => {
+                // Если ошибка связана с правами – даём понятное сообщение
+                if e.to_string().contains("insufficient_scope") {
+                    panic!("Вебхук не имеет прав на 'disk'. Добавьте разрешение в настройках вебхука.");
+                } else {
+                    panic!("Ошибка загрузки файла: {}", e);
+                }
+            }
+        }
+    }
+
+    // Дополнительный тест, который проверяет только получение метаданных (без скачивания)
+#[tokio::test]
+async fn test_get_attached_metadata() {
+    let webhook_url = webhook_disk();
+    let attached_id = 40582;
+    let client = Client::new();
+
+    match get_file_by_attached_id(&client, &webhook_url, attached_id).await {
+        Ok((name, data)) => {
+            println!("✅ Файл успешно получен!");
+            println!("📄 Имя: {}", name);
+            println!("📦 Размер: {} байт ({} КБ)", data.len(), data.len() as f64 / 1024.0);
+            // При необходимости можно вывести первые 30 байт для отладки
+            // println!("🔍 Первые 30 байт: {:?}", &data[..data.len().min(30)]);
+            assert!(!name.is_empty());
+            assert!(!data.is_empty());
+        }
+        Err(e) => {
+            eprintln!("❌ Ошибка при получении файла: {}", e);
+            panic!("Тест провален из-за ошибки");
+        }
+    }
+}
+
 
     
 
@@ -947,6 +1084,53 @@ mod tests {
         http_Proc::process_function("FILENAME.bin".to_string()).await;
         std::thread::sleep(Duration::from_secs(5));//handle.join();
     }
+
+    #[tokio::test]
+    async fn test_pull_messages_prod_Payments_with_dump() {
+        let current_collab = Collab::PAYMENTS;
+        let title = current_collab.title();
+        let id = http_Proc:: get_last_id_for_collab(current_collab, Client::new(), webhook_base_bp().as_str()).await.unwrap();
+
+        println!("\n\n\n\nLAST ID IN {}:: {}\n\n\n", title, id);
+        let limit = 1220;
+
+        let json_value:Value = http_Proc::pull_messages_raw(Client::new(),webhook_base_bp().as_str(),CHATS_ID.get(&current_collab).expect(&format!("{} not found", title)),
+        (id + 1) as i64,limit,    ).await.unwrap();
+ 
+        let messages =  http_Proc::extract_messages_from_json(&json_value);
+        println!("Извлечено {} сообщений", messages.len());
+        for msg in messages.iter() {        println!("{:?}", msg);    }
+
+        {
+            let mut queue = http_Proc::QUEUE.lock();
+            queue.extend(messages.clone());
+        }
+
+        let bin_filename = format!("{}_queue.bin", current_collab.title());
+        {
+            let queue_data = http_Proc::QUEUE.lock();
+            let serialized = bincode::serialize(&*queue_data).expect("Ошибка сериализации");
+            std::fs::write(&bin_filename, serialized).expect("Не удалось записать бинарный файл");
+        }
+        println!("Очередь сохранена в {}", bin_filename);
+
+        println!("\n\n\nSTARING WATCH!\n\n\n");
+        http_Proc::watch(); 
+
+        let out_extracted = format!("{}_last{}_extracted.json", current_collab.title(), limit);
+        let json_output = serde_json::to_string_pretty(&messages).unwrap();
+        std::fs::write(out_extracted, json_output).unwrap();
+
+        let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", current_collab.title(), limit),serde_json::to_string_pretty(&json_value).unwrap(),);
+        http_Proc::move_queue_to_queue2();
+        // let handle = thread::spawn(http_Proc::process_function());//<===good
+        // handle.join();  //process
+
+        http_Proc::process_function("FILENAME.bin".to_string()).await;
+
+}
+
+
 
     #[tokio::test]
     async fn test_pull_messages_prod_Scandinavia2_with_dump() {
@@ -1240,22 +1424,22 @@ async fn test_embed_queue_test() {
      }
 
 
-////
-////
-////
-//// <div class="bx-im-message-base__container"><div class="bx-im-message-base__content"><div class="bx-im-message-base__body"><div class="bx-im-message-default__container"><div class="bx-im-message-author-title__container --clickable"><div class="bx-im-chat-title__scope bx-im-chat-title__container"><span class="bx-im-chat-title__content"><!----><span class="bx-im-chat-title__text" title="Сергей Музданбаев" style="color: rgb(88, 204, 71);">Сергей Музданбаев</span><!----><!----><!----></span></div></div><div class="bx-im-message-default-content__container bx-im-message-default-content__scope"><div class="bx-im-message-quote --reply --collapsed --clickable" data-context="chat6986/117754"><div class="bx-im-message-quote__wrap"><div class="bx-im-message-quote__name"><div class="bx-im-message-quote__name-text">Дмитрий Бердников</div></div><div class="bx-im-message-quote__text">Прошу согласовать на 24.04.26  к 13:00 манипулятор для перевозки уголков и перемычек с Куйбышевой 86 на Рыбацкую <br><br>Конт. тел. 89170911410 Дмитрий</div><!----></div></div><div class="bx-im-message-default-content__text">Согласовано</div><!----><div class="bx-im-message-default-content__bottom-panel"><!----><div class="bx-im-message-default-content__status-container"><div class="bx-im-message-status__container"><!----><div class="bx-im-message-status__date">14:06</div><!----></div></div></div></div></div><!----><div class="bx-im-reaction-selector__container"><div class="bx-im-reaction-selector__selector"><div class="bx-im-reaction-selector__icon"></div></div></div></div><div class="bx-im-message-context-menu__container bx-im-message-context-menu__scope"><button title="Кликните для открытия меню действий или удерживайте CTRL для цитирования сообщения" class="bx-im-message-context-menu__button"></button></div></div><!----></div>
-////
-////
-////
-////
-////<div class="bx-im-message-base__body"><div class="bx-im-message-default__container"><div class="bx-im-message-author-title__container --clickable"><div class="bx-im-chat-title__scope bx-im-chat-title__container"><span class="bx-im-chat-title__content"><!----><span class="bx-im-chat-title__text" title="Сергей Музданбаев" style="color: rgb(88, 204, 71);">Сергей Музданбаев</span><!----><!----><!----></span></div></div><div class="bx-im-message-default-content__container bx-im-message-default-content__scope"><div class="bx-im-message-quote --reply --collapsed --clickable" data-context="chat6986/119486"><div class="bx-im-message-quote__wrap"><div class="bx-im-message-quote__name"><div class="bx-im-message-quote__name-text">Артур Сераждинов</div></div><div class="bx-im-message-quote__text">Прошу согласовать материал <br>1.гофра серая 20-ый диаметр-5000м</div><!----></div></div><div class="bx-im-message-default-content__text">Согласовано</div><!----><div class="bx-im-message-default-content__bottom-panel"><!----><div class="bx-im-message-default-content__status-container"><div class="bx-im-message-status__container"><!----><div class="bx-im-message-status__date">11:25</div><!----></div></div></div></div></div><!----><div class="bx-im-reaction-selector__container"><div class="bx-im-reaction-selector__selector"><div class="bx-im-reaction-selector__icon"></div></div></div></div>
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
+//
+//
+//
+// <div class="bx-im-message-base__container"><div class="bx-im-message-base__content"><div class="bx-im-message-base__body"><div class="bx-im-message-default__container"><div class="bx-im-message-author-title__container --clickable"><div class="bx-im-chat-title__scope bx-im-chat-title__container"><span class="bx-im-chat-title__content"><!----><span class="bx-im-chat-title__text" title="Сергей Музданбаев" style="color: rgb(88, 204, 71);">Сергей Музданбаев</span><!----><!----><!----></span></div></div><div class="bx-im-message-default-content__container bx-im-message-default-content__scope"><div class="bx-im-message-quote --reply --collapsed --clickable" data-context="chat6986/117754"><div class="bx-im-message-quote__wrap"><div class="bx-im-message-quote__name"><div class="bx-im-message-quote__name-text">Дмитрий Бердников</div></div><div class="bx-im-message-quote__text">Прошу согласовать на 24.04.26  к 13:00 манипулятор для перевозки уголков и перемычек с Куйбышевой 86 на Рыбацкую <br><br>Конт. тел. 89170911410 Дмитрий</div><!----></div></div><div class="bx-im-message-default-content__text">Согласовано</div><!----><div class="bx-im-message-default-content__bottom-panel"><!----><div class="bx-im-message-default-content__status-container"><div class="bx-im-message-status__container"><!----><div class="bx-im-message-status__date">14:06</div><!----></div></div></div></div></div><!----><div class="bx-im-reaction-selector__container"><div class="bx-im-reaction-selector__selector"><div class="bx-im-reaction-selector__icon"></div></div></div></div><div class="bx-im-message-context-menu__container bx-im-message-context-menu__scope"><button title="Кликните для открытия меню действий или удерживайте CTRL для цитирования сообщения" class="bx-im-message-context-menu__button"></button></div></div><!----></div>
+//
+//
+//
+//
+//<div class="bx-im-message-base__body"><div class="bx-im-message-default__container"><div class="bx-im-message-author-title__container --clickable"><div class="bx-im-chat-title__scope bx-im-chat-title__container"><span class="bx-im-chat-title__content"><!----><span class="bx-im-chat-title__text" title="Сергей Музданбаев" style="color: rgb(88, 204, 71);">Сергей Музданбаев</span><!----><!----><!----></span></div></div><div class="bx-im-message-default-content__container bx-im-message-default-content__scope"><div class="bx-im-message-quote --reply --collapsed --clickable" data-context="chat6986/119486"><div class="bx-im-message-quote__wrap"><div class="bx-im-message-quote__name"><div class="bx-im-message-quote__name-text">Артур Сераждинов</div></div><div class="bx-im-message-quote__text">Прошу согласовать материал <br>1.гофра серая 20-ый диаметр-5000м</div><!----></div></div><div class="bx-im-message-default-content__text">Согласовано</div><!----><div class="bx-im-message-default-content__bottom-panel"><!----><div class="bx-im-message-default-content__status-container"><div class="bx-im-message-status__container"><!----><div class="bx-im-message-status__date">11:25</div><!----></div></div></div></div></div><!----><div class="bx-im-reaction-selector__container"><div class="bx-im-reaction-selector__selector"><div class="bx-im-reaction-selector__icon"></div></div></div></div>
+// 
+// 
+// 
+// 
+// 
+// 
+// 
 // Извлечено 50 сообщений
 // ExtractedMessage { author_name: "Сергей Музданбаев", text: "Прошу поставить:\n1. бетономешалку код в Добрострой 3016584.\n2. УШМ-230 Ресанта код 3003088.", uuid: Some("00d99f7b-2fcf-4932-96ad-ab7cd4964dc8"), id: 180296, chat_id: 6986 }
 // regerenced to phpto ExtractedMessage { author_name: "Сергей Музданбаев", text: "Согласовано", uuid: Some("71fc41f8-2f53-4612-ba11-3b79d5575f8a"), id: 180274, chat_id: 6986 }

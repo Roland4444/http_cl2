@@ -117,8 +117,36 @@ PULL MESSAGES via name:: with LIMIT
   ============================================================================================================
 
 
+ curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{}' \
+  "https://relits.bitrix24.ru/rest/336/0utdnasi7mdd89vp/im.recent.list"  -o collabsRRR.js
 
 
+
+
+https://relits.bitrix24.ru/rest/336/0utdnasi7mdd89vp
+
+
+
+
+get file
+
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"id": 40582}' \
+  https://relits.bitrix24.ru/rest/336/0utdnasi7mdd89vp/disk.attachedObject.get
+
+
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"id": 40582}' \
+  https://relits.bitrix24.ru/rest/336/pxle21os94maipad/disk.attachedObject.get
+
+
+https://relits.bitrix24.ru/rest/336/pxle21os94maipad/
 
 
 ==================================================WRITE TO CHAT================================================
