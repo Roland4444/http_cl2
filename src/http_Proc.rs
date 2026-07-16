@@ -738,8 +738,30 @@ pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
             let author_name = user_names.get(&author_id).cloned().unwrap_or_else(|| format!("unknown_{}", author_id));
             let text = msg["text"].as_str().unwrap_or("").to_string();
             let uuid = msg["uuid"].as_str().map(|s| s.to_string());
-            result.push(ExtractedMessage {author_name,text,uuid,id,chat_id,});
+            
+            let attaches = msg["params"]
+                .get("FILE_ID")                      // берём поле "FILE_ID" внутри "params"
+                .and_then(|v| v.as_array())         // пытаемся получить массив
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|item| item.as_u64().map(|num| num as u32))
+                        .collect::<Vec<u32>>()
+                })
+                .unwrap_or_else(Vec::new);          // если ничего нет – пустой вектор
+
+            result.push(ExtractedMessage {
+                author_name,
+                text,
+                uuid,
+                id,
+                chat_id,
+                attaches,
+            });
         }
+            
+            
+        //    result.push(ExtractedMessage {author_name,text,uuid,id,chat_id,});
+        
     }
     result
 }
@@ -949,7 +971,7 @@ mod tests {
     #[test]
     fn test_process_msg() {
         let msg = ExtractedMessage {author_name: "Сергей Браташов".to_string(),text: "Согласовано".to_string(),uuid: Some("851fba1b-35d9-4b61-aaaa-0258fc093efd".to_string()),
-            id: 100822,chat_id: 9796,};
+            id: 100822,chat_id: 9796, attaches: Vec::new()};
         assert_eq!(100822, http_Proc::process_message2(msg));
     }
 

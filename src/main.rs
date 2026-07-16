@@ -803,8 +803,10 @@ mod tests {
         let limit = 120;
         let out = "./out7.js";
         let Client = Client::new();
-        let dialog_id = "chat8";  
-        http_Proc::pull_messages(Client::new(),webhook_base_test().as_str(),dialog_id,id,limit,out,).await;
+        let dialog_id = "chat13372";//"chat9796";//"chat8";  
+        http_Proc::pull_messages(Client::new(),
+        &webhook_base_prod().as_str(), //webhook_base_test().as_str(),
+        dialog_id,id,limit,out,).await;
     }
 
     #[tokio::test]
@@ -827,6 +829,14 @@ mod tests {
         let _ = http_Proc::pull_messages(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&Collab::OKLAND).expect("OKLAND not found"),  id as i64,limit,&out,).await;
     }
 
+
+    #[tokio::test]    /////need repair failed!
+    async fn test_pull_messages_prod_skan() {
+        let id =http_Proc::get_last_id_for_collab(Collab::SCANDINAVIA, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+        let limit = 120;
+        let out = format!("{}_last{}.js", SCANDINAVIA, limit);
+        let _ = http_Proc::pull_messages(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&Collab::SCANDINAVIA).expect("SCANDINAVIA not found"),  id as i64,limit,&out,).await;
+    }
     #[tokio::test]
     async fn test_fetch_recent_chats_prod() {        let _ = http_Proc::fetch_recent_list( Client::new(),webhook_base_prod().as_str(),json!({}),"recent_chats_prod.js",).await;}
 
@@ -1332,7 +1342,8 @@ async fn test_get_attached_metadata() {
         text: "Согласовано".to_string(), 
         uuid: Some("aa2fe320-f7f1-4c3d-9028-75848448ac6d".to_string()), 
         id: 123820, 
-        chat_id: 6986 };
+        chat_id: 6986 , 
+        attaches: Vec::new()};
     let stop_flag = Arc::new(AtomicBool::new(false));
     let flag_clone = stop_flag.clone();    
     let msgs = vec![extracted];
@@ -1360,7 +1371,8 @@ async fn test_get_attached_metadata() {
         text: "Согласовано".to_string(), 
         uuid: Some("aa2fe320-f7f1-4c3d-9028-75848448ac6d".to_string()), 
         id: 123820, 
-        chat_id: 6986 };
+        chat_id: 6986,
+        attaches: Vec::new() };
     let stop_flag = Arc::new(AtomicBool::new(false));
     let flag_clone = stop_flag.clone();    
     let msgs = vec![extracted];
