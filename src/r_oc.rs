@@ -37,12 +37,12 @@ pub enum VibeError {
 
 // ---- Основные функции ----
 
-fn build_vision_payload(image_base64: &str, instruction: &str) -> serde_json::Value {
+pub fn build_vision_payload(image_base64: &str, instruction: &str) -> serde_json::Value {
     json!({
         "messages": [
             {
                 "role": "system",
-                "content": "Ты — AI-помощник, который извлекает данные из счетов-фактур."
+                "content": "Ты — AI-помощник, который извлекает данные для заявок подрядчиков из изображений.  Приведи распарсенные данные в следующий формат {номер})  {наименование} - {количество} {единица измерения}. например \"1) Доска 25х100 - 20 шт\" .  Для знака новой строки используй $$   \n не вставляй  , в конце каждой строки ставь точку .  "                              //  "content": "Ты — AI-помощник, который извлекает данные из счетов-фактур."
             },
             {
                 "role": "user",
@@ -164,14 +164,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let response = call_vibe_api(&client, &API_KEY, payload).await?;
 
     println!("✅ Ответ от VibeCode:");
-    println!("{}", serde_json::to_string_pretty(&response)?);
+   // println!("{}", serde_json::to_string_pretty(&response)?);
+
+    let  js_resp = serde_json::to_string(&response).unwrap();
+    let target_text = extract_text_from_response ( js_resp.as_str()).unwrap();
+
+    println!("EXTRACTED::{}", target_text);
 
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::{assert_eq, mem::take};
+
+use super::*;
 
     #[tokio::test]
     async fn test_ocr()-> Result<(), Box<dyn std::error::Error>> {
@@ -179,82 +186,40 @@ mod tests {
         let file_path = "___1.jpg"; 
 
         let v = vec!["1.jpg", "1.tif", "1.bmp", "1.gif"];
+        for i in v {
+            let image_data = std::fs::read(i)?;
+            let base64_image = general_purpose::STANDARD.encode(&image_data);
+            let payload = build_vision_payload(&base64_image, INSTRUCTION_VAR);
+            let client = reqwest::Client::new();
 
-        // for i in v {
-        //     let image_data = std::fs::read(i)?;
-        //     let base64_image = general_purpose::STANDARD.encode(&image_data);
-        //     let payload = build_vision_payload(&base64_image, INSTRUCTION_VAR);
-        //     let client = reqwest::Client::new();
+            let response = call_vibe_api(&client, &API_KEY, payload).await?;
 
-        //     let response = call_vibe_api(&client, &API_KEY, payload).await?;
-
-        //     println!("✅ Ответ от VibeCode:");
-        //     println!("{}\n",serde_json::to_string_pretty(&response)?);
-
-        // }
-
-
-        //  for i in v {
-        //     let image_data = std::fs::read(i)?;
-        //     let base64_image = general_purpose::STANDARD.encode(&image_data);
-        //     let payload = build_vision_payload(&base64_image, INSTRUCTION_VAR);
-        //     let client = reqwest::Client::new();
-
-        //     let response = call_vibe_api(&client, &API_KEY, payload).await?;
-
-      
-        //     let content = response["choices"][0]["message"]["content"]
-        //         .as_str()
-        //         .ok_or_else(|| format!("Нет поля content в ответе для файла {}", i))?;
-
-      
-        //     match extract_clean_table(content) {
-        //         Ok(rows) => {
-        //             println!("✅ Извлечённые строки из файла {}:", i);
-        //             for row in rows {
-        //                 println!("{}", row);
-        //             }
-        //             println!(); // разделитель
-        //         }
-        //         Err(e) => {
-        //             eprintln!("⚠️ Не удалось извлечь таблицу из файла {}: {}", i, e);
-        //         }
-        //     }
-        // }
-
-for i in v {
-    let image_data = std::fs::read(i)?;
-    let base64_image = general_purpose::STANDARD.encode(&image_data);
-    let payload = build_vision_payload(&base64_image, INSTRUCTION_VAR);
-    let client = reqwest::Client::new();
-
-    let response = call_vibe_api(&client, &API_KEY, payload).await?;
-
-    // Извлекаем полный текст
-    let content = match extract_text_from_responseV(&response) {
-        Ok(text) => text,
-        Err(e) => {
-            eprintln!("⚠️ Не удалось извлечь текст из ответа для файла {}: {}", i, e);
-            continue;
-        }
-    };
-
-    println!("📄 Полный ответ для {}:\n{}", i, content);
-
-    match extract_clean_table(&content) {
-        Ok(rows) => {
-            println!("✅ Извлечённые строки из файла {}:", i);
-            for row in rows {
-                println!("{}", row);
-            }
+            // Извлекаем полный текст
+            let content = match extract_text_from_responseV(&response) {
+                Ok(text) => text,
+                Err(e) => {
+                    eprintln!("⚠️ Не удалось извлечь текст из ответа для файла {}: {}", i, e);
+                    continue;
+                }
+            };
+            println!("📄 Полный ответ для {}:\n{}", i, content);
+            match extract_clean_table(&content) {
+            Ok(rows) => {
+                println!("✅ Извлечённые строки из файла {}:", i);
+                for row in rows {
+                    println!("{}", row);
+                }
             println!();
+            }
+            Err(e) => {
+                eprintln!("⚠️ Не удалось извлечь таблицу из файла {}: {}", i, e);
+            }
+            }
         }
-        Err(e) => {
-            eprintln!("⚠️ Не удалось извлечь таблицу из файла {}: {}", i, e);
-        }
-    }
-}
 
+
+
+        let ETALON_EXTRACT = "1) Кабель силовой ВВГнг(А)-LS 3х6,0 - 1000 м. $$ 2) Дюбель-хомут под плоский кабель 5-10 - 2000 шт. $$ 3) Дюбель-хомут под плоский кабель 6-12 - 2000 шт.";
 
         let image_data = std::fs::read(file_path)?;
         let base64_image = general_purpose::STANDARD.encode(&image_data);
@@ -263,6 +228,17 @@ for i in v {
         let client = reqwest::Client::new();
 
         let response = call_vibe_api(&client, &API_KEY, payload).await?;
+
+
+        let  js_resp = serde_json::to_string(&response).unwrap();
+        let target_text = extract_text_from_response ( js_resp.as_str()).unwrap();
+
+        let normalized_etalon = ETALON_EXTRACT.replace('х', "x");
+        let normalized_target = target_text.replace('х', "x");
+        assert_eq!(normalized_etalon, normalized_target);
+    //    assert_eq!(ETALON_EXTRACT.to_string(), target_text.to_string());
+        println!("EXTRACTED::{}", target_text);
+
 
         println!("✅ Ответ от VibeCode:");
         println!("{}", serde_json::to_string_pretty(&response)?);
