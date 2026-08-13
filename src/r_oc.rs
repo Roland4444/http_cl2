@@ -17,6 +17,7 @@ use serde_json::Value;
 
 const INSTRUCTION_VAR: &str = "Извлеки из этого изображения: весь текст по строкам";
 const INSTRUCTION_VAR_2FA: &str = r#"Извлеки из этого изображения: статус напротив "Двухфакторная аутентификация" "#;
+const NO_2FA: &str = "Не подключена";
 
 
 
@@ -300,7 +301,7 @@ use super::*;
     //    assert_eq!(ETALON_EXTRACT.to_string(), target_text.to_string());
         println!("EXTRACTED::{}", target_text);
 
-
+        assert_eq!(true, target_text.contains(NO_2FA));
         println!("✅ Ответ от VibeCode:");
         println!("{}", serde_json::to_string_pretty(&response)?);
 
