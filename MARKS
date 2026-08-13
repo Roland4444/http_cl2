@@ -355,3 +355,473 @@ Lisa Gerrard – «Now We Are Free» – голос как инструмент,
 
 
 sk-5e8e19fcfcdd40ddb73d18f1914db385
+
+
+
+
+;;; 9608602880   шада
+
+
+
+
+curl -X POST \
+https://relits.bitrix24.ru/rest/336/w1gzyqwhiipe1jph/user.get \
+-H "Content-Type: application/json" \
+-d '{
+    "filter": {
+     "NAME": "Роман",
+     "LAST_NAME": "Пастушков"
+    },
+    "limit": 0
+}'
+{"result":[{"ID":"1","XML_ID":"49915858","ACTIVE":true,"NAME":"Сергей","LAST_NAM
+E":"Цыбульский","SECOND_NAME":"Александрович","EMAIL":"scybulskiy@relits.ru","LA
+ST_LOGIN":"2026-08-10T07:33:56+03:00","DATE_REGISTER":"2023-06-20T03:00:00+03:00
+","TIME_ZONE":"Europe\/Moscow","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_D
+ATE":{},"PERSONAL_GENDER":"M","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1984-09-01T
+03:00:00+04:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\
+/f91\/f91e86bc285ff011d9800229baea38bb\/0010.jpg.png","PERSONAL_MOBILE":"8988170
+1789","PERSONAL_CITY":"Астрахань","WORK_PHONE":"","WORK_POSITION":"Директор по и
+нформационным технологиям","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[9],"USER_TYP
+E":"employee"},
+
+
+
+
+
+
+{"result":[{"ID":"1","XML_ID":"49915858","ACTIVE":true,"NAME":"Сергей","LAST_NAM
+E":"Цыбульский","SECOND_NAME":"Александрович","EMAIL":"scybulskiy@relits.ru","LA
+ST_LOGIN":"2026-08-10T07:33:56+03:00","DATE_REGISTER":"2023-06-20T03:00:00+03:00
+","TIME_ZONE":"Europe\/Moscow","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_D
+ATE":{},"PERSONAL_GENDER":"M","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1984-09-01T
+03:00:00+04:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\
+/f91\/f91e86bc285ff011d9800229baea38bb\/0010.jpg.png","PERSONAL_MOBILE":"8988170
+1789","PERSONAL_CITY":"Астрахань","WORK_PHONE":"","WORK_POSITION":"Директор по и
+нформационным технологиям","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[9],"USER_TYP
+E":"employee"},{"ID":"7","XML_ID":"51094664","ACTIVE":true,"NAME":"Денис","LAST_
+NAME":"Бочаров","SECOND_NAME":"Николаевич","EMAIL":"dbocharov@relits.ru","LAST_L
+OGIN":"2026-08-10T08:39:35+03:00","DATE_REGISTER":"2023-08-30T03:00:00+03:00","T
+IME_ZONE":"Europe\/Samara","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE"
+:{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1982-01-22T03:00
+:00+03:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/897\
+/897ffb0fb22f6e4f7026e7b7b64923ad\/Bocharov D.N..jpg.png","PERSONAL_MOBILE":"","
+PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Учредитель","UF_EMPLOYMENT_DA
+TE":"","UF_DEPARTMENT":[15,1],"USER_TYPE":"employee"},{"ID":"9","XML_ID":"510946
+66","ACTIVE":true,"NAME":"Елена","LAST_NAME":"Бочарова","SECOND_NAME":"Александр
+овна","EMAIL":"ebocharova@relits.ru","LAST_LOGIN":"2026-08-10T13:03:32+03:00","D
+ATE_REGISTER":"2023-08-30T03:00:00+03:00","TIME_ZONE":"Europe\/Samara","IS_ONLIN
+E":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"F","PERSONAL_
+WWW":"","PERSONAL_BIRTHDAY":"1982-04-08T03:00:00+04:00","PERSONAL_PHOTO":"https:
+\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/2a4\/2a4daa75b4ba349e010bdcbe8467498e\/
+Bocharova A.A..jpg.png","PERSONAL_MOBILE":"+79275667577","PERSONAL_CITY":"","WOR
+K_PHONE":"885120484484","WORK_POSITION":"Руководитель проекта","UF_EMPLOYMENT_DA
+TE":"","UF_DEPARTMENT":[37,15],"USER_TYPE":"employee"},{"ID":"11","XML_ID":"5109
+4668","ACTIVE":true,"NAME":"Владимир","LAST_NAME":"Оганесян","SECOND_NAME":"Арме
+нович","EMAIL":"voganesyan@relits.ru","LAST_LOGIN":"2026-08-06T12:28:27+03:00","
+DATE_REGISTER":"2023-08-30T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_O
+NLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSON
+AL_WWW":"","PERSONAL_BIRTHDAY":"1978-01-02T03:00:00+03:00","PERSONAL_PHOTO":"htt
+ps:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/18d\/18daebf75178eb1a1402a0aaa2743df
+0\/Oganesyan V.A..png","PERSONAL_MOBILE":"","PERSONAL_CITY":"","WORK_PHONE":"","
+WORK_POSITION":"Учредитель","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[5,65,37,1],
+"USER_TYPE":"employee"},{"ID":"13","XML_ID":"51094670","ACTIVE":true,"NAME":"Евг
+ений","LAST_NAME":"Толстых","SECOND_NAME":"Николаевич","EMAIL":"etolstyh@relits.
+ru","LAST_LOGIN":"2026-08-10T13:20:53+03:00","DATE_REGISTER":"2023-08-30T03:00:0
+0+03:00","TIME_ZONE":"Europe\/Samara","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACT
+IVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1986-
+08-03T03:00:00+04:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\
+/main\/c9a\/c9ae9eca2c968fe2005e7a435fd06250\/Tolstykh E.N..jpg.png","PERSONAL_M
+OBILE":"+7 960 853-84-41","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Ге
+неральный директор","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[37,15],"USER_TYPE":
+"employee"},{"ID":"15","XML_ID":"51094672","ACTIVE":false,"NAME":"Екатерина","LA
+ST_NAME":"Миронова","SECOND_NAME":"Станиславовна","EMAIL":"emironova@panorama-do
+m.ru","LAST_LOGIN":"2025-02-19T13:37:25+03:00","DATE_REGISTER":"2023-08-30T03:00
+:00+03:00","TIME_ZONE":"","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":
+{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1988-04-09T03:00:
+00+04:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/8d6\/
+8d6b4a31574fafaedfe87f499d340c8e\/Mironova E.S..jpg.png","PERSONAL_MOBILE":"+7 9
+65 454-54-31","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Генеральный ди
+ректор","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[1],"USER_TYPE":"employee"},{"ID
+":"17","XML_ID":"51094674","ACTIVE":true,"NAME":"Надежда","LAST_NAME":"Князева",
+"SECOND_NAME":"Викторовна","EMAIL":"nknyazeva@relits.ru","LAST_LOGIN":"2026-08-1
+0T13:28:47+03:00","DATE_REGISTER":"2023-08-30T03:00:00+03:00","TIME_ZONE":"Etc\/
+GMT-4","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER
+":"F","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1981-10-14T03:00:00+03:00","PERSONA
+L_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/399\/39993369f8c32f7c3b
+2345c55e43fe66\/profil.jpg.png","PERSONAL_MOBILE":"+79275599995","PERSONAL_CITY"
+:"","WORK_PHONE":"","WORK_POSITION":"Главный бухгалтер","UF_EMPLOYMENT_DATE":"",
+"UF_DEPARTMENT":[3],"USER_TYPE":"employee"},{"ID":"19","XML_ID":"51094676","ACTI
+VE":true,"NAME":"Наталия","LAST_NAME":"Бобкова","SECOND_NAME":"Анатольевна","EMA
+IL":"nbobkova@relits.ru","LAST_LOGIN":"2026-08-10T13:28:47+03:00","DATE_REGISTER
+":"2023-08-30T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLINE":"Y","T
+IMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"F","PERSONAL_WWW":"","
+PERSONAL_BIRTHDAY":"1977-10-26T03:00:00+03:00","PERSONAL_PHOTO":"https:\/\/cdn-r
+u.bitrix24.ru\/b26039220\/main\/f18\/f18e842d3b34e44e8726edd4308ba920\/DSC_5060.
+jpg.png","PERSONAL_MOBILE":"+79275733326","PERSONAL_CITY":"Астрахань","WORK_PHON
+E":"","WORK_POSITION":"Бухгалтер","UF_EMPLOYMENT_DATE":"2022-12-01T03:00:00+03:0
+0","UF_DEPARTMENT":[3],"UF_PHONE_INNER":"202","USER_TYPE":"employee"},{"ID":"21"
+,"XML_ID":"51094678","ACTIVE":false,"NAME":"Лилия","LAST_NAME":"Мартьянова","SEC
+OND_NAME":"Александровна","EMAIL":"Lmartyanova@relits.ru","LAST_LOGIN":"2025-08-
+01T09:45:02+03:00","DATE_REGISTER":"2023-08-30T03:00:00+03:00","TIME_ZONE":"Euro
+pe\/Astrakhan","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONA
+L_GENDER":"F","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1984-05-29T03:00:00+04:00",
+"PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/bec\/bec20d6176
+45608305f2f5ae18ab6042\/Martyanova L.A..jpg.png","PERSONAL_MOBILE":"89170002621"
+,"PERSONAL_CITY":"Астрахань","WORK_PHONE":"","WORK_POSITION":"Руководитель ПТО",
+"UF_EMPLOYMENT_DATE":"2023-02-01T03:00:00+03:00","UF_DEPARTMENT":[11],"USER_TYPE
+":"employee"},{"ID":"23","XML_ID":"51094680","ACTIVE":true,"NAME":"Дмитрий","LAS
+T_NAME":"Скутин","SECOND_NAME":"Вадимович","EMAIL":"dskutin@relits.ru","LAST_LOG
+IN":"2026-08-10T13:28:49+03:00","DATE_REGISTER":"2023-08-30T03:00:00+03:00","TIM
+E_ZONE":"Europe\/Astrakhan","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE
+":{},"PERSONAL_GENDER":"M","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"2001-07-07T03:
+00:00+04:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/a9
+4\/a94dbd0984b9bf2fb86c33fd3505cab9\/Skutin D. V..jpg.png","PERSONAL_MOBILE":"+7
+9610557679","PERSONAL_CITY":"Астрахань","WORK_PHONE":"","WORK_POSITION":"Инженер
+ по закупкам","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[43],"USER_TYPE":"employee
+"},{"ID":"25","XML_ID":"51094682","ACTIVE":true,"NAME":"Эльвира","LAST_NAME":"Мо
+сковая","SECOND_NAME":"Владимировна","EMAIL":"emoskovaya@relits.ru","LAST_LOGIN"
+:"2026-08-10T12:01:31+03:00","DATE_REGISTER":"2023-08-30T03:00:00+03:00","TIME_Z
+ONE":"Europe\/Astrakhan","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{
+},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1978-12-20T03:00:0
+0+03:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/f40\/f
+4008f83dcb938fb2c4b75840e525b57\/Moskovaya E.V..jpg.png","PERSONAL_MOBILE":"+7 9
+67 338 49 22","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Руководитель о
+тдела","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[13],"USER_TYPE":"employee"},{"ID
+":"27","XML_ID":"51094852","ACTIVE":true,"NAME":"Вадим","LAST_NAME":"Скутин","SE
+COND_NAME":"Феликсович","EMAIL":"vskutin@relits.ru","LAST_LOGIN":"2026-08-10T13:
+22:18+03:00","DATE_REGISTER":"2023-08-30T03:00:00+03:00","TIME_ZONE":"Asia\/Aqto
+be","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"
+","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1978-03-07T03:00:00+03:00","PERSONAL_PH
+OTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/a9a\/a9aa681ee90061c208cdf8
+479ff79849\/Skutin V.F..jpg.png","PERSONAL_MOBILE":"+7 908 610 65 42","PERSONAL_
+CITY":"","WORK_PHONE":"","WORK_POSITION":"Генеральный директор","UF_EMPLOYMENT_D
+ATE":"","UF_DEPARTMENT":[15,71],"USER_TYPE":"employee"},{"ID":"29","XML_ID":"510
+96458","ACTIVE":true,"NAME":"Жанна","LAST_NAME":"Утешова","SECOND_NAME":"Сайфулл
+аевна","EMAIL":"zhuteshova@relits.ru","LAST_LOGIN":"2026-08-10T12:04:38+03:00","
+DATE_REGISTER":"2023-08-31T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_O
+NLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"F","PERSO
+NAL_WWW":"","PERSONAL_BIRTHDAY":"1975-06-07T03:00:00+03:00","PERSONAL_PHOTO":"ht
+tps:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/353\/353256dfeb8154376970601431f1fd
+18\/Uteshova ZH.S..jpg.png","PERSONAL_MOBILE":"+7 927 079-52-61","PERSONAL_CITY"
+:"","WORK_PHONE":"","WORK_POSITION":"Главный юрист","UF_EMPLOYMENT_DATE":"","UF_
+DEPARTMENT":[17],"USER_TYPE":"employee"},{"ID":"31","XML_ID":"51788992","ACTIVE"
+:true,"NAME":"Елизавета","LAST_NAME":"Морозова","SECOND_NAME":"Алексеевна","EMAI
+L":"emorozova@relits.ru","LAST_LOGIN":"2026-08-10T12:03:58+03:00","DATE_REGISTER
+":"2023-10-10T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLINE":"Y","T
+IMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","P
+ERSONAL_BIRTHDAY":"1989-12-05T03:00:00+03:00","PERSONAL_MOBILE":"+7 927 662-08-5
+1","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Главный архитектор проект
+а","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[55],"USER_TYPE":"employee"},{"ID":"3
+3","XML_ID":"51789246","ACTIVE":true,"NAME":"Аделя","LAST_NAME":"Усцелемова","SE
+COND_NAME":"Ильдаровна","EMAIL":"auscelemova@relits.ru","LAST_LOGIN":"2026-08-10
+T11:47:44+03:00","DATE_REGISTER":"2023-10-10T03:00:00+03:00","TIME_ZONE":"Etc\/G
+MT-4","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER"
+:"F","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1993-11-03T03:00:00+03:00","PERSONAL
+_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/737\/737ed0fc2b8fd247628
+daedef889689c\/Ustselemova A.I..jpg.png","PERSONAL_MOBILE":"+7 927 662 02 30","P
+ERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Дизайнер","UF_EMPLOYMENT_DATE"
+:"","UF_DEPARTMENT":[55],"USER_TYPE":"employee"},{"ID":"35","XML_ID":"51789248",
+"ACTIVE":true,"NAME":"Давид","LAST_NAME":"Оганесян","SECOND_NAME":"Владимирович"
+,"EMAIL":"daoganesyan@relits.ru","LAST_LOGIN":"2026-08-09T12:44:36+03:00","DATE_
+REGISTER":"2023-10-10T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLINE
+":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WW
+W":"","PERSONAL_BIRTHDAY":"1998-01-23T03:00:00+03:00","PERSONAL_PHOTO":"https:\/
+\/cdn-ru.bitrix24.ru\/b26039220\/main\/32d\/32df631be1aa551c95846d3a4f1bc91a\/Og
+anesyan David.V.jpg.png","PERSONAL_MOBILE":"89275606588","PERSONAL_CITY":"","WOR
+K_PHONE":"","WORK_POSITION":"Генеральный директор","UF_EMPLOYMENT_DATE":"","UF_D
+EPARTMENT":[59,61],"USER_TYPE":"employee"},{"ID":"37","XML_ID":"51789250","ACTIV
+E":false,"NAME":"Татьяна","LAST_NAME":"Тулина","SECOND_NAME":"","EMAIL":"ttulina
+@relits.ru","LAST_LOGIN":"2024-02-29T23:32:14+03:00","DATE_REGISTER":"2023-10-10
+T03:00:00+03:00","TIME_ZONE":"","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_
+DATE":{},"PERSONAL_GENDER":"F","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1968-07-24
+T03:00:00+03:00","PERSONAL_MOBILE":"8 906 456 63-57","PERSONAL_CITY":"","WORK_PH
+ONE":"","WORK_POSITION":"инженер ПТО","UF_EMPLOYMENT_DATE":"2023-09-27T03:00:00+
+03:00","UF_DEPARTMENT":[11],"USER_TYPE":"employee"},{"ID":"39","XML_ID":"5178925
+2","ACTIVE":true,"NAME":"Евгения","LAST_NAME":"Иванова","SECOND_NAME":"Александр
+овна","EMAIL":"eivanova@relits.ru","LAST_LOGIN":"2026-08-10T13:08:15+03:00","DAT
+E_REGISTER":"2023-10-10T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLI
+NE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"F","PERSONAL
+_WWW":"","PERSONAL_BIRTHDAY":"1985-06-27T03:00:00+04:00","PERSONAL_PHOTO":"https
+:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/5fa\/5fa1eda23cb78f7d531bbe22c3f974ad\
+/Ivanova E. A..jpg.png","PERSONAL_MOBILE":"89171751559","PERSONAL_CITY":"Астраха
+нь","WORK_PHONE":"","WORK_POSITION":"Бухгалтер","UF_EMPLOYMENT_DATE":"2023-09-18
+T03:00:00+03:00","UF_DEPARTMENT":[3],"USER_TYPE":"employee"},{"ID":"41","XML_ID"
+:"51789254","ACTIVE":false,"NAME":"Никита","LAST_NAME":"Бормотин","SECOND_NAME":
+"Владимирович","EMAIL":"nbormotin@panorama-dom.ru","LAST_LOGIN":"2024-04-18T17:3
+5:43+03:00","DATE_REGISTER":"2023-10-10T03:00:00+03:00","TIME_ZONE":"","IS_ONLIN
+E":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_W
+WW":"","PERSONAL_BIRTHDAY":"1997-08-13T03:00:00+04:00","PERSONAL_MOBILE":"","PER
+SONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Менеджер по продаже недвижимости
+","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[5],"USER_TYPE":"employee"},{"ID":"43"
+,"XML_ID":"51789974","ACTIVE":false,"NAME":"Валентина","LAST_NAME":"Грачева","SE
+COND_NAME":"Сергеевна","EMAIL":"sin@relits.ru","LAST_LOGIN":"2024-02-13T21:45:43
++03:00","DATE_REGISTER":"2023-10-10T03:00:00+03:00","TIME_ZONE":"","IS_ONLINE":"
+N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"F","PERSONAL_WWW"
+:"","PERSONAL_BIRTHDAY":"1982-02-13T03:00:00+03:00","PERSONAL_PHOTO":"https:\/\/
+cdn-ru.bitrix24.ru\/b26039220\/main\/edc\/edc1d83f78b58b857c025179d5b38157\/fon2
+.jpg.png","PERSONAL_MOBILE":"+79061789286","PERSONAL_CITY":"Астрахань","WORK_PHO
+NE":"","WORK_POSITION":"юрист","UF_EMPLOYMENT_DATE":"2023-08-21T03:00:00+03:00",
+"UF_DEPARTMENT":[17],"USER_TYPE":"employee"},{"ID":"45","XML_ID":"51789978","ACT
+IVE":true,"NAME":"Николай","LAST_NAME":"Юдкин","SECOND_NAME":"Владимирович","EMA
+IL":"nyudkin@relits.ru","LAST_LOGIN":"2026-08-10T11:38:28+03:00","DATE_REGISTER"
+:"2023-10-10T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLINE":"N","TI
+MESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"M","PERSONAL_WWW":"","P
+ERSONAL_BIRTHDAY":"1984-07-25T03:00:00+04:00","PERSONAL_PHOTO":"https:\/\/cdn-ru
+.bitrix24.ru\/b26039220\/main\/0bd\/0bdd2004afedc00a3a366ca2a317a7d6\/YUdkin N.V
+..jpg.png","PERSONAL_MOBILE":"+7 927-077-11-00","PERSONAL_CITY":"","WORK_PHONE":
+"","WORK_POSITION":"Руководитель отдела корпоративной безопасности","UF_EMPLOYME
+NT_DATE":"","UF_DEPARTMENT":[25],"USER_TYPE":"employee"},{"ID":"47","XML_ID":"51
+789980","ACTIVE":true,"NAME":"Екатерина","LAST_NAME":"Литвинова","SECOND_NAME":"
+Эдуардовна","EMAIL":"elitvinova@relits.ru","LAST_LOGIN":"2025-11-27T16:26:06+03:
+00","DATE_REGISTER":"2023-10-10T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan",
+"IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","P
+ERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1978-05-21T03:00:00+03:00","PERSONAL_PHOTO"
+:"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/8c9\/8c96830eaaf1c6b20f499d707a
+2aff39\/photo_5247137210694754943_x.jpg.png","PERSONAL_MOBILE":"+7 937 137-93-33
+","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Менеджер по работе с партн
+ерами","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[79],"USER_TYPE":"employee"},{"ID
+":"49","XML_ID":"51789982","ACTIVE":true,"NAME":"Пётр","LAST_NAME":"Богоявленски
+й","SECOND_NAME":"Юрьевич","EMAIL":"pbogoyavlenskiy@relits.ru","LAST_LOGIN":"202
+6-08-10T13:06:43+03:00","DATE_REGISTER":"2023-10-10T03:00:00+03:00","TIME_ZONE":
+"Europe\/Astrakhan","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PE
+RSONAL_GENDER":"M","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1982-08-21T03:00:00+04
+:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/a00\/a004d
+98b3b0c38f616ff6444ef519f49\/Bogoyavlenskiy P.YU..jpg.png","PERSONAL_MOBILE":"8-
+965-452-84-44","PERSONAL_CITY":"Астрахань","WORK_PHONE":"","WORK_POSITION":"Дире
+ктор ООО \u0022Сервисная компания \u0022РЭС\u0022","UF_EMPLOYMENT_DATE":"2023-07
+-24T03:00:00+03:00","UF_DEPARTMENT":[67],"USER_TYPE":"employee"},{"ID":"51","XML
+_ID":"51939466","ACTIVE":false,"NAME":"Эльдар","LAST_NAME":"Курбанов","SECOND_NA
+ME":"Викторович","EMAIL":"ekurbanov@relits.ru","LAST_LOGIN":"2026-06-24T11:46:40
++03:00","DATE_REGISTER":"2023-10-18T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakh
+an","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"
+M","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1984-12-28T03:00:00+03:00","PERSONAL_P
+HOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/c36\/c36d0b1e88f23b5f84030
+a73680d702c\/Kurbanov E. V..jpg.png","PERSONAL_MOBILE":"+7(905)481-76-80","PERSO
+NAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Начальник участка","UF_EMPLOYMENT_
+DATE":"","UF_DEPARTMENT":[71],"USER_TYPE":"employee"},{"ID":"53","XML_ID":"52231
+674","ACTIVE":true,"NAME":"Владислав","LAST_NAME":"Лавров","SECOND_NAME":"Никола
+евич","EMAIL":"vlavrov@panorama-dom.ru","LAST_LOGIN":"2026-08-01T15:08:20+03:00"
+,"DATE_REGISTER":"2023-11-05T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS
+_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERS
+ONAL_WWW":"","PERSONAL_BIRTHDAY":"1995-05-14T03:00:00+04:00","PERSONAL_PHOTO":"h
+ttps:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/fd5\/fd567ad8616ea7f427c0968aa5888
+1a2\/NZ5_6238.jpg.png","PERSONAL_MOBILE":"+79673322225","PERSONAL_CITY":"Астраха
+нь","WORK_PHONE":"+79170003274","WORK_POSITION":"Территориальный менеджер по про
+дажам","UF_EMPLOYMENT_DATE":"2023-06-28T03:00:00+03:00","UF_DEPARTMENT":[79],"US
+ER_TYPE":"employee"},{"ID":"55","XML_ID":"52231676","ACTIVE":true,"NAME":"Наталь
+я","LAST_NAME":"Максимова","SECOND_NAME":"Дмитриевна","EMAIL":"nmaksimova@relits
+.ru","LAST_LOGIN":"2026-08-10T09:42:43+03:00","DATE_REGISTER":"2023-11-05T03:00:
+00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST
+_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1
+994-07-26T03:00:00+04:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039
+220\/main\/aab\/aab56d8508fdbcb9410d5ce7a971540a\/IMG_1613.JPG.png","PERSONAL_MO
+BILE":"+7 937 131-62-60","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Юри
+ст по корпоративно-имущественным правоотношениям","UF_EMPLOYMENT_DATE":"","UF_DE
+PARTMENT":[67],"USER_TYPE":"employee"},{"ID":"57","XML_ID":"52231678","ACTIVE":f
+alse,"NAME":"Ринат","LAST_NAME":"Синдикаев","SECOND_NAME":"Александрович","EMAIL
+":"rsindikaev@relits.ru","LAST_LOGIN":"2024-07-04T16:01:52+03:00","DATE_REGISTER
+":"2023-11-05T03:00:00+03:00","TIME_ZONE":"","IS_ONLINE":"N","TIMESTAMP_X":{},"L
+AST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY"
+:"1991-10-28T03:00:00+02:00","PERSONAL_MOBILE":"","PERSONAL_CITY":"","WORK_PHONE
+":"","WORK_POSITION":"Инженер ПТО","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[11],
+"USER_TYPE":"employee"},{"ID":"59","XML_ID":"52231680","ACTIVE":true,"NAME":"Вад
+им","LAST_NAME":"Алексеюк","SECOND_NAME":"Александрович","EMAIL":"valekseyuk@rel
+its.ru","LAST_LOGIN":"2026-08-10T11:47:42+03:00","DATE_REGISTER":"2023-11-05T03:
+00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLINE":"Y","TIMESTAMP_X":{},"L
+AST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY"
+:"1976-01-04T03:00:00+03:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26
+039220\/main\/54a\/54aa715e1712f04d04e587ce5a36d4b5\/Aleksyuk V.A..jpg.png","PER
+SONAL_MOBILE":"+7 960 851-23-63","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITI
+ON":"Специалист по охране труда","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[71],"U
+SER_TYPE":"employee"},{"ID":"61","XML_ID":"52231682","ACTIVE":true,"NAME":"Антон
+","LAST_NAME":"Абрамов","SECOND_NAME":"Александрович","EMAIL":"aabramov@relits.r
+u","LAST_LOGIN":"2026-08-10T12:12:26+03:00","DATE_REGISTER":"2023-11-05T03:00:00
++03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_A
+CTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"199
+0-01-08T03:00:00+03:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b2603922
+0\/main\/9e5\/9e5a48aabc2c518e8622297d3df91ed7\/Abramov A. A..jpg.png","PERSONAL
+_MOBILE":"+7 988 591 84 07","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"
+Инженер производственно-технического отдела","UF_EMPLOYMENT_DATE":"","UF_DEPARTM
+ENT":[11],"USER_TYPE":"employee"},{"ID":"63","XML_ID":"52231684","ACTIVE":true,"
+NAME":"Даниэль","LAST_NAME":"Оганесян","SECOND_NAME":"Владимирович","EMAIL":"dog
+anesyan@relits.ru","LAST_LOGIN":"2025-04-09T17:08:18+03:00","DATE_REGISTER":"202
+3-11-05T03:00:00+03:00","TIME_ZONE":"","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_AC
+TIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"2002
+-09-08T03:00:00+04:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220
+\/main\/c8a\/c8aa578011f4c689dae4bdfbc9766c5e\/338536117_1269284677323733_172787
+8200652216302_n.jpg.png","PERSONAL_MOBILE":"+7 927 579-90-07","PERSONAL_CITY":""
+,"WORK_PHONE":"","WORK_POSITION":"Менеджер по работе с партнерами","UF_EMPLOYMEN
+T_DATE":"","UF_DEPARTMENT":[79],"USER_TYPE":"employee"},{"ID":"65","XML_ID":"522
+31686","ACTIVE":false,"NAME":"Наталья","LAST_NAME":"Стяжкова","SECOND_NAME":"Пав
+ловна","EMAIL":"nstyazhkova@relits.ru","LAST_LOGIN":"2023-11-05T00:42:32+03:00",
+"DATE_REGISTER":"2023-11-05T03:00:00+03:00","TIME_ZONE":"","IS_ONLINE":"N","TIME
+STAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERS
+ONAL_BIRTHDAY":"1983-12-23T03:00:00+03:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bi
+trix24.ru\/b26039220\/main\/210\/210e25b84b874678d27f99b8a292e0a1\/Styazhkova N.
+.jpg.png","PERSONAL_MOBILE":"+7 927 560-60-36","PERSONAL_CITY":"","WORK_PHONE":"
+","WORK_POSITION":"Специалист по продвижению в социальных сетях","UF_EMPLOYMENT_
+DATE":"","UF_DEPARTMENT":[49],"USER_TYPE":"employee"},{"ID":"67","XML_ID":"52231
+688","ACTIVE":false,"NAME":"Игорь","LAST_NAME":"Муравьёв","SECOND_NAME":"Владими
+рович","EMAIL":"02121968@bk.ru","LAST_LOGIN":"2024-10-14T10:52:30+03:00","DATE_R
+EGISTER":"2023-11-05T03:00:00+03:00","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTI
+VITY_DATE":{},"PERSONAL_GENDER":"M","PERSONAL_BIRTHDAY":"1968-12-02T03:00:00+03:
+00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/86b\/86b687
+ed45a738d7d3c69ec69e0f32f8\/Muravev I.V..jpg.png","PERSONAL_MOBILE":"89678337088
+","WORK_POSITION":" Начальник участка ","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":
+[71],"USER_TYPE":"employee"},{"ID":"69","XML_ID":"52231824","ACTIVE":true,"NAME"
+:"Наталия","LAST_NAME":"Тиненкова","SECOND_NAME":"Константиновна","EMAIL":"ntine
+nkova@panorama-dom.ru","LAST_LOGIN":"2026-08-10T12:36:18+03:00","DATE_REGISTER":
+"2023-11-05T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLINE":"Y","TIM
+ESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"F","PERSONAL_WWW":"","PE
+RSONAL_BIRTHDAY":"1984-03-09T03:00:00+03:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.
+bitrix24.ru\/b26039220\/main\/3db\/3dbf4178a59983232978afd677795f0b\/Tinenkova N
+.K..jpg.png","PERSONAL_MOBILE":"89171824910","PERSONAL_CITY":"","WORK_PHONE":"",
+"WORK_POSITION":"Руководитель ипотечного центра","UF_EMPLOYMENT_DATE":"","UF_DEP
+ARTMENT":[79],"USER_TYPE":"employee"},{"ID":"71","XML_ID":"52231826","ACTIVE":tr
+ue,"NAME":"Элина","LAST_NAME":"Оганесян","SECOND_NAME":"Сергеевна","EMAIL":"eoga
+nesyan@panorama-dom.ru","LAST_LOGIN":"2023-11-05T01:01:51+03:00","DATE_REGISTER"
+:"2023-11-05T03:00:00+03:00","TIME_ZONE":"","IS_ONLINE":"N","TIMESTAMP_X":{},"LA
+ST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":
+"1998-12-24T03:00:00+03:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b260
+39220\/main\/beb\/beb580ce9d551c7e92e2d5db86e0811f\/Oganesyan E.S..jpg.png","PER
+SONAL_MOBILE":"+7 908 610-95-98","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITI
+ON":"Менеджер по работе с партнерами","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[7
+9],"USER_TYPE":"employee"},{"ID":"73","XML_ID":"52231828","ACTIVE":false,"NAME":
+"Олег","LAST_NAME":"Клопов","SECOND_NAME":"Владимирович","EMAIL":"oklopov@relits
+.ru","LAST_LOGIN":"2024-12-24T14:03:40+03:00","DATE_REGISTER":"2023-11-05T03:00:
+00+03:00","TIME_ZONE":"","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{
+},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1964-01-21T03:00:0
+0+03:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/942\/9
+4255aaebdc48110d3785742e28ed77c\/Klopov O.V..jpg.png","PERSONAL_MOBILE":"+7 988
+061-09-71","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Инженер по надзор
+у за производством строительных работ","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[
+71],"USER_TYPE":"employee"},{"ID":"75","XML_ID":"52231940","ACTIVE":false,"NAME"
+:"Замера","LAST_NAME":"Гасанова","SECOND_NAME":"Абдулжелиловна","EMAIL":"zgasano
+va@ressk.ru","LAST_LOGIN":"2025-09-18T09:34:09+03:00","DATE_REGISTER":"2023-11-0
+5T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLINE":"N","TIMESTAMP_X":
+{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"F","PERSONAL_WWW":"","PERSONAL_BIR
+THDAY":"1983-03-13T03:00:00+03:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.r
+u\/b26039220\/main\/479\/479726cd5848d94e59a7c0844b5c5d85\/Gasanova Z.A..png","P
+ERSONAL_MOBILE":"+7 927 077 13 03","PERSONAL_CITY":"Астрахань","WORK_PHONE":"+7
+(8512) 249-249","WORK_POSITION":"юрисконсульт","UF_EMPLOYMENT_DATE":"","UF_DEPAR
+TMENT":[23],"USER_TYPE":"employee"},{"ID":"77","XML_ID":"52231942","ACTIVE":true
+,"NAME":"Ольга","LAST_NAME":"Гаврилова","SECOND_NAME":"Петровна","EMAIL":"buh@re
+ssk.ru","LAST_LOGIN":"2026-08-10T12:04:37+03:00","DATE_REGISTER":"2023-11-05T03:
+00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","IS_ONLINE":"Y","TIMESTAMP_X":{},"L
+AST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"F","PERSONAL_WWW":"","PERSONAL_BIRTHDAY
+":"1982-12-20T03:00:00+03:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b2
+6039220\/main\/c6d\/c6dc62c4b0ded98f6601e3009a91d99d\/image-15-12-25-12-31-2.png
+","PERSONAL_MOBILE":"+7-917-097-39-70","PERSONAL_CITY":"г. Астрахань","WORK_PHON
+E":"+7-988-600-25-83","WORK_POSITION":"Бухгалтер","UF_EMPLOYMENT_DATE":"2023-08-
+24T03:00:00+03:00","UF_DEPARTMENT":[3],"USER_TYPE":"employee"},{"ID":"79","XML_I
+D":"52231960","ACTIVE":false,"NAME":"Дмитрий","LAST_NAME":"Сикорский","SECOND_NA
+ME":"Леонидович","EMAIL":"director@ressk.ru","LAST_LOGIN":"2026-06-01T07:48:15+0
+3:00","DATE_REGISTER":"2023-11-05T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan
+","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"M"
+,"PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1961-09-09T03:00:00+03:00","PERSONAL_PHO
+TO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/dde\/dde0f63fc9ce1d33a5ab5dc
+5978bb84f\/Sikorskiy D.L..png","PERSONAL_MOBILE":"+7 960 866-31-25","PERSONAL_CI
+TY":"","WORK_PHONE":"","WORK_POSITION":"Инженер  производственно-технического от
+дела","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[23,65],"USER_TYPE":"employee"},{"
+ID":"81","XML_ID":"52232022","ACTIVE":true,"NAME":"Елена","LAST_NAME":"Шерстюков
+а","SECOND_NAME":"Анатольевна","EMAIL":"esherstyukova@ressk.ru","LAST_LOGIN":"20
+26-08-10T11:42:43+03:00","DATE_REGISTER":"2023-11-05T03:00:00+03:00","TIME_ZONE"
+:"Europe\/Astrakhan","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"P
+ERSONAL_GENDER":"F","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1968-05-24T03:00:00+0
+3:00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/92b\/92bb
+50b5cb1b8acc7cb5512bcc6662d5\/photo_2026-02-24_10-40-54.jpg.png","PERSONAL_MOBIL
+E":"+7 988 076 81 87","PERSONAL_CITY":"Астрахань","WORK_PHONE":"89886002615","WO
+RK_POSITION":"Специалист по работе с клиентами","UF_EMPLOYMENT_DATE":"2023-05-26
+T03:00:00+03:00","UF_DEPARTMENT":[88],"USER_TYPE":"employee"},{"ID":"83","XML_ID
+":"52232048","ACTIVE":false,"NAME":"Наталья","LAST_NAME":"Григорьева","SECOND_NA
+ME":"Анатольевна","EMAIL":"ngrigoreva@ressk.ru","LAST_LOGIN":"2023-11-05T01:22:4
+5+03:00","DATE_REGISTER":"2023-11-05T03:00:00+03:00","TIME_ZONE":"","IS_ONLINE":
+"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW"
+:"","PERSONAL_BIRTHDAY":"1968-09-08T03:00:00+03:00","PERSONAL_MOBILE":"+7 927 56
+9-65-74","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Кладовщик","UF_EMPL
+OYMENT_DATE":"","UF_DEPARTMENT":[23],"USER_TYPE":"employee"},{"ID":"85","XML_ID"
+:"52232062","ACTIVE":true,"NAME":"Анна","LAST_NAME":"Астахина","SECOND_NAME":"Ан
+атольевна","EMAIL":"aastakhina@relits.ru","LAST_LOGIN":"2026-08-10T11:47:43+03:0
+0","DATE_REGISTER":"2023-11-05T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","
+IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"F","P
+ERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1994-06-01T03:00:00+04:00","PERSONAL_PHOTO"
+:"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/06f\/06fa90a826b72455c78ebe4e49
+a9d86b\/Izobrazhenie WhatsApp 2024-12-26 v 11.10.36_7bd59876.jpg.png","PERSONAL_
+MOBILE":"+79880670157","PERSONAL_CITY":"Астрахань","WORK_PHONE":"","WORK_POSITIO
+N":"Офис-менеджер","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[13],"UF_PHONE_INNER"
+:"215","USER_TYPE":"employee"},{"ID":"87","XML_ID":"52236920","ACTIVE":false,"NA
+ME":"Николай","LAST_NAME":"Борисенко","SECOND_NAME":"Иванович","EMAIL":"nborisen
+ko@relits.ru","LAST_LOGIN":"2024-01-27T12:39:58+03:00","DATE_REGISTER":"2023-11-
+05T03:00:00+03:00","TIME_ZONE":"","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVIT
+Y_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"","PERSON
+AL_MOBILE":"89627535336","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Нач
+альник участка","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[15],"USER_TYPE":"employ
+ee"},{"ID":"89","XML_ID":"52236936","ACTIVE":false,"NAME":"Дмитрий","LAST_NAME":
+"Николашин","SECOND_NAME":"","EMAIL":"dnikolashin@relits.ru","LAST_LOGIN":"2023-
+11-05T16:47:33+03:00","DATE_REGISTER":"2023-11-05T03:00:00+03:00","TIME_ZONE":""
+,"IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","
+PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1985-11-19T03:00:00+03:00","PERSONAL_MOBIL
+E":"","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"","UF_EMPLOYMENT_DATE"
+:"","UF_DEPARTMENT":[71],"USER_TYPE":"employee"},{"ID":"91","XML_ID":"52236958",
+"ACTIVE":false,"NAME":"Сергей","LAST_NAME":"Савенков","SECOND_NAME":"Аркадьевич"
+,"EMAIL":"ssavenkov@relits.ru","LAST_LOGIN":"2023-11-05T21:58:45+03:00","DATE_RE
+GISTER":"2023-11-05T03:00:00+03:00","TIME_ZONE":"","IS_ONLINE":"N","TIMESTAMP_X"
+:{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIR
+THDAY":"1952-11-05T03:00:00+03:00","PERSONAL_MOBILE":"+7 903 348 83 03","PERSONA
+L_CITY":"","WORK_PHONE":"","WORK_POSITION":"Главный инженер проектов","UF_EMPLOY
+MENT_DATE":"","UF_DEPARTMENT":[53],"USER_TYPE":"employee"},{"ID":"97","XML_ID":"
+52517028","ACTIVE":true,"NAME":"Анастасия","LAST_NAME":"Завьялова","SECOND_NAME"
+:"Евгеньевна","EMAIL":"azavyalova@relits.ru","LAST_LOGIN":"2026-08-10T08:11:01+0
+3:00","DATE_REGISTER":"2023-11-21T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan
+","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"",
+"PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1991-01-14T03:00:00+03:00","PERSONAL_PHOT
+O":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/102\/10226e9c4a5be2526b208216
+3e88b419\/Zavyalova A.E..jpg.png","PERSONAL_MOBILE":"+7 965 450 45 85","PERSONAL
+_CITY":"","WORK_PHONE":"","WORK_POSITION":"Главный инженер проекта","UF_EMPLOYME
+NT_DATE":"","UF_DEPARTMENT":[53],"USER_TYPE":"employee"},{"ID":"101","XML_ID":"5
+3191874","ACTIVE":false,"NAME":"Николай","LAST_NAME":"Шаповалов","SECOND_NAME":"
+","EMAIL":"","LAST_LOGIN":"2024-01-10T22:40:08+03:00","DATE_REGISTER":"2024-01-1
+0T03:00:00+03:00","TIME_ZONE":"","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY
+_DATE":{},"PERSONAL_GENDER":"","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"","PERSONA
+L_MOBILE":"","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"","UF_EMPLOYMEN
+T_DATE":"","UF_DEPARTMENT":[5],"USER_TYPE":"employee"},{"ID":"105","XML_ID":"532
+08840","ACTIVE":true,"NAME":"Николай","LAST_NAME":"Шаповалов","SECOND_NAME":"Ник
+олаевич","EMAIL":"nshapovalov@relits.ru","LAST_LOGIN":"2026-08-10T12:02:55+03:00
+","DATE_REGISTER":"2024-01-10T03:00:00+03:00","TIME_ZONE":"Europe\/Astrakhan","I
+S_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"M","PE
+RSONAL_WWW":"","PERSONAL_BIRTHDAY":"1992-09-30T03:00:00+03:00","PERSONAL_PHOTO":
+"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/219\/219a3805bd8306cc865f5dd2f93
+8d1c3\/SHapovalov N.N..jpg.png","PERSONAL_MOBILE":"+7 961 798 97 26","PERSONAL_C
+ITY":"","WORK_PHONE":"","WORK_POSITION":"Заместитель руководителя ипотечного цен
+тра","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[79],"USER_TYPE":"employee"},{"ID":
+"107","XML_ID":"53289674","ACTIVE":true,"NAME":"Елена","LAST_NAME":"Кривоножкина
+","SECOND_NAME":"Петровна","EMAIL":"ekrivonozhkina@relits.ru","LAST_LOGIN":"2026
+-08-10T13:06:35+03:00","DATE_REGISTER":"2024-01-17T03:00:00+03:00","TIME_ZONE":"
+Europe\/Astrakhan","IS_ONLINE":"Y","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PER
+SONAL_GENDER":"F","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1978-04-07T03:00:00+03:
+00","PERSONAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/487\/487031
+d0b9764e513b9f05f0a4c0da12\/NZ5_6300.jpg.png","PERSONAL_MOBILE":"+79053606618","
+PERSONAL_CITY":"","WORK_PHONE":"+79885902967","WORK_POSITION":"Главный юрист","U
+F_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[79],"USER_TYPE":"employee"},{"ID":"109","
+XML_ID":"53483410","ACTIVE":false,"NAME":"Дмитрий","LAST_NAME":"Сергеев","SECOND
+_NAME":"Александрович","EMAIL":"dsergeev@relits.ru","LAST_LOGIN":"2026-02-09T13:
+09:50+03:00","DATE_REGISTER":"2024-01-29T03:00:00+03:00","TIME_ZONE":"Europe\/As
+trakhan","IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GEND
+ER":"M","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1987-04-16T03:00:00+04:00","PERSO
+NAL_PHOTO":"https:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/bfb\/bfb930516cb42b15
+530c3c65afa6c252\/Sergeev D. A..jpg.png","PERSONAL_MOBILE":"+7 927 557 45 44","P
+ERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Начальник строительного участк
+а","UF_EMPLOYMENT_DATE":"","UF_DEPARTMENT":[71],"USER_TYPE":"employee"},{"ID":"1
+11","XML_ID":"53643546","ACTIVE":false,"NAME":"Дмитрий","LAST_NAME":"Круглов","S
+ECOND_NAME":"Владимирович","EMAIL":"dkruglov@relits.ru","LAST_LOGIN":"2024-02-05
+T23:53:03+03:00","DATE_REGISTER":"2024-02-06T03:00:00+03:00","TIME_ZONE":"","IS_
+ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"","PERSO
+NAL_WWW":"","PERSONAL_BIRTHDAY":"1978-07-10T03:00:00+03:00","PERSONAL_PHOTO":"ht
+tps:\/\/cdn-ru.bitrix24.ru\/b26039220\/main\/2c2\/2c2fb79688c16133046ea98927f8bf
+02\/Kruglov D.V..png","PERSONAL_MOBILE":"+7 964 882 84 44","PERSONAL_CITY":"","W
+ORK_PHONE":"","WORK_POSITION":"Главный мехник","UF_EMPLOYMENT_DATE":"","UF_DEPAR
+TMENT":[79],"USER_TYPE":"employee"}],"next":50,"total":231,"time":{"start":17863
+58166,"finish":1786358166.564243,"duration":0.5642430782318115,"processing":0,"d
+ate_start":"2026-08-10T13:36:06+03:00","date_finish":"2026-08-10T13:36:06+03:00"
+,"operating_reset_at":1786358766,"operating":0}}

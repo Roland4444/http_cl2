@@ -337,7 +337,7 @@ async fn grub_data_with_add_params(    index_start: i32,    index_stop: i32,    
 }
 
 async fn try_grub() -> Result<(), Box<dyn std::error::Error>> {
-    let res = grub_data_with_add_params(        1,        600,        ADD_DUMP,        vec![          ADDITIONAL_FIELDS::WORK_POSITION.to_string(),
+    let res = grub_data_with_add_params(        1,        700,        ADD_DUMP,        vec![          ADDITIONAL_FIELDS::WORK_POSITION.to_string(),
             ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY.to_string(),
             ADDITIONAL_FIELDS::UF_DEPARTMENT.to_string(),
         ],

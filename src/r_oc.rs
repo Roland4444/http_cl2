@@ -16,6 +16,8 @@ use std::path::Path;
 use serde_json::Value;
 
 const INSTRUCTION_VAR: &str = "Извлеки из этого изображения: весь текст по строкам";
+const INSTRUCTION_VAR_2FA: &str = r#"Извлеки из этого изображения: статус напротив "Двухфакторная аутентификация" "#;
+
 
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
@@ -52,6 +54,32 @@ pub fn build_vision_payload(image_base64: &str, instruction: &str) -> serde_json
                         "type": "image_url",
                         "image_url": {
                             "url": format!("data:image/jpeg;base64,{}", image_base64)
+                        }
+                    }
+                ]
+            }
+        ]
+    })
+}
+
+
+pub fn build_vision_payload_2FA(image_base64: &str, instruction: &str) -> serde_json::Value {
+    json!({
+        "messages": [
+            {
+                "role": "system",
+                "content": "Ты — AI-помощник, который извлекает данные для заявок подрядчиков из изображений.  Приведи распарсенные данные в следующий формат {номер})  {наименование} - {количество} {единица измерения}. например \"1) Доска 25х100 - 20 шт\" .  Для знака новой строки используй $$   \n не вставляй  , в конце каждой строки ставь точку .  "                              //  "content": "Ты — AI-помощник, который извлекает данные из счетов-фактур."
+
+              //  "content": "Ты — AI-помощник, который извлекает данные для извлечения статуса двухфакторной аутентификации из изображений.  Приведи статус двухфакторной аутентификакции из загржуенного изображения "                              //  "content": "Ты — AI-помощник, который извлекает данные из счетов-фактур."
+            },
+            {
+                "role": "user",
+                "content": [
+                    { "type": "text", "text": instruction },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": format!("data:image/jpg;base64,{}", image_base64)
                         }
                     }
                 ]
@@ -184,8 +212,8 @@ use super::*;
     async fn test_ocr()-> Result<(), Box<dyn std::error::Error>> {
         let API_KEY = get_webhook_(KEY_FILE);   
         let file_path = "___1.jpg"; 
-
-        let v = vec!["1.jpg", "1.tif", "1.bmp", "1.gif"];
+        let v = vec![ "00.tif"];
+   //     let v = vec!["1.jpg", "1.tif", "1.bmp", "1.gif", "00.tif"];
         for i in v {
             let image_data = std::fs::read(i)?;
             let base64_image = general_purpose::STANDARD.encode(&image_data);
@@ -245,6 +273,40 @@ use super::*;
 
         Ok(())
     }
+
+
+    #[tokio::test]
+    async fn test_ocr_2FA()-> Result<(), Box<dyn std::error::Error>> {
+        let API_KEY = get_webhook_(KEY_FILE);   
+        let file_path = "00.tif"; 
+
+    //    let ETALON_EXTRACT = "1) Кабель силовой ВВГнг(А)-LS 3х6,0 - 1000 м. $$ 2) Дюбель-хомут под плоский кабель 5-10 - 2000 шт. $$ 3) Дюбель-хомут под плоский кабель 6-12 - 2000 шт.";
+
+        let image_data = std::fs::read(file_path)?;
+        let base64_image = general_purpose::STANDARD.encode(&image_data);
+
+        let payload = build_vision_payload(&base64_image, INSTRUCTION_VAR_2FA);
+        let client = reqwest::Client::new();
+
+        let response = call_vibe_api(&client, &API_KEY, payload).await?;
+
+
+        let  js_resp = serde_json::to_string(&response).unwrap();
+        let target_text = extract_text_from_response ( js_resp.as_str()).unwrap();
+
+    //    let normalized_etalon = ETALON_EXTRACT.replace('х', "x");
+        let normalized_target = target_text.replace('х', "x");
+     //   assert_eq!(normalized_etalon, normalized_target);
+    //    assert_eq!(ETALON_EXTRACT.to_string(), target_text.to_string());
+        println!("EXTRACTED::{}", target_text);
+
+
+        println!("✅ Ответ от VibeCode:");
+        println!("{}", serde_json::to_string_pretty(&response)?);
+
+        Ok(())
+    }
+
 
 
     #[test]
