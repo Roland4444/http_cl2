@@ -1325,6 +1325,15 @@ async fn test_get_attached_metadata() {
     }
 
 
+    #[test]   
+    fn test_normal2(){
+        let input = "    8 917 171-28-49";
+        let normal = "9171712849";
+        let genned = normalize_tel(input.to_string(), EFES.to_string());
+        assert_eq!(genned, normal);
+    }
+
+
     #[tokio::test]
     async fn test_pull_messages_prod_OKLAND_with_dump_via_prod_queue() {
         let stop_flag = Arc::new(AtomicBool::new(false));
