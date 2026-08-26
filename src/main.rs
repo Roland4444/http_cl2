@@ -158,7 +158,10 @@ impl Pack {
 
     fn to_string(&self, ender: String) -> String {
         let mut result = String::from("");
-        for emp in &self.pack {result.push_str(&emp._to_string());result.push_str(&ender);}
+        for emp in &self.pack {
+            result.push_str(&emp._to_string());
+            result.push_str(&ender);
+        }
         result
     }
 
@@ -220,7 +223,9 @@ impl Employee {
     fn _to_string_poetic34(&self) -> String {format!( "{} {} {} {} ",  self.id,  self.name,  self.middle_name,  self.last_name)}
 
 
-    fn map_to_string(m: HashMap<ADDITIONAL_FIELDS, String>) -> String {m.iter().map(|(key, value)| format!("{}: {}", key, value)).collect::<Vec<String>>().join(", ")}
+    fn map_to_string(m: HashMap<ADDITIONAL_FIELDS, String>) -> String {
+        m.iter().map(|(key, value)| 
+            format!("{}: {}", key, value)).collect::<Vec<String>>().join(", ")}
 }
 
 fn get_i32_from_value(value: &Value) -> Option<i32> {match value {Value::Number(n) => n.as_i64().map(|x| x as i32),Value::String(s) => s.parse::<i32>().ok(),_ => None,    }}
@@ -325,14 +330,19 @@ async fn grub_data_with_add_params(    index_start: i32,    index_stop: i32,    
                             let name = user.get("NAME").unwrap_or(&Value::Null);
                             let last_name = user.get("LAST_NAME").unwrap_or(&Value::Null);
                             let second_name = user.get("SECOND_NAME").unwrap_or(&Value::Null);
-                            let personal_mobile: &Value = user.get("PERSONAL_MOBILE").unwrap_or(&Value::Null);
-                            println!("TEL: {}", personal_mobile);
+                        //    let personal_mobile: &Value = user.get("PERSONAL_MOBILE").unwrap_or(&Value::Null);
+                        //    println!("TEL: {}", personal_mobile);
 
                             let mut map22: HashMap<ADDITIONAL_FIELDS, String> = HashMap::new();
 
                             for item in params.iter() {
                                 let enum_ = get_enum__by_string(item);
-                                let value = user.get(enum_.to_string()).unwrap_or(&Value::Null);
+                                let mut value = user.get(enum_.to_string()).unwrap_or(&Value::Null);
+                                if enum_ == ADDITIONAL_FIELDS::PERSONAL_MOBILE{
+                                    let norm = normalize_tel(value.to_string(), EFES.to_string());
+                                    map22.insert(enum_, value.to_string());
+                                    continue;
+                                }
                                 map22.insert(enum_, value.to_string());
                             }
 
@@ -340,7 +350,7 @@ async fn grub_data_with_add_params(    index_start: i32,    index_stop: i32,    
                             println!("Имя: {}", name);
                             println!("Фамилия: {}", last_name);
                             println!("Отчество: {}", second_name);
-                            println!("TEL: {}", personal_mobile);
+                        //    println!("TEL: {}", personal_mobile);
 
                             println!("ДОП ПАРАМЕТРЫ: {}", Employee::map_to_string(map22.clone()));
 
