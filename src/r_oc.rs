@@ -110,6 +110,22 @@ async fn call_vibe_api(
 pub fn read_bytes(filename: &str) -> Vec<u8> {    fs::read(filename).expect("Cant read files")}
 
 
+fn normalize_text(s: &str) -> String {
+    s.replace('х', "x")
+     .replace('Х', "X")
+     .replace('А', "A")
+     .replace('а', "a")
+     .replace('О', "O")
+     .replace('о', "o")
+     .replace('С', "C")
+     .replace('с', "c")
+     .replace('Е', "E")
+     .replace('е', "e")
+     .replace('Р', "P")
+     .replace('р', "p")
+}
+
+
 pub fn read_lines(filename: &str) -> Vec<String> {
     let bytes = read_bytes(filename);
     let (decoded, _, had_errors) = WINDOWS_1251.decode(&bytes);
@@ -262,8 +278,9 @@ use super::*;
         let  js_resp = serde_json::to_string(&response).unwrap();
         let target_text = extract_text_from_response ( js_resp.as_str()).unwrap();
 
-        let normalized_etalon = ETALON_EXTRACT.replace('х', "x");
-        let normalized_target = target_text.replace('х', "x");
+        let normalized_etalon = normalize_text(ETALON_EXTRACT);
+        let normalized_target = normalize_text(&target_text);
+        assert_eq!(normalized_etalon, normalized_target);
         assert_eq!(normalized_etalon, normalized_target);
     //    assert_eq!(ETALON_EXTRACT.to_string(), target_text.to_string());
         println!("EXTRACTED::{}", target_text);

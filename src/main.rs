@@ -24,14 +24,25 @@ const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
 const SYNTEKA_TOKEN_FILE: &str = "synteka";
 const CL_ADDRESS_FILE: &str = "cl_address";
+const EFES: &str = "";
+const PLUS_7: &str = "+7";
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-enum ADDITIONAL_FIELDS {    WORK_POSITION,    PERSONAL_BIRTHDAY,    UF_DEPARTMENT,}
+enum ADDITIONAL_FIELDS {    WORK_POSITION,    PERSONAL_BIRTHDAY,    UF_DEPARTMENT,  PERSONAL_MOBILE}
 
-impl ADDITIONAL_FIELDS { fn all_values() -> Vec<Self> {vec![ADDITIONAL_FIELDS::WORK_POSITION,ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY,ADDITIONAL_FIELDS::UF_DEPARTMENT,]    }
+impl ADDITIONAL_FIELDS { fn all_values() -> Vec<Self> {vec![
+    ADDITIONAL_FIELDS::WORK_POSITION,
+    ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY,
+    ADDITIONAL_FIELDS::UF_DEPARTMENT,
+    ADDITIONAL_FIELDS::PERSONAL_MOBILE]    }
 
-    fn to_string(&self) -> String {match self {ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => "PERSONAL_BIRTHDAY",ADDITIONAL_FIELDS::UF_DEPARTMENT => "UF_DEPARTMENT",}.to_string()}
+    fn to_string(&self) -> String {match self {
+        ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",
+        ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => "PERSONAL_BIRTHDAY",
+        ADDITIONAL_FIELDS::UF_DEPARTMENT => "UF_DEPARTMENT",
+        ADDITIONAL_FIELDS::PERSONAL_MOBILE  => "PERSONAL_MOBILE"
+    }.to_string()}
 }
 
 struct Operation {    id_for_item: i32,    map_params: HashMap<String, String>,}
@@ -44,11 +55,16 @@ impl Operation {
     fn map_to_string(m: HashMap<String, String>) -> String {m.iter().map(|(key, value)| format!("{}: {}", key, value)).collect::<Vec<String>>().join(", ")    }
 }
 
-fn get_enum__by_string(target: &str) -> ADDITIONAL_FIELDS {    ADDITIONAL_FIELDS::all_values().iter().find(|&field| field.to_string() == target).cloned().unwrap_or_else(|| panic!("No field found with string: {}", target))}
+fn get_enum__by_string(target: &str) -> ADDITIONAL_FIELDS {    
+    ADDITIONAL_FIELDS::all_values().iter().find(|&field| field.to_string() == target).cloned().unwrap_or_else(|| panic!("No field found with string: {}", target))}
 
 impl std::fmt::Display for ADDITIONAL_FIELDS {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {  ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность"),  ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения"),  ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя"),}
+        match self {  ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность"), 
+                      ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения"),  
+                      ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя"),
+                      ADDITIONAL_FIELDS::PERSONAL_MOBILE => write!(f, "Номер телефона")
+                    }
     }
 }
 
@@ -266,15 +282,19 @@ async fn grub_data(    index_start: i32,    index_stop: i32,    filename_to_dump
                             let last_name = user.get("LAST_NAME").unwrap_or(&Value::Null);
                             let second_name = user.get("SECOND_NAME").unwrap_or(&Value::Null);
                             let work_position = user.get("WORK_POSITION").unwrap_or(&Value::Null);
+                            let phone_number = user.get("PERSONAL_MOBILE").unwrap_or(&Value::Null);
                             println!("ID: {}", id);
                             println!("Имя: {}", name);
                             println!("Фамилия: {}", last_name);
                             println!("Отчество: {}", second_name);
                             println!("Должность: {}", work_position);
+                            println!("Tel: {}", phone_number);
                             println!("---");
                             let number_id = get_i32_from_value(id).expect("shit");
                             let emp = Employee::new(number_id,p(name),p(last_name),p(second_name),
-                            HashMap::from([(ADDITIONAL_FIELDS::WORK_POSITION,work_position.to_string(),)]),
+                            HashMap::from([(ADDITIONAL_FIELDS::WORK_POSITION,work_position.to_string(),),
+                                                    (ADDITIONAL_FIELDS::PERSONAL_MOBILE, phone_number.to_string())
+                            ]),
                             );
                             pack.push_and_update(emp);
                         }
@@ -305,6 +325,8 @@ async fn grub_data_with_add_params(    index_start: i32,    index_stop: i32,    
                             let name = user.get("NAME").unwrap_or(&Value::Null);
                             let last_name = user.get("LAST_NAME").unwrap_or(&Value::Null);
                             let second_name = user.get("SECOND_NAME").unwrap_or(&Value::Null);
+                            let personal_mobile: &Value = user.get("PERSONAL_MOBILE").unwrap_or(&Value::Null);
+                            println!("TEL: {}", personal_mobile);
 
                             let mut map22: HashMap<ADDITIONAL_FIELDS, String> = HashMap::new();
 
@@ -318,6 +340,8 @@ async fn grub_data_with_add_params(    index_start: i32,    index_stop: i32,    
                             println!("Имя: {}", name);
                             println!("Фамилия: {}", last_name);
                             println!("Отчество: {}", second_name);
+                            println!("TEL: {}", personal_mobile);
+
                             println!("ДОП ПАРАМЕТРЫ: {}", Employee::map_to_string(map22.clone()));
 
                             println!("---");
@@ -337,9 +361,11 @@ async fn grub_data_with_add_params(    index_start: i32,    index_stop: i32,    
 }
 
 async fn try_grub() -> Result<(), Box<dyn std::error::Error>> {
-    let res = grub_data_with_add_params(        1,        700,        ADD_DUMP,        vec![          ADDITIONAL_FIELDS::WORK_POSITION.to_string(),
+    let res = grub_data_with_add_params(        1,        700,        ADD_DUMP,        vec![        
+            ADDITIONAL_FIELDS::WORK_POSITION.to_string(),
             ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY.to_string(),
             ADDITIONAL_FIELDS::UF_DEPARTMENT.to_string(),
+            ADDITIONAL_FIELDS::PERSONAL_MOBILE.to_string()
         ],
     ).await; //DEFAULT_DUMP).await;
 
@@ -462,6 +488,28 @@ async fn getting_users(client_reqwest: Client) -> () {
 
 fn compare(fromVik: String, fromDump: String) -> bool {    return false;}
 
+
+
+
+
+fn normal(input: String) -> String {
+    input.replace(" ", "").replace("-", "")
+}
+
+fn normalize_tel(input: String, prefix: String) -> String {
+    let normalized = normal(input);
+
+    match normalized.strip_prefix(PLUS_7) {
+        Some(rest) => format!("{}{}", prefix, rest),       
+        None => {
+            if normalized.is_empty() {
+                prefix
+            } else {
+                format!("{}{}", prefix, &normalized[1..])
+            }
+        }
+    }
+}
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_reqwest: Client = reqwest::Client::new();
@@ -475,7 +523,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn add(a: i32, b: i32) -> i32 {    a + b}
+pub fn add(a: i32, b: i32) -> i32 {a + b}
 
 pub fn bad_add(a: i32, b: i32) -> i32 {    a - b}
 
@@ -1023,7 +1071,7 @@ async fn test_get_attached_metadata() {
     
 
 
-    use std::fs;
+    use std::{assert_eq, fs};
 
     #[tokio::test]
     async fn test_pull_employess() -> Result<() , anyhow::Error> {
@@ -1266,6 +1314,15 @@ async fn test_get_attached_metadata() {
 
 }
 
+
+
+    #[test]
+    fn test_normazline(){
+        let input = "+7 917 171-28-49";
+        let normal = "89171712849";
+        let genned = normalize_tel(input.to_string(), "8".to_string());
+        assert_eq!(genned, normal);
+    }
 
 
     #[tokio::test]
