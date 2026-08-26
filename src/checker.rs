@@ -19,3 +19,22 @@ pub fn get_f_(input: String) -> String {
         "" .to_string()
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+
+use std::assert_eq;
+
+use super::*;
+
+    #[test]
+    fn test_ocr() {
+        let input = "Руководитель отдела  по внутренней отделке=Шагинян А.	";
+        assert_eq!("Руководитель отдела  по внутренней отделке", get_work_pos(input.to_string()));
+        assert_eq!("Шагинян", get_f_(input.to_string()));
+      
+    }
+
+    
+}
