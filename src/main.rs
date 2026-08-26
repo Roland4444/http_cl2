@@ -12,6 +12,7 @@ pub mod http_Parser;
 pub mod http_Proc;
 pub mod http_test;
 pub mod http_synteka;
+pub mod checker;
 pub mod r_oc;
 use std::thread;
 use std::time::Duration;
@@ -24,7 +25,7 @@ const DEFAULT_DUMP: &str = "all_dump.bin";
 const ADD_DUMP: &str = "snoyman.bin";
 const SYNTEKA_TOKEN_FILE: &str = "synteka";
 const CL_ADDRESS_FILE: &str = "cl_address";
-const EFES: &str = "";
+pub   const EFES: &str = "";
 const PLUS_7: &str = "+7";
 
 
@@ -795,6 +796,14 @@ mod tests {
     }
 
     #[test]
+    fn test_parshina_f(){
+        let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+        let mass: Vec<&Employee> = pack.pack.iter().filter(|&q|  q.last_name == "Паршина" ).collect();
+        println!("{}", mass[0]._to_string());
+
+    }
+
+    #[test]
     fn test_get_id2() {
         let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
         println!("{}", pack.to_string("\n".to_string()));
@@ -1081,7 +1090,7 @@ async fn test_get_attached_metadata() {
     
 
 
-    use std::{assert_eq, fs};
+    use std::{assert_eq, fs, print};
 
     #[tokio::test]
     async fn test_pull_employess() -> Result<() , anyhow::Error> {
