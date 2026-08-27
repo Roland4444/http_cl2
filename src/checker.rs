@@ -1,6 +1,7 @@
 
 use std::println;
-
+use crate::normalize_tel;
+use crate::ADDITIONAL_FIELDS;
 use crate::{EFES, Employee, http_test, Pack};
 use crate::ADDITIONAL_FIELDS::WORK_POSITION;
 use crate::ADD_DUMP;
@@ -55,8 +56,10 @@ pub fn get_info_str(input: &mut Vec<String>, f: &str) -> String {
         input.swap_remove(pos)
     } else {
         "".to_string()
-    }
+    }    
 }
+
+
 
 pub fn check_pack(pack: Pack, filename: &str, supress_sucess: bool) {
     let mut info_strs = http_test::read_lines_utf8(filename);
@@ -88,38 +91,75 @@ pub fn check_pack(pack: Pack, filename: &str, supress_sucess: bool) {
 
     }
 
-    // for emp in pack.pack {
-    //     if info_strs.is_empty(){
-    //         break;
-    //     }
-    //     println!("\n\n================================================================================"); 
-
-    //     let fio_target  = &emp.last_name;
-    //     let info_str = get_info_str(&mut info_strs, fio_target);
-    //     if info_str.len() == 0 { 
-    //        // println!("RECORD NOT FOUND in TEXT FILE     {} ", filename);
-    //         continue;
-    //     }
-
-    //     let compared = check_work_pos_atom(&emp, info_str.to_string());
+}
 
 
-    //     if compared {
-    //         if supress_sucess {
-    //             continue;
-    //         }
-    //         println!("PROCESS ::{} {} {} {}", emp.name, emp.last_name, emp.middle_name,  fio_target.clone()); 
+pub fn check_phone(emp: &Employee, info_str: String)  -> bool {
+    let tel_from_info_str = normalize_tel(extract_tel_n(info_str.clone()).unwrap(), EFES.to_string());
+    let e_tel = emp.map_add.get(&crate::ADDITIONAL_FIELDS::PERSONAL_MOBILE).unwrap().to_string();
+    let e_tel2 = normalize_tel(e_tel, EFES.to_string());
+   // let emp_tel = normalize_tel(emp.map_add.get(&crate::ADDITIONAL_FIELDS::PERSONAL_MOBILE).unwrap().to_string(), EFES.to_string());
+ //   println!("first::{}\nsecond::{}", tel_from_info_str, e_tel);
 
-    //         println!("ALLES GUTTE!");
-    //     }
-    //     else {
-    //         println!("\n\nPROCESS ::{} {}", emp.name, fio_target.clone()); 
-    //         println!("INFO STR-> {}", info_str);
-    //         println!("REQUIRED WORKPOS ::+{}+\n",  get_work_pos(info_str) );
-    //     }
-    // }
+    let res = tel_from_info_str == e_tel2 ;//emp_tel
+    if !res {
+        println!("PROCESS::{}\n, from binary::{}\n, from csv::{}", info_str, e_tel2, tel_from_info_str);
+
+        println!("STRING WRONG::{}", info_str);
+    }
+    res
+}
+
+pub fn get_f_4_phone_check(input: String ) ->  String {
+    let first_delim = input.find(";").unwrap();  
+    let slice = input.as_str()[first_delim + 1..].to_string();
+    slice.split_whitespace().next().unwrap_or("").to_string()
 
 }
+
+pub fn get_n_4_phone_check(input: String) -> String {
+    let first_delim = input.find(";").unwrap();  
+    let slice = input.as_str()[first_delim + 1..].to_string();
+    slice.split_whitespace().nth(1).unwrap_or("").to_string()
+}
+
+
+pub fn check_pack_phones(pack: Pack, filename: &str) {
+    let mut info_strs = http_test::read_lines_utf8(filename);
+
+
+    for info_str in info_strs{
+        println!("=========================================================================================");
+        let f =  get_f_4_phone_check(info_str.clone());
+        let n =  get_n_4_phone_check(info_str.clone());
+        let mass: Vec<&Employee> = pack.pack.iter().filter(|&q| 
+            q.last_name == f && 
+            q.name == n &&
+            q.map_add.get(&ADDITIONAL_FIELDS::ACTIVE).unwrap().to_string() == "true".to_string() 
+        ).collect();
+
+        if mass.is_empty(){
+            println!("NOT FOUND IN BINARY::{}", info_str);
+            continue;
+        }
+        let emp = mass.get(0).unwrap();
+        let f =  get_f_4_phone_check(info_str.to_string());
+    //    assert_eq!("Абрамов".to_string(), f);
+        let mass: Vec<&Employee> = pack.pack.iter().filter(|&q|  q.last_name == f ).collect();
+        let emp = mass.get(0).unwrap();
+        check_phone(&emp, info_str);       
+        
+    }
+
+}
+
+
+fn extract_tel_n(input: String) -> Option<String>  {
+  input
+        .split(';')
+        .nth(7)
+        .map(|s: &str| s.trim().to_string())
+    }
 
 #[cfg(test)]
 mod tests {
@@ -128,6 +168,31 @@ use crate::ADD_DUMP;
 use std::assert_eq;
 
 use super::*;
+
+use crate::normalize_tel;
+    #[test]
+    fn test_one_4_phone(){
+        let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+        let info: String = "1;Абрамов Антон Александрович;инженер ПТО;Операционный департпмент ;08;январь;1990;+7 988 591 84 07;Стройпро".to_string();
+        let f =  get_f_4_phone_check(info.to_string());
+        let n =  get_n_4_phone_check(info.to_string());
+        assert_eq!("Абрамов".to_string(), f);
+        assert_eq!("Антон".to_string(), n);
+        let mass: Vec<&Employee> = pack.pack.iter().filter(|&q|  q.last_name == f ).collect();
+        let emp = mass.get(0).unwrap();
+        assert_eq!(normalize_tel(extract_tel_n(info.clone()).unwrap(), EFES.to_string()), "9885918407");
+        assert_eq!(true, check_phone(&emp, info));
+
+    }
+
+
+    #[test]
+    fn test_packs_4_phone(){
+        let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+        let filename_info =  "ph_dump.csv";
+        check_pack_phones(pack, filename_info);
+    }
+
 
     #[test]
     fn test_ocr() {

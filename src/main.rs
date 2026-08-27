@@ -511,10 +511,10 @@ fn compare(fromVik: String, fromDump: String) -> bool {    return false;}
 
 
 fn normal(input: String) -> String {
-    input.replace(" ", "").replace("-", "")
+    input.replace(" ", "").replace("-", "").replace("\"", "")
 }
 
-fn normalize_tel(input: String, prefix: String) -> String {
+pub fn normalize_tel(input: String, prefix: String) -> String {
     let normalized = normal(input);
 
     match normalized.strip_prefix(PLUS_7) {
@@ -823,7 +823,8 @@ use futures::stream::Filter;
     fn test_show_active() {
         let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
         pack.pack.iter().filter(|&q|  
-             q.map_add.get(&ADDITIONAL_FIELDS::ACTIVE).unwrap().to_string() == "true".to_string() && q.map_add.get(&ADDITIONAL_FIELDS::UF_DEPARTMENT).unwrap().to_string() != "null".to_string()
+             q.map_add.get(&ADDITIONAL_FIELDS::ACTIVE).unwrap().to_string() == "true".to_string() &&
+             q.map_add.get(&ADDITIONAL_FIELDS::UF_DEPARTMENT).unwrap().to_string() != "null".to_string()
             
             ).for_each(|f| println!("{}", f._to_string()));
         // println!("{}", pack.to_string("\n".to_string()));
