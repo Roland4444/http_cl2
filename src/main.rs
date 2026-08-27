@@ -5,6 +5,7 @@ use reqwest::Client;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, from_str, json};
+use thirtyfour::common::print;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -30,19 +31,21 @@ const PLUS_7: &str = "+7";
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-enum ADDITIONAL_FIELDS {    WORK_POSITION,    PERSONAL_BIRTHDAY,    UF_DEPARTMENT,  PERSONAL_MOBILE}
+enum ADDITIONAL_FIELDS {    WORK_POSITION,    PERSONAL_BIRTHDAY,    UF_DEPARTMENT,  PERSONAL_MOBILE, ACTIVE}
 
 impl ADDITIONAL_FIELDS { fn all_values() -> Vec<Self> {vec![
     ADDITIONAL_FIELDS::WORK_POSITION,
     ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY,
     ADDITIONAL_FIELDS::UF_DEPARTMENT,
-    ADDITIONAL_FIELDS::PERSONAL_MOBILE]    }
+    ADDITIONAL_FIELDS::PERSONAL_MOBILE, 
+    ADDITIONAL_FIELDS::ACTIVE]    }
 
     fn to_string(&self) -> String {match self {
         ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",
         ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => "PERSONAL_BIRTHDAY",
         ADDITIONAL_FIELDS::UF_DEPARTMENT => "UF_DEPARTMENT",
-        ADDITIONAL_FIELDS::PERSONAL_MOBILE  => "PERSONAL_MOBILE"
+        ADDITIONAL_FIELDS::PERSONAL_MOBILE  => "PERSONAL_MOBILE",
+        ADDITIONAL_FIELDS::ACTIVE  => "ACTIVE"
     }.to_string()}
 }
 
@@ -64,8 +67,9 @@ impl std::fmt::Display for ADDITIONAL_FIELDS {
         match self {  ADDITIONAL_FIELDS::WORK_POSITION => write!(f, "Должность"), 
                       ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения"),  
                       ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя"),
-                      ADDITIONAL_FIELDS::PERSONAL_MOBILE => write!(f, "Номер телефона")
-                    }
+                      ADDITIONAL_FIELDS::PERSONAL_MOBILE => write!(f, "Номер телефона"),
+                      ADDITIONAL_FIELDS::ACTIVE => write!(f, "ACTIVE")
+                                        }
     }
 }
 
@@ -111,10 +115,10 @@ impl MsgPack {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-struct Employee {    id: i32,    name: String,    last_name: String,    middle_name: String,    map_add: HashMap<ADDITIONAL_FIELDS, String>,}
+pub struct Employee {    id: i32,    name: String,    last_name: String,    middle_name: String,    map_add: HashMap<ADDITIONAL_FIELDS, String>,}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-struct Pack {    pack: Vec<Employee>,}
+pub struct Pack {    pack: Vec<Employee>,}
 
 impl Pack {
     fn new(pack: Vec<Employee>) -> Self {        Pack { pack }    }
@@ -124,6 +128,7 @@ impl Pack {
         file.write_all(&encoded)?;
         Ok(())
     }
+
 
     fn deserialize_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error>> {deserialize_from_file(filename)}
 
@@ -339,11 +344,12 @@ async fn grub_data_with_add_params(    index_start: i32,    index_stop: i32,    
                             for item in params.iter() {
                                 let enum_ = get_enum__by_string(item);
                                 let mut value = user.get(enum_.to_string()).unwrap_or(&Value::Null);
-                                if enum_ == ADDITIONAL_FIELDS::PERSONAL_MOBILE{
-                                    let norm = normalize_tel(value.to_string(), EFES.to_string());
-                                    map22.insert(enum_, value.to_string());
-                                    continue;
-                                }
+                                // if enum_ == ADDITIONAL_FIELDS::PERSONAL_MOBILE{
+                                //     let norm = normalize_tel(value.to_string(), EFES.to_string());
+                                //     map22.insert(enum_, value.to_string());
+                                //     continue;
+                                // }
+                             //   println!("INSERTED::{}:{}", enum_, value);
                                 map22.insert(enum_, value.to_string());
                             }
 
@@ -376,7 +382,8 @@ async fn try_grub() -> Result<(), Box<dyn std::error::Error>> {
             ADDITIONAL_FIELDS::WORK_POSITION.to_string(),
             ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY.to_string(),
             ADDITIONAL_FIELDS::UF_DEPARTMENT.to_string(),
-            ADDITIONAL_FIELDS::PERSONAL_MOBILE.to_string()
+            ADDITIONAL_FIELDS::PERSONAL_MOBILE.to_string(),
+            ADDITIONAL_FIELDS::ACTIVE.to_string()
         ],
     ).await; //DEFAULT_DUMP).await;
 
@@ -671,6 +678,7 @@ mod tests {
 
     use chrono::format;
     use futures::TryFutureExt;
+use futures::stream::Filter;
     use crate::File;
     use crate::http_Proc::{consumer_loop_proc, fetch_recent_list_raw};
 
@@ -809,6 +817,19 @@ mod tests {
         println!("{}", pack.to_string("\n".to_string()));
         assert_eq!(            1,            pack.get_id_by_fi("Цыбульский Сергей".to_string())                .expect("shit")        );
     }
+
+
+    #[test]
+    fn test_show_active() {
+        let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+        pack.pack.iter().filter(|&q|  
+             q.map_add.get(&ADDITIONAL_FIELDS::ACTIVE).unwrap().to_string() == "true".to_string() && q.map_add.get(&ADDITIONAL_FIELDS::UF_DEPARTMENT).unwrap().to_string() != "null".to_string()
+            
+            ).for_each(|f| println!("{}", f._to_string()));
+        // println!("{}", pack.to_string("\n".to_string()));
+        // assert_eq!(            1,            pack.get_id_by_fi("Цыбульский Сергей".to_string())                .expect("shit")        );
+    }
+
 
     #[test]
     fn test_get_id2_poetic() {
