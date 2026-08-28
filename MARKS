@@ -825,3 +825,147 @@ TMENT":[79],"USER_TYPE":"employee"}],"next":50,"total":231,"time":{"start":17863
 58166,"finish":1786358166.564243,"duration":0.5642430782318115,"processing":0,"d
 ate_start":"2026-08-10T13:36:06+03:00","date_finish":"2026-08-10T13:36:06+03:00"
 ,"operating_reset_at":1786358766,"operating":0}}
+
+
+
+
+------------------------------------------
+USER:: {"ID":"189","XML_ID":"58982932","ACTIVE":true,"NAME":"Лилия","LAST_NAME":"Калюжина","SECOND_NAME":"Олеговна","EMAIL":"lkalyjina@relits.ru",
+"LAST_LOGIN":"2026-08-28T09:13:24+03:00","DATE_REGISTER":"2024-12-02T03:00:00+03:00","TIME_ZONE":"Europe/Astrakhan","IS_ONLINE":"Y","TIMESTAMP_X":{},
+"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"F","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1991-10-26T03:00:00+02:00",
+"PERSONAL_PHOTO":"https://cdn-ru.bitrix24.ru/b26039220/main/1a7/1a7875012da2ba652ebfd43ce64fee02/WhatsApp Image 2024-12-02 at 16.59.49.png",
+"PERSONAL_MOBILE":"89371288000","PERSONAL_CITY":"","WORK_PHONE":"","WORK_POSITION":"Бизнес-аналитик","UF_EMPLOYMENT_DATE":"2024-12-02T03:00:00+03:00",
+"UF_DEPARTMENT":[112],
+"UF_USR_1787895367901":"Операционный департамент","UF_USR_1787895573295":"Управление технического заказчика","USER_TYPE":"employee"}
+ID: "189"
+Имя: "Лилия"
+Фамилия: "Калюжина"
+Отчество: "Олеговна"
+ДОП ПАРАМЕТРЫ: Номер телефона: "89371288000", ACTIVE: true, Должность: "Бизнес-аналитик", День рождения: "1991-10-26T03:00:00+02:00", Отдел пользователя: [112]
+---
+
+
+
+USER:: {"ID":"1","XML_ID":"49915858","ACTIVE":true,"NAME":"Сергей","LAST_NAME":"Цыбульский","SECOND_NAME":"Александрович",
+"EMAIL":"scybulskiy@relits.ru","LAST_LOGIN":"2026-08-28T09:49:22+03:00","DATE_REGISTER":"2023-06-20T03:00:00+03:00","TIME_ZONE":"Europe/Samara",
+"IS_ONLINE":"N","TIMESTAMP_X":{},"LAST_ACTIVITY_DATE":{},"PERSONAL_GENDER":"M","PERSONAL_WWW":"","PERSONAL_BIRTHDAY":"1984-09-01T03:00:00+04:00",
+"PERSONAL_PHOTO":"https://cdn-ru.bitrix24.ru/b26039220/main/f91/f91e86bc285ff011d9800229baea38bb/0010.jpg.png","PERSONAL_MOBILE":"+79881701789","PERSONAL_CITY":"Астрахань",
+"WORK_PHONE":"","WORK_POSITION":"Директор по ИТ","UF_EMPLOYMENT_DATE":"",
+"UF_DEPARTMENT":[102]
+"UF_USR_1787895367901":"Операционный департамент",
+"UF_USR_1787895573295":"Управление ИТ",
+
+"USER_TYPE":"employee"}
+ID: "1"
+Имя: "Сергей"
+Фамилия: "Цыбульский"
+Отчество: "Александрович"
+ДОП ПАРАМЕТРЫ: Должность: "Директор по ИТ", День рождения: "1984-09-01T03:00:00+04:00", Номер телефона: "+79881701789", ACTIVE: true, Отдел пользователя: [102]
+
+
+
+
+
+curl -X POST "https://relits.bitrix24.ru/rest/336/w1gzyqwhiipe1jph/user.update" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ID": "229",
+    "UF_USR_1787895367901": "Операционный департамент",
+    "UF_USR_1787895573295": "Управление строительством"
+  }'
+
+
+
+  curl -X GET "https://relits.bitrix24.ru/rest/336/w1gzyqwhiipe1jph/user.field?ID=UF_USR_1787903292765"
+
+
+curl -X GET "https://relits.bitrix24.ru/rest/336/w1gzyqwhiipe1jph/user.fields"
+
+
+
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{}' \
+  "https://relits.bitrix24.ru/rest/336/w1gzyqwhiipe1jph/user.userfield.list"
+
+
+
+
+{"result":
+{"ID":"ID","XML_ID":"Внешний код","ACTIVE":"Активность",
+"NAME":"Имя","LAST_NAME":"Фамилия","SECOND_NAME":"Отчество",
+"TITLE":"Список пользователей","EMAIL":"E-Mail","LAST_LOGIN":"Последняя авторизация",
+"DATE_REGISTER":"Дата регистрации","TIME_ZONE":"TIME_ZONE","IS_ONLINE":"IS_ONLINE",
+"TIMESTAMP_X":"TIMESTAMP_X","LAST_ACTIVITY_DATE":"LAST_ACTIVITY_DATE","PERSONAL_GENDER":"Пол",
+"PERSONAL_PROFESSION":"Профессия","PERSONAL_WWW":"Домашняя страничка","PERSONAL_BIRTHDAY":"Дата рождения",
+"PERSONAL_PHOTO":"Фотография","PERSONAL_ICQ":"ICQ","PERSONAL_PHONE":"Личный телефон","PERSONAL_FAX":"Факс","PERSONAL_MOBILE":"Личный мобильный",
+"PERSONAL_PAGER":"Пейджер","PERSONAL_STREET":"Улица проживания","PERSONAL_CITY":"Город проживания",
+"PERSONAL_STATE":"Область \/ край","PERSONAL_ZIP":"Почтовый индекс","PERSONAL_COUNTRY":"Страна","PERSONAL_MAILBOX":"Почтовый ящик",
+"PERSONAL_NOTES":"Дополнительные заметки","WORK_PHONE":"Телефон компании","WORK_COMPANY":"Компания","WORK_POSITION":"Должность","WORK_DEPARTMENT":"Отдел",
+"WORK_WWW":"Сайт компании","WORK_FAX":"WORK_FAX","WORK_PAGER":"WORK_PAGER","WORK_STREET":"WORK_STREET","WORK_MAILBOX":"WORK_MAILBOX","WORK_CITY":"Город работы",
+"WORK_STATE":"WORK_STATE","WORK_ZIP":"WORK_ZIP","WORK_COUNTRY":"WORK_COUNTRY","WORK_PROFILE":"WORK_PROFILE","WORK_LOGO":"WORK_LOGO","WORK_NOTES":"WORK_NOTES",
+"UF_SKYPE_LINK":"Ссылка на чат в Skype","UF_ZOOM":"Zoom","UF_EMPLOYMENT_DATE":"Дата принятия на работу","UF_TIMEMAN":"Учет рабочего времени","UF_DEPARTMENT":"Подразделения",
+"UF_INTERESTS":"Интересы","UF_SKILLS":"Навыки","UF_WEB_SITES":"Другие сайты","UF_XING":"Xing","UF_LINKEDIN":"LinkedIn","UF_FACEBOOK":"Facebook","UF_TWITTER":"Twitter",
+"UF_SKYPE":"Microsoft Teams","UF_DISTRICT":"Район","UF_PHONE_INNER":"Внутренний телефон","UF_USR_1787895367901":"Департамент","UF_USR_1787895573295":"Управление",
+"UF_USR_1787903292765":"Департамент","UF_USR_1787903545634":"Управление","USER_TYPE":"USER_TYPE"},"time":{"start":1787904233,"finish":1787904233.37635,"duration":0.37634992599487305,"processing":0,"date_start":"2026-08-28T11:03:53+03:00","date_finish":"2026-08-28T11:03:53+03:00","operating_
+
+
+
+curl -X POST "https://relits.bitrix24.ru/rest/336/w1gzyqwhiipe1jph/user.update" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ID": "229",
+    "UF_USR_1787903292765": "634",
+    "UF_USR_1787903545634": "650"
+  }'
+
+
+
+
+
+{"result":[{"ID":"976",
+"ENTITY_ID":"USER","FIELD_NAME":"UF_USR_1787895367901",
+"USER_TYPE_ID":"string","XML_ID":null,"SORT":"100","MULTIPLE":"N",
+"MANDATORY":"N","SHOW_FILTER":"E","SHOW_IN_LIST":"Y","EDIT_IN_LIST":"Y",
+"IS_SEARCHABLE":"N","SETTINGS":{"SIZE":20,"ROWS":1,"REGEXP":"","MIN_LENGTH":0,
+"MAX_LENGTH":0,"DEFAULT_VALUE":""}},{"ID":"978","ENTITY_ID":"USER",
+"FIELD_NAME":"UF_USR_1787895573295","USER_TYPE_ID":"string","XML_ID":null,
+"SORT":"100","MULTIPLE":"N","MANDATORY":"N","SHOW_FILTER":"E","SHOW_IN_LIST":"Y",
+"EDIT_IN_LIST":"Y","IS_SEARCHABLE":"N","SETTINGS":{"SIZE":20,"ROWS":1,"REGEXP":"","MIN_LENGTH":0,
+"MAX_LENGTH":0,"DEFAULT_VALUE":""}},{"ID":"980","ENTITY_ID":"USER","FIELD_NAME":"UF_USR_1787903292765",
+"USER_TYPE_ID":"enumeration","XML_ID":null,"SORT":"100","MULTIPLE":"N","MANDATORY":"N","SHOW_FILTER":"E",
+"SHOW_IN_LIST":"Y","EDIT_IN_LIST":"Y","IS_SEARCHABLE":"N","SETTINGS":{"DISPLAY":"UI","LIST_HEIGHT":1,"CAPTION_NO_VALUE":"",
+"SHOW_NO_VALUE":"Y"},"LIST":[{"ID":"634","SORT":"0","VALUE":"Операционный департамент","DEF":"N","XML_ID":"b39173c61c5d9044a6821354f9626925"},
+{"ID":"636","SORT":"100","VALUE":"Административный департамент","DEF":"N","XML_ID":"30281a988eb3c495203d72d6440cbd6e"}]},
+{"ID":"982","ENTITY_ID":"USER","FIELD_NAME":"UF_USR_1787903545634","USER_TYPE_ID":"enumeration",
+"XML_ID":null,"SORT":"100","MULTIPLE":"N","MANDATORY":"N","SHOW_FILTER":"E","SHOW_IN_LIST":"Y",
+"EDIT_IN_LIST":"Y","IS_SEARCHABLE":"N","SETTINGS":{"DISPLAY":"UI","LIST_HEIGHT":1,"CAPTION_NO_VALUE":"",
+"SHOW_NO_VALUE":"Y"},
+"LIST":
+[{"ID":"638","SORT":"0","VALUE":"Управление маркетинга","DEF":"N","XML_ID":"f8ef7c85e6c9f90e1c6cab12439b54cd"},
+{"ID":"640","SORT":"100","VALUE":"Управление продаж","DEF":"N","XML_ID":"398f67f82399b8837cdfd301f81db364"},
+{"ID":"642","SORT":"200","VALUE":"Финансовое управление","DEF":"N","XML_ID":"43f88681606b9b5e9fd61dad3a7d1b55"},
+{"ID":"644","SORT":"300","VALUE":"Управление проектирования","DEF":"N","XML_ID":"322ed95f4393259c4dca4c62c0c72287"},
+{"ID":"646","SORT":"400","VALUE":"Управление ИТ","DEF":"N","XML_ID":"d8eedac9184b65c69dd54074df33099f"},
+{"ID":"648","SORT":"500","VALUE":"Управление Технического заказчика","DEF":"N","XML_ID":"751a9833c862b90e8011efcd76405eb9"},
+{"ID":"650","SORT":"600","VALUE":"Управление строительства","DEF":"N","XML_ID":"9e939a307ac381fa50f28e589b092386"},
+{"ID":"652","SORT":"700","VALUE":"Управление сервиса","DEF":"N","XML_ID":"28fba2ac8569091cd31599a0531556b9"}]}]}
+
+
+
+
+    #[tokio::test]
+    async fn test_update_atom(){
+        let webhook = get_webhook();
+        let departments__ = load_departments_from_file("deps.js");
+        update_user_departments__(    webhook.as_str(),    "229",               "132",             &departments__).await;
+    }
+
+
+    curl -X POST "https://relits.bitrix24.ru/rest/336/w1gzyqwhiipe1jph/user.update" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ID": "135",
+    "UF_USR_1787903292765": "634",
+    "UF_USR_1787903545634": "650"
+  }'

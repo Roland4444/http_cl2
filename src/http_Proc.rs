@@ -3,6 +3,10 @@ use axum::{    Router,    body::Bytes,    http::StatusCode,    response::IntoRes
 use futures_util::{SinkExt, StreamExt};
 use anyhow::{Context, Result};
 use futures::stream::{self,  TryStreamExt}; // в начало файла
+
+use reqwest;  // <-- Добавить это
+
+
 use reqwest::Client;
 use serde_json::{Value, json};
 use std::collections::HashSet;
@@ -953,6 +957,173 @@ async fn send_to_decode(text: &str) -> Result<String, Box<dyn Error>> {
     let body = response.text().await?;
     Ok(body)
 }
+#[derive(Debug, Deserialize, Clone)]
+struct Department {
+    #[serde(rename = "ID")]
+    id: String,
+    #[serde(rename = "NAME")]
+    name: String,
+    #[serde(default, rename = "PARENT")]
+    parent: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct DepartmentJson {
+    result: Vec<Department>,
+}
+
+// ==================== ВЫЧИСЛЕНИЕ ПОЛЕЙ ====================
+
+
+
+// ==================== ЧТЕНИЕ ФАЙЛА ====================
+
+/// Читает файл построчно в UTF-8
+
+/// Загружает иерархию отделов из JSON файла
+fn load_departments_from_file(path: &str) -> Result<Vec<Department>, Box<dyn std::error::Error>> {
+    let lines = read_lines_utf8(path);
+    
+    if lines.is_empty() {
+        return Err(format!("Файл {} пуст или не найден", path).into());
+    }
+    
+    // Объединяем строки в один JSON
+    let json_content = lines.join("\n");
+    
+    // Пробуем распарсить как {"result": [...]}
+    let json: DepartmentJson = serde_json::from_str(&json_content)?;
+    Ok(json.result)
+}
+
+// ==================== ВЫЧИСЛЕНИЕ ПОЛЕЙ ====================
+
+/// Вычисляет ID департамента и управления по ID отдела пользователя
+fn compute_department_ids(
+    user_department_id: &str,
+    departments: &[Department],
+) -> Option<(String, String)> {
+    let dept_map: HashMap<&str, &Department> = departments
+        .iter()
+        .map(|d| (d.id.as_str(), d))
+        .collect();
+
+    let mut hierarchy: Vec<&Department> = Vec::new();
+    let mut current_id = user_department_id;
+
+    while let Some(dept) = dept_map.get(current_id) {
+        hierarchy.push(dept);
+        match &dept.parent {
+            Some(parent_id) => current_id = parent_id.as_str(),
+            None => break,
+        }
+    }
+
+    if hierarchy.is_empty() {
+        return None;
+    }
+
+    // Департамент: ID 92 → 634
+    let dept_enum_id = hierarchy
+        .iter()
+        .find(|d| d.id == "92")
+        .map(|_| "634".to_string())
+        .unwrap_or("634".to_string());
+
+    // Управление: маппинг ID родителя в ID справочника
+    let mgmt_enum_id = if hierarchy.len() >= 2 {
+        match hierarchy[1].id.as_str() {
+            "124" => "650", // Управление строительства
+            "110" => "648", // Управление Технического заказчика
+            "102" => "646", // Управление ИТ
+            "144" => "638", // Управление маркетинга
+            "146" => "640", // Управление продаж
+            "156" => "642", // Финансовое управление
+            "96"  => "644", // Управление проектирования
+            "170" => "652", // Управление сервиса
+            _ => "650",
+        }.to_string()
+    } else {
+        "650".to_string()
+    };
+
+    Some((dept_enum_id, mgmt_enum_id))
+}
+
+/// Формирует JSON payload для Bitrix24 API
+fn build_update_payload(user_id: &str, dept_id: &str, mgmt_id: &str) -> serde_json::Value {
+    serde_json::json!({
+        "ID": user_id,
+        "UF_USR_1787903292765": dept_id,
+        "UF_USR_1787903545634": mgmt_id
+    })
+}
+
+
+
+ fn get_test_departments() -> Vec<Department> {
+        load_departments_from_file("deps.js").expect("Не удалось загрузить deps.js")
+    }
+async fn update_user_departments(
+    webhook_url: &str,
+    user_id: &str,
+    department_id: &str,
+    departments: &[Department],
+) -> Result<(), Box<dyn std::error::Error>> {
+    let client: Client = Client::new();
+
+    // Вычисляем ID департамента и управления
+    let (dept_enum_id, mgmt_enum_id) = compute_department_ids(department_id, departments)
+        .ok_or("Не удалось вычислить поля для пользователя")?;
+
+    // Выводим вычисляемые параметры в консоль
+    println!("=== Обновление пользователя {} ===", user_id);
+    println!("  Отдел пользователя: {}", department_id);
+    println!("  Департамент (UF_USR_1787903292765): {}", dept_enum_id);
+    println!("  Управление (UF_USR_1787903545634): {}", mgmt_enum_id);
+
+    // Формируем payload для обновления
+    let payload = json!({
+        "ID": user_id,
+        "UF_USR_1787903292765": dept_enum_id,
+        "UF_USR_1787903545634": mgmt_enum_id
+    });
+
+    // Отправляем запрос на обновление
+    let update_response = client
+        .post(format!("{}/user.update", webhook_url))
+        .json(&payload)
+        .send()
+        .await?;
+
+    let result: Value = update_response.json().await?;
+
+    if result.get("result").is_some() {
+        println!("✓ Пользователь {} успешно обновлён", user_id);
+        Ok(())
+    } else {
+        println!("✗ Ошибка Bitrix24: {:?}", result);
+        Err(format!("Ошибка Bitrix24: {:?}", result).into())
+    }
+}
+/// Обновляет поля пользователя с загрузкой отделов из файла
+/// 
+/// # Arguments
+/// * `webhook_url` - URL вебхука Bitrix24
+/// * `user_id` - ID пользователя в Bitrix24
+/// * `department_id` - ID отдела пользователя
+/// * `deps_file` - Путь к файлу с иерархией отделов (deps.js)
+pub async fn update_user_with_file(
+    webhook_url: &str,
+    user_id: &str,
+    department_id: &str,
+    deps_file: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let departments = load_departments_from_file(deps_file)?;
+    update_user_departments(webhook_url, user_id, department_id, &departments).await
+}
+
+
 
 
 
@@ -962,6 +1133,8 @@ async fn main() -> anyhow::Result<()> {    spawn().await}
 #[cfg(test)]
 mod tests {
     use core::panic;
+use std::assert_eq;
+use std::println;
 
     use crate::http_Proc;
 
@@ -1076,4 +1249,245 @@ mod tests {
                   
     }
 
+///////////////  DEPS tests    
+
+
+    #[test]
+    fn test_read_file_success() {
+        let lines = read_lines_utf8("deps.js");
+        assert!(!lines.is_empty(), "Файл deps.js должен существовать и не быть пустым");
+        println!("Прочитано строк: {}", lines.len());
+    }
+
+    #[test]
+    fn test_read_file_not_found() {
+        let lines = read_lines_utf8("nonexistent_file.json");
+        assert!(lines.is_empty(), "Несуществующий файл должен вернуть пустой вектор");
+    }
+
+    #[test]
+    fn test_load_departments() {
+        let departments = get_test_departments();
+        assert!(!departments.is_empty(), "Список отделов не должен быть пустым");
+        println!("Всего отделов: {}", departments.len());
+    }
+
+    #[test]
+    fn test_user_229_muzdanbaev() {
+        // Пользователь 229: отдел 132 (Строительный участок)
+        // Иерархия: 132 → 124 → 92
+        let departments = get_test_departments();
+        let (dept_id, mgmt_id) = compute_department_ids("132", &departments).unwrap();
+
+        assert_eq!(dept_id, "634", "Департамент должен быть Операционный (634)");
+        assert_eq!(mgmt_id, "650", "Управление должно быть строительства (650)");
+    }
+
+    #[test]
+    fn test_user_336_pastushkov() {
+        // Пользователь 336: отдел 108 (Отдел ИИ, интеграции и разработки)
+        // Иерархия: 108 → 102 → 92
+        let departments = get_test_departments();
+        let (dept_id, mgmt_id) = compute_department_ids("108", &departments).unwrap();
+
+        assert_eq!(dept_id, "634", "Департамент должен быть Операционный (634)");
+        assert_eq!(mgmt_id, "646", "Управление должно быть ИТ (646)");
+    }
+
+    #[test]
+    fn test_user_189_kalyuzhina() {
+        // Пользователь 189: отдел 112 (Отдел управления проектами)
+        // Иерархия: 112 → 110 → 92
+        let departments = get_test_departments();
+        let (dept_id, mgmt_id) = compute_department_ids("112", &departments).unwrap();
+
+        assert_eq!(dept_id, "634", "Департамент должен быть Операционный (634)");
+        assert_eq!(mgmt_id, "648", "Управление должно быть Тех. заказчика (648)");
+    }
+
+    #[test]
+    fn test_unknown_department() {
+        let departments = get_test_departments();
+        let result = compute_department_ids("999", &departments);
+
+        assert!(result.is_none(), "Неизвестный отдел должен вернуть None");
+    }
+
+    #[test]
+    fn test_build_payload() {
+        let payload = build_update_payload("229", "634", "650");
+
+        assert_eq!(payload["ID"], "229");
+        assert_eq!(payload["UF_USR_1787903292765"], "634");
+        assert_eq!(payload["UF_USR_1787903545634"], "650");
+    }
+
+    #[test]
+    fn test_hierarchy_building() {
+        let departments = get_test_departments();
+        let dept_map: HashMap<&str, &Department> = departments
+            .iter()
+            .map(|d| (d.id.as_str(), d))
+            .collect();
+
+        // Отдел 132 должен иметь родителя 124
+        let dept_132 = dept_map.get("132").unwrap();
+        assert_eq!(dept_132.parent, Some("124".to_string()));
+
+        // Отдел 124 должен иметь родителя 92
+        let dept_124 = dept_map.get("124").unwrap();
+        assert_eq!(dept_124.parent, Some("92".to_string()));
+
+        // Отдел 92 должен иметь родителя 178
+        let dept_92 = dept_map.get("92").unwrap();
+        assert_eq!(dept_92.parent, Some("178".to_string()));
+    }
+
+    #[test]
+    fn test_root_department() {
+        let departments = get_test_departments();
+        let dept_map: HashMap<&str, &Department> = departments
+            .iter()
+            .map(|d| (d.id.as_str(), d))
+            .collect();
+
+        // Корневой отдел ID 1 не должен иметь родителя
+        let root = dept_map.get("1").unwrap();
+        assert!(root.parent.is_none(), "Корневой отдел не должен иметь родителя");
+        assert_eq!(root.name, "RES DEVELOPMENT УЧРЕДИТЕЛИ");
+    }
+
+#[tokio::test]
+async fn test_update_atom() {
+    let webhook = get_webhook();
+    let departments = load_departments_from_file("deps.js").expect("Не удалось загрузить deps.js");
+    update_user_departments(webhook.as_str(), "229", "132", &departments).await;
 }
+
+use crate::Pack;
+use crate::Employee;
+use crate::ADD_DUMP;
+#[tokio::test]
+async fn test_update_atom_rahman() {
+    let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+    let mass: Vec<&Employee> = pack.pack.iter().filter(|&q|  q.last_name == "Рахман" ).collect();
+    println!("{}", mass[0]._to_string());
+    let emp =  mass[0];
+    let deps_user =  emp.map_add.get(&crate::ADDITIONAL_FIELDS::UF_DEPARTMENT).unwrap();
+    let id_user = emp.id.to_string();
+    if deps_user.contains(",") {
+        println!("WARNING!!! user {} has multiple deps", emp._to_string());
+    }
+    assert_eq!("104",  deps_user.replace("[", "").replace("]", "") );
+    assert_eq!("135",  id_user );
+
+
+    let webhook = get_webhook();
+    let departments = load_departments_from_file("deps.js").expect("Не удалось загрузить deps.js");
+    let _ =update_user_departments(webhook.as_str(), id_user.as_str(), deps_user.as_str(), &departments).await;
+}
+
+
+#[tokio::test]
+async fn test_update_atom_rahman2() {
+    let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+    let mass: Vec<&Employee> = pack.pack.iter().filter(|&q| q.last_name == "Рахман").collect();
+    println!("{}", mass[0]._to_string());
+    let emp = mass[0];
+    
+    let deps_user = emp.map_add.get(&crate::ADDITIONAL_FIELDS::UF_DEPARTMENT).unwrap();
+    let id_user = emp.id.to_string();
+    
+    if deps_user.contains(",") {
+        println!("WARNING!!! user {} has multiple deps", emp._to_string());
+    }
+    
+    // Проверяем формат
+    assert_eq!("[104]", deps_user);
+    assert_eq!("135", id_user);
+
+    // Извлекаем чистый ID отдела (убираем скобки)
+    let dept_id = deps_user.replace("[", "").replace("]", "");
+    assert_eq!("104", &dept_id);
+
+    let webhook = get_webhook();
+    let departments = load_departments_from_file("deps.js").expect("Не удалось загрузить deps.js");
+    
+    // Вызываем функцию и обрабатываем результат
+    let result = update_user_departments(webhook.as_str(), &id_user, &dept_id, &departments).await;
+    
+    // Выводим результат
+    match result {
+        Ok(_) => println!("✓ Тест завершён успешно"),
+        Err(e) => println!("✗ Ошибка обновления: {}", e),
+    }
+    
+    // Или через ? для propagation ошибки
+    // update_user_departments(webhook.as_str(), &id_user, &dept_id, &departments).await?;
+}
+
+
+use crate::ADDITIONAL_FIELDS;
+#[tokio::test]
+async fn test_update_atom_packed() {
+    let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+
+    // Используем for цикл вместо .for_each() для async операций
+    for emp in pack.pack.iter().filter(|&q| 
+        q.map_add.get(&ADDITIONAL_FIELDS::ACTIVE).unwrap().to_string() == "true"
+    ) {
+        println!("PROCESS::{}  {}", emp.name, emp.last_name);
+        
+        let deps_user = emp.map_add.get(&crate::ADDITIONAL_FIELDS::UF_DEPARTMENT).unwrap();
+        let id_user = emp.id.to_string();
+        
+        if deps_user.contains(",") {
+            println!("WARNING!!! user {} has multiple deps", emp._to_string());
+        }
+
+        let dept_id = deps_user.replace("[", "").replace("]", "");
+
+        let webhook = get_webhook();
+        let departments = load_departments_from_file("deps.js").expect("Не удалось загрузить deps.js");
+
+        let result = update_user_departments(webhook.as_str(), &id_user, &dept_id, &departments).await;
+
+        match result {
+            Ok(_) => println!("✓ Тест завершён успешно"),
+            Err(e) => println!("✗ Ошибка обновления: {}", e),
+        }
+    }
+
+    // Дополнительная проверка для Рахмана
+    let mass: Vec<&Employee> = pack.pack.iter().filter(|&q| q.last_name == "Рахман").collect();
+    println!("{}", mass[0]._to_string());
+    let emp = mass[0];
+    
+    let deps_user = emp.map_add.get(&crate::ADDITIONAL_FIELDS::UF_DEPARTMENT).unwrap();
+    let id_user = emp.id.to_string();
+    
+    if deps_user.contains(",") {
+        println!("WARNING!!! user {} has multiple deps", emp._to_string());
+    }
+    
+    assert_eq!("[104]", deps_user);
+    assert_eq!("135", id_user);
+
+    let dept_id = deps_user.replace("[", "").replace("]", "");
+    assert_eq!("104", &dept_id);
+
+    let webhook = get_webhook();
+    let departments = load_departments_from_file("deps.js").expect("Не удалось загрузить deps.js");
+    
+    let result = update_user_departments(webhook.as_str(), &id_user, &dept_id, &departments).await;
+    
+    match result {
+        Ok(_) => println!("✓ Тест завершён успешно"),
+        Err(e) => println!("✗ Ошибка обновления: {}", e),
+    }
+}
+}
+
+///////////////////////////////////////////    
+
+
