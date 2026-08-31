@@ -15,6 +15,7 @@ pub mod http_test;
 pub mod http_synteka;
 pub mod checker;
 pub mod r_oc;
+pub mod web_accelerator;
 use std::thread;
 use std::time::Duration;
 use common::*;
@@ -31,21 +32,23 @@ const PLUS_7: &str = "+7";
 
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-enum ADDITIONAL_FIELDS {    WORK_POSITION,    PERSONAL_BIRTHDAY,    UF_DEPARTMENT,  PERSONAL_MOBILE, ACTIVE}
+enum ADDITIONAL_FIELDS {    WORK_POSITION,    PERSONAL_BIRTHDAY,    UF_DEPARTMENT,  PERSONAL_MOBILE, ACTIVE, EMAIL}
 
 impl ADDITIONAL_FIELDS { fn all_values() -> Vec<Self> {vec![
     ADDITIONAL_FIELDS::WORK_POSITION,
     ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY,
     ADDITIONAL_FIELDS::UF_DEPARTMENT,
     ADDITIONAL_FIELDS::PERSONAL_MOBILE, 
-    ADDITIONAL_FIELDS::ACTIVE]    }
+    ADDITIONAL_FIELDS::ACTIVE,
+    ADDITIONAL_FIELDS::EMAIL]    }
 
     fn to_string(&self) -> String {match self {
         ADDITIONAL_FIELDS::WORK_POSITION => "WORK_POSITION",
         ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => "PERSONAL_BIRTHDAY",
         ADDITIONAL_FIELDS::UF_DEPARTMENT => "UF_DEPARTMENT",
         ADDITIONAL_FIELDS::PERSONAL_MOBILE  => "PERSONAL_MOBILE",
-        ADDITIONAL_FIELDS::ACTIVE  => "ACTIVE"
+        ADDITIONAL_FIELDS::ACTIVE  => "ACTIVE",
+        ADDITIONAL_FIELDS::EMAIL   => "EMAIL"
     }.to_string()}
 }
 
@@ -68,8 +71,8 @@ impl std::fmt::Display for ADDITIONAL_FIELDS {
                       ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY => write!(f, "День рождения"),  
                       ADDITIONAL_FIELDS::UF_DEPARTMENT => write!(f, "Отдел пользователя"),
                       ADDITIONAL_FIELDS::PERSONAL_MOBILE => write!(f, "Номер телефона"),
-                      ADDITIONAL_FIELDS::ACTIVE => write!(f, "ACTIVE")
-                                        }
+                      ADDITIONAL_FIELDS::ACTIVE => write!(f, "ACTIVE"),
+                      ADDITIONAL_FIELDS::EMAIL  => write!(f, "EMAIL")                                       }
     }
 }
 
@@ -383,7 +386,8 @@ async fn try_grub() -> Result<(), Box<dyn std::error::Error>> {
             ADDITIONAL_FIELDS::PERSONAL_BIRTHDAY.to_string(),
             ADDITIONAL_FIELDS::UF_DEPARTMENT.to_string(),
             ADDITIONAL_FIELDS::PERSONAL_MOBILE.to_string(),
-            ADDITIONAL_FIELDS::ACTIVE.to_string()
+            ADDITIONAL_FIELDS::ACTIVE.to_string(),
+            ADDITIONAL_FIELDS::EMAIL.to_string()
         ],
     ).await; //DEFAULT_DUMP).await;
 

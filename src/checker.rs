@@ -220,8 +220,61 @@ use crate::normalize_tel;
     // //    let data_pack = pack.pack.iter().filter(|&a| a.last_name != "" ).collect();
         let filename_info =  "workpos.info";
         check_pack(pack, filename_info, true);
-
     }
+
+
+    use crate::web_accelerator::open_browser_and_wait;
+    // #[tokio::test]
+    // async fn force_login_glpi_test(){
+    //     let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("msg");
+    //     let mut counter = 1;
+    //     let base_url =  "https://glpi.relits.ru/chat";
+    //     pack.pack.iter().filter(|&q|  q.map_add.get(&ADDITIONAL_FIELDS::ACTIVE).unwrap() == "true" && 
+    //                                              q.map_add.get(&ADDITIONAL_FIELDS::UF_DEPARTMENT).unwrap()!="null" &&
+    //                                              q.map_add.get(&ADDITIONAL_FIELDS::EMAIL).unwrap().contains("@")).for_each(|f|  {
+    //                                                 counter += 1;                                                    
+    //                                                 println!("{}      EMPS->{}", counter, f._to_string());
+    //                                                 open_browser_and_wait(base_url, f.map_add.get(&ADDITIONAL_FIELDS::EMAIL)).await;
+    //                                             });
+
+    // }
+
+   // #[tokio::test]
+    async fn force_login_glpi_test() -> Result<(), Box<dyn std::error::Error>> {
+    let mut pack = Pack::deserialize_from_file(ADD_DUMP).expect("Ошибка загрузки данных");
+    let mut counter = 1;
+    let base_url = "https://glpi.relits.ru";////chat";
+ //https://glpi.relits.ru?user=nmaksimova%40relits.ru
+    for emp in pack.pack.iter() {
+        // Фильтруем по условиям
+        let active = emp.map_add.get(&ADDITIONAL_FIELDS::ACTIVE).unwrap();
+        if active != "true" {
+            continue;
+        }
+
+        let dept = emp.map_add.get(&ADDITIONAL_FIELDS::UF_DEPARTMENT).unwrap();
+        if dept == "null" {
+            continue;
+        }
+
+        let email = emp.map_add.get(&ADDITIONAL_FIELDS::EMAIL).unwrap();
+        if !email.contains('@') {
+            continue;
+        }
+
+        counter += 1;
+        println!("{}      EMPS->{}", counter, emp._to_string());
+
+        // Асинхронный вызов с обработкой ошибок
+        if let Err(e) = open_browser_and_wait(base_url, email).await {
+            eprintln!("Ошибка для {}: {}", email, e);
+            // Если нужно прервать тест при первой ошибке – используйте ?
+            // return Err(e.into());
+        }
+    }
+
+    Ok(())
+}
 
     
 }
