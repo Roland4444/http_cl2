@@ -182,7 +182,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let API_KEY = get_webhook_(KEY_FILE);   
     let file_path = "___1.jpg"; 
 
-    let v = vec!["1.jpg", "1.tif", "1.bmp", "1.gif"];
+   // let v = vec!["1.jpg", "1.tif", "1.bmp", "1.gif"];
+    let v = vec!["1.jpg", "1.bmp"];
 
     for i in v {
         let image_data = std::fs::read(i)?;
@@ -229,8 +230,7 @@ use super::*;
     async fn test_ocr()-> Result<(), Box<dyn std::error::Error>> {
         let API_KEY = get_webhook_(KEY_FILE);   
         let file_path = "___1.jpg"; 
-        let v = vec![ "00.tif"];
-   //     let v = vec!["1.jpg", "1.tif", "1.bmp", "1.gif", "00.tif"];
+        let v = vec!["1.jpg", "1.tif", "1.bmp", "1.gif", "00.tif", "test.pdf"];
         for i in v {
             let image_data = std::fs::read(i)?;
             let base64_image = general_purpose::STANDARD.encode(&image_data);

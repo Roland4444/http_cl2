@@ -717,6 +717,79 @@ pub async fn get_text_via_chat_id_and_id(chat_name: String, message_id: u64) -> 
     anyhow::bail!("Не получен ответ от сервера");
 }
 
+use thiserror::Error;
+use std::path::Path;
+
+#[derive(Debug, Error)]
+pub enum ExportError {
+    #[error("HTTP-запрос провалился: {0}")]
+    Http(#[from] reqwest::Error),
+
+    #[error("Ошибка записи в файл '{path}': {source}")]
+    Io { path: String, source: std::io::Error },
+
+    #[error("Ошибка сериализации JSON: {0}")]
+    Api(String),
+}
+
+
+pub async fn export_smart_process_to_file(
+    webhook_url: &str,
+    entity_type_id: u64,
+    output_path: impl AsRef<Path>,
+) -> Result<usize, ExportError> {
+    let client = Client::new();
+    let url = format!("{webhook_url}/crm.item.list.json");
+
+    let mut all_items: Vec<Value> = Vec::new();
+    let mut start: u64 = 0;
+
+    loop {
+        let body = json!({
+            "entityTypeId": entity_type_id,
+            "select": ["*"],
+            "order": { "id": "ASC" },
+            "start": start
+        });
+
+        let resp: Value = client
+            .post(&url)
+            .json(&body)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        let items = resp["result"]["items"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
+
+        if items.is_empty() {
+            break;
+        }
+        all_items.extend(items);
+
+        match resp["next"].as_u64() {
+            Some(next) => start = next,
+            None => break,
+        }
+    }
+
+    // --- красивый JSON в файл ---
+    let pretty = serde_json::to_string_pretty(&all_items)
+        .map_err(|e| ExportError::Api(e.to_string()))?;
+
+    std::fs::write(output_path.as_ref(), &pretty).map_err(|e| ExportError::Io {
+        path: output_path.as_ref().display().to_string(),
+        source: e,
+    })?;
+
+    Ok(all_items.len())
+}
+
+
+
 pub async fn get_text_via_chat_id_and_id2(chat_name: String, message_id: u64) -> Result<String> {
     let (mut ws_stream, _) = connect_async("ws://127.0.0.1:3000/proc").await.context("Не удалось подключиться к WebSocket")?;
     let request = json!({"collab": chat_name,"message_id": message_id});
@@ -1486,6 +1559,16 @@ async fn test_update_atom_packed() {
         Err(e) => println!("✗ Ошибка обновления: {}", e),
     }
 }
+
+
+#[tokio::test]
+async fn dump_process_to_file() -> Result<()>{
+    let webhook = "https://relits.bitrix24.ru/rest/336/gu2hurjhtt5sji5v/";
+    let count = export_smart_process_to_file(&webhook, 1092, "chain_1092.json").await?;
+    println!("✅ Выгружено {count} элементов в chain_1092.json");    
+    Ok(())
+}
+
 }
 
 ///////////////////////////////////////////    

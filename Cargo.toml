@@ -12,6 +12,7 @@ incremental = false     # ОТКЛЮЧИТЬ инкрементальную ко
 debug = false
 
 [dependencies]
+thiserror = "2.0.20"
 encoding_rs = "0.8.35"
 reqwest = { version = "0.13", features = ["json","form"] }
 serde = { version = "1.0", features = ["derive"] }
