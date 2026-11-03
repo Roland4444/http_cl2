@@ -1563,7 +1563,7 @@ async fn test_update_atom_packed() {
 
 #[tokio::test]
 async fn dump_process_to_file() -> Result<()>{
-    let webhook = "https://relits.bitrix24.ru/rest/336/gu2hurjhtt5sji5v/";
+    let webhook = get_webhook_("crm_webhook");
     let count = export_smart_process_to_file(&webhook, 1092, "chain_1092.json").await?;
     println!("✅ Выгружено {count} элементов в chain_1092.json");    
     Ok(())
