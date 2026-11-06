@@ -789,6 +789,69 @@ pub async fn export_smart_process_to_file(
 }
 
 
+pub async fn export_smart_process_to_json(
+    webhook_url: &str,
+    entity_type_id: u64,
+    output_path: impl AsRef<Path>,
+) -> Result<usize, ExportError> {
+    let client = Client::new();
+    let url = format!("{webhook_url}/crm.item.list.json");
+    let mut all_items: Vec<Value> = Vec::new();
+    let mut start: u64 = 0;
+
+    loop {
+        let body = json!({
+            "entityTypeId": entity_type_id,
+            "select": ["*"],
+            "order": { "id": "ASC" },
+            "start": start
+        });
+
+        let resp: Value = client
+            .post(&url)
+            .json(&body)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        // Проверка на ошибку в ответе API
+        if let Some(error) = resp.get("error") {
+            let error_msg = error.to_string();
+            return Err(ExportError::Api(error_msg));
+        }
+
+        let items = resp["result"]["items"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
+
+        if items.is_empty() {
+            break;
+        }
+        all_items.extend(items);
+
+        // Пагинация: если есть "next", значит есть еще страницы
+        match resp["next"].as_u64() {
+            Some(next) => start = next,
+            None => break,
+        }
+    }
+
+    let pretty = serde_json::to_string_pretty(&all_items)
+        .map_err(|e| ExportError::Api(e.to_string()))?;
+
+    std::fs::write(output_path.as_ref(), &pretty).map_err(|e| ExportError::Io {
+        path: output_path.as_ref().display().to_string(),
+        source: e,
+    })?;
+
+    Ok(all_items.len())
+}
+
+
+
+
 
 pub async fn get_text_via_chat_id_and_id2(chat_name: String, message_id: u64) -> Result<String> {
     let (mut ws_stream, _) = connect_async("ws://127.0.0.1:3000/proc").await.context("Не удалось подключиться к WebSocket")?;
@@ -1569,6 +1632,19 @@ async fn dump_process_to_file() -> Result<()>{
     Ok(())
 }
 
+
+#[tokio::test]
+async fn dump_diffs_process_to_file() -> Result<()>{
+    let webhook = get_webhook_("crm_webhook");
+    let docs_id = 1078;
+    let chains_id =  1092;
+    let v_proc = vec! [docs_id, chains_id];
+    for item in v_proc {
+        let count = export_smart_process_to_json(&webhook, item, format!("chain_{}.json", item)).await?;
+        println!("✅ Выгружено {count} элементов в chain_{item}.json");    
+    }
+    Ok(())
+}
 }
 
 ///////////////////////////////////////////    

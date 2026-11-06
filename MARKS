@@ -969,3 +969,22 @@ curl -X POST "https://relits.bitrix24.ru/rest/336/w1gzyqwhiipe1jph/user.update" 
     "UF_USR_1787903292765": "634",
     "UF_USR_1787903545634": "650"
   }'
+
+
+
+
+
+
+
+
+
+
+curl -X POST \
+  "https://relits.bitrix24.ru/rest/336/pisweydu4b1lzwba/crm.item.list.json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "entityTypeId": 1092,
+    "select": ["*"],
+    "order": {"id": "ASC"},
+    "start": 0
+  }'
