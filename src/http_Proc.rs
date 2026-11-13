@@ -6,6 +6,8 @@ use futures::stream::{self,  TryStreamExt}; // в начало файла
 
 use reqwest;  // <-- Добавить это
 
+use tokio::io::AsyncWriteExt;
+use std::path::Path;
 
 use reqwest::Client;
 use serde_json::{Value, json};
@@ -30,6 +32,9 @@ use parking_lot::Mutex as Mutex2;
 use crate::HashMap;
 use std::sync::RwLock;
 use std::fs;
+
+use chrono::DateTime;
+
 
 use crate::webhook_base_prod;
 use crate::cl_address;
@@ -107,9 +112,9 @@ macro_rules! hashmap {
 //genned
 pub static CHATS_ID: Lazy<HashMap<Collab, &str>> = Lazy::new(|| {
     hashmap!(
-        Collab::PAYMENTS => "chat9224",        Collab::OLIVIA => "chat6998",        Collab::BABEFA => "chat6974",        Collab::OKLAND => "chat6986",        Collab::RED => "chat7018",
-        Collab::TETRIS => "chat7014",          Collab::SCANDINAVIA => "chat9796",   Collab::KUIB => "chat7210",          Collab::POLZ => "chat7208",          Collab::ZVEZD => "chat7242",
-        Collab::SKY => "chat6966",             Collab::OWN => "chat13372"    )});
+        Collab::PAYMENTS => "chat9224",        Collab::OLIVIA => "chat6998",        Collab::BABEFA => "chat6974",               Collab::OKLAND => "chat6986",            Collab::RED => "chat7018",
+        Collab::TETRIS => "chat7014",          Collab::SCANDINAVIA => "chat9796",   Collab::KUIB => "chat7210",                 Collab::POLZ => "chat7208",              Collab::ZVEZD => "chat7242",
+        Collab::SKY => "chat6966",             Collab::OWN => "chat13372",          Collab::CONTRACT_4_APPROVAL => "chat25072", Collab::CONTRACT_ARCHIVE => "chat23082"   )});
 //genned
 
 pub static CHAT_NUM_ID: Lazy<HashMap<Collab, u64>> = Lazy::new(|| {
@@ -295,7 +300,129 @@ pub async fn fn_to_produce_msg_to_collab(current_collab: Collab,    queue: &Mute
     messages
 }
 
+#[derive(Deserialize, Debug)]
+struct DiskFileGetResponse {
+    result: Option<DiskFileInfo>,
+    error: Option<String>,
+    error_description: Option<String>,
+}
 
+#[derive(Deserialize, Debug)]
+struct DiskFileInfo {
+    #[serde(rename = "NAME")]
+    name: String,
+    #[serde(rename = "DOWNLOAD_URL")]
+    download_url: String,
+}
+
+/// Убирает символы, запрещённые в Windows-именах, и нормализует пробелы.
+fn sanitize_filename(name: &str) -> String {
+    name.chars()
+        .map(|c| match c {
+            '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => '_',
+            '\r' | '\n' => ' ',
+            c => c,
+        })
+        .collect::<String>()
+        .trim()
+        .to_string()
+}
+
+/// Скачивает файл с Bitrix24 Диска, сохраняя оригинальное имя.
+///
+/// Логика 1:1 с curl:
+///   1. POST {webhook}/disk.file.get  {"id": <id>}     → NAME + DOWNLOAD_URL
+///   2. GET  DOWNLOAD_URL                               → байты
+///   3. Пишем в `<save_dir>/<NAME>` потоком
+pub async fn download_disk_file(
+    webhook_url: &str,
+    file_id: u64,
+    save_dir: impl AsRef<Path>,
+) -> Result<std::path::PathBuf> {
+    let client = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::limited(10))
+        .build()
+        .context("Не удалось создать HTTP-клиент")?;
+
+    let base = webhook_url.trim_end_matches('/');
+    let get_url = format!("{}/disk.file.get", base);
+
+    // ДИАГНОСТИКА — три строки, потом удалить
+    println!("[DIAG] webhook_url   = {:?}", webhook_url);
+    println!("[DIAG] base (trimmed) = {:?}", base);
+    println!("[DIAG] get_url       = {:?}", get_url);
+
+    let resp = client
+        .post(&get_url)
+        .json(&serde_json::json!({ "id": file_id }))
+        .send()
+        .await
+        .context("Не удалось отправить disk.file.get")?;
+
+    let status = resp.status();
+    let body = resp
+        .text()
+        .await
+        .context("Не удалось прочитать ответ disk.file.get")?;
+
+    if !status.is_success() {
+        anyhow::bail!("disk.file.get HTTP {}: {}", status, body);
+    }
+
+    let disk: DiskFileGetResponse = serde_json::from_str(&body)
+        .with_context(|| format!("Не удалось распарсить ответ disk.file.get: {}", body))?;
+
+    if let Some(err) = disk.error {
+        anyhow::bail!(
+            "Ошибка disk.file.get: {} - {}",
+            err,
+            disk.error_description.unwrap_or_default()
+        );
+    }
+
+    let info = disk
+        .result
+        .ok_or_else(|| anyhow::anyhow!("Нет поля result в ответе disk.file.get"))?;
+
+    let safe_name = sanitize_filename(&info.name);
+    if safe_name.is_empty() {
+        anyhow::bail!("disk.file.get вернул пустое имя файла");
+    }
+    println!("Имя файла: {}", safe_name);
+    println!("Ссылка для скачивания: {}", info.download_url);
+
+    // ---------- 2. GET по DOWNLOAD_URL (curl -L) ----------
+    let mut file_resp = client
+        .get(&info.download_url)
+        .send()
+        .await
+        .context("Не удалось запросить файл по DOWNLOAD_URL")?;
+
+    if !file_resp.status().is_success() {
+        anyhow::bail!("Скачивание файла: HTTP {}", file_resp.status());
+    }
+
+    // ---------- 3. Пишем в downloads/<имя> ----------
+    let save_dir = save_dir.as_ref();
+    tokio::fs::create_dir_all(save_dir)
+        .await
+        .with_context(|| format!("Не удалось создать папку {}", save_dir.display()))?;
+
+    let save_path = save_dir.join(&safe_name);
+    let mut dest = tokio::fs::File::create(&save_path)
+        .await
+        .with_context(|| format!("Не удалось создать файл {}", save_path.display()))?;
+
+    while let Some(chunk) = file_resp.chunk().await.context("Ошибка чтения чанка")? {
+        dest.write_all(&chunk).await.context("Ошибка записи в файл")?;
+    }
+    dest.flush().await.ok();
+
+    let size = tokio::fs::metadata(&save_path).await?.len();
+    println!("Скачан: {} ({} байт)", save_path.display(), size);
+
+    Ok(save_path)
+}
 pub async fn consumer_loop_proc(name_4_idfile: &str) {
     let _ = restore_processed_ids(name_4_idfile);
     loop {
@@ -718,7 +845,6 @@ pub async fn get_text_via_chat_id_and_id(chat_name: String, message_id: u64) -> 
 }
 
 use thiserror::Error;
-use std::path::Path;
 
 #[derive(Debug, Error)]
 pub enum ExportError {
@@ -873,6 +999,13 @@ pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
         for msg in messages {
             let author_id = msg["author_id"].as_u64().unwrap_or(0);
             if author_id == 0 {                continue;            }
+
+            let Some(date) = msg["date"]
+                .as_str()
+                .and_then(|s| DateTime::parse_from_rfc3339(s).ok())
+            else {
+                continue;
+            };
             let id = msg["id"].as_u64().unwrap_or(0) as u32;
             let chat_id = msg["chat_id"].as_u64().unwrap_or(0) as u32;
             let author_name = user_names.get(&author_id).cloned().unwrap_or_else(|| format!("unknown_{}", author_id));
@@ -896,6 +1029,7 @@ pub fn extract_messages_from_json(value: &Value) -> Vec<ExtractedMessage> {
                 id,
                 chat_id,
                 attaches,
+                date
             });
         }
             
@@ -1280,7 +1414,8 @@ use std::println;
     #[test]
     fn test_process_msg() {
         let msg = ExtractedMessage {author_name: "Сергей Браташов".to_string(),text: "Согласовано".to_string(),uuid: Some("851fba1b-35d9-4b61-aaaa-0258fc093efd".to_string()),
-            id: 100822,chat_id: 9796, attaches: Vec::new()};
+            id: 100822,chat_id: 9796, attaches: Vec::new(), date: chrono::Utc::now().fixed_offset(),
+};
         assert_eq!(100822, http_Proc::process_message2(msg));
     }
 
@@ -1638,7 +1773,8 @@ async fn dump_diffs_process_to_file() -> Result<()>{
     let webhook = get_webhook_("crm_webhook");
     let docs_id = 1078;
     let chains_id =  1092;
-    let v_proc = vec! [docs_id, chains_id];
+    let accs_id = 1084;
+    let v_proc = vec! [docs_id, chains_id, accs_id];
     for item in v_proc {
         let count = export_smart_process_to_json(&webhook, item, format!("chain_{}.json", item)).await?;
         println!("✅ Выгружено {count} элементов в chain_{item}.json");    

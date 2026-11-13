@@ -682,7 +682,7 @@ mod tests {
 
     use chrono::format;
     use futures::TryFutureExt;
-use futures::stream::Filter;
+    use futures::stream::Filter;
     use crate::File;
     use crate::http_Proc::{consumer_loop_proc, fetch_recent_list_raw};
 
@@ -923,6 +923,15 @@ use futures::stream::Filter;
     }
 
 
+
+    #[tokio::test]
+    async fn test_pull_messages_prod_contact4approval() {
+        let id =http_Proc::get_last_id_for_collab(Collab::CONTRACT_4_APPROVAL, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+        let limit = 120;
+        let out = format!("{}_last{}.js", CONTRACT_4_APPROVAL, limit);
+        let _ = http_Proc::pull_messages(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&Collab::CONTRACT_4_APPROVAL).expect("OKLAND not found"),  id as i64,limit,&out,).await;
+    }
+
     #[tokio::test]    /////need repair failed!
     async fn test_pull_messages_prod_skan() {
         let id =http_Proc::get_last_id_for_collab(Collab::SCANDINAVIA, Client::new(), webhook_base_prod().as_str()).await.unwrap();
@@ -962,6 +971,531 @@ use futures::stream::Filter;
             Err(e) => {                panic!("SHIT HAPPENS22222: {}", e)}
         }
     }
+
+    #[tokio::test]
+    async fn test_pull_messages_prod_conract4_approval() {
+        let id =   http_Proc::get_last_id_for_collab(Collab::CONTRACT_4_APPROVAL, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+        println!("\n\n\n\nLAST ID IN OKLAND:: {}\n\n\n", id);
+        let limit = 1200;
+        let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&Collab::CONTRACT_4_APPROVAL).expect("CONTRACT_4_APPROVAL not found"),
+            (id + 2) as i64,  limit,        ).await.unwrap();
+        let messages =  http_Proc::extract_messages_from_json(&json_value);
+        println!("Извлечено {} сообщений", messages.len());
+        for msg in messages.iter() {                     println!("{:?}", msg);        } 
+        let out_extracted = format!("{}_last{}_extracted.json", "OKLAND", limit);
+        let json_output = serde_json::to_string_pretty(&messages).unwrap();
+        std::fs::write(out_extracted, json_output).unwrap();
+        let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", "OKLAND", limit),serde_json::to_string_pretty(&json_value).unwrap(),        );
+    }
+
+
+
+    #[tokio::test]
+    async fn test_pull_messages_prod_conract4_approval_dump() {
+        let id =   http_Proc::get_last_id_for_collab(Collab::CONTRACT_4_APPROVAL, Client::new(), webhook_base_prod().as_str()).await.unwrap();
+        println!("\n\n\n\nLAST ID IN OKLAND:: {}\n\n\n", id);
+        let limit = 1200;
+        let json_value = http_Proc::pull_messages_raw(Client::new(),webhook_base_prod().as_str(),CHATS_ID.get(&Collab::CONTRACT_4_APPROVAL).expect("CONTRACT_4_APPROVAL not found"),
+            (id + 2) as i64,  limit,        ).await.unwrap();
+        let messages =  http_Proc::extract_messages_from_json(&json_value);
+        println!("Извлечено {} сообщений", messages.len());
+        for msg in messages.iter() {                     println!("{:?}", msg);        } 
+        let out_extracted = format!("{}_last{}_extracted.json", "OKLAND", limit);
+        let json_output = serde_json::to_string_pretty(&messages).unwrap();
+        std::fs::write(out_extracted, json_output).unwrap();
+        let _ = std::fs::write(format!("{}_last{}_extracted_FULL.json", "OKLAND", limit),serde_json::to_string_pretty(&json_value).unwrap(),        );
+    }
+
+
+
+
+    #[tokio::test]
+    #[ignore = "требует реальный webhook и доступ к Bitrix24"]
+    async fn download_file_to_downloads() -> anyhow::Result<()> {
+        let webhook = webhook_disk();
+        let file_id: u64 = 93032;
+
+    let dir = std::path::Path::new("downloads");
+    let saved = http_Proc::download_disk_file(webhook.as_str(), file_id, dir).await?;
+
+    assert!(saved.exists(), "файл не создан: {}", saved.display());
+    let size = tokio::fs::metadata(&saved).await?.len();
+    assert!(size > 0, "файл пустой: {}", saved.display());
+
+    assert!(
+        saved.to_string_lossy().ends_with(".pdf"),
+        "ожидали .pdf, а получили: {}",
+        saved.display()
+    );
+
+    println!("OK: {} ({} байт)", saved.display(), size);
+    Ok(())
+}
+
+
+
+    #[tokio::test]
+    #[ignore = "требует реальный webhook и доступ к Bitrix24"]
+    async fn download_file_to_downloads2222() -> anyhow::Result<()> {
+        let webhook = webhook_disk();
+        let dialog_id = CHATS_ID
+            .get(&Collab::CONTRACT_4_APPROVAL)
+            .copied()                                   // &&str -> &str
+            .expect("CONTRACT_4_APPROVAL должен быть в CHATS_ID");// OKLAND, можно взять из CHATS_ID.get(&Collab::OKLAND)
+        let file_id: u64 = 93032;
+
+        // 1. Готовим папку
+        let dir = std::path::Path::new("downloads");
+        tokio::fs::create_dir_all(dir).await?;
+
+        // 2. Скачиваем. Используем вариант с получением оригинального имени.
+        // http_Proc::download_bitrix_chat_file_with_name(
+        //     webhook_base_prod().as_str(),
+        //     dialog_id,
+        //     file_id,
+        //     dir,).await?;
+
+ 
+        let mut entries = tokio::fs::read_dir(dir).await?;
+        let mut found = false;
+        while let Some(entry) = entries.next_entry().await? {
+            let path = entry.path();
+            let size = entry.metadata().await?.len();
+            println!("Скачан: {} ({} байт)", path.display(), size);
+            found = true;
+        }
+        assert!(found, "В папке downloads нет файлов — скачивание не сработало");
+
+        Ok(())
+    }
+
+#[tokio::test]
+#[ignore = "требует реальный webhook и доступ к Bitrix24"]
+async fn test_pull_messages_prod_conract4_approval_dump__() -> anyhow::Result<()> {
+    let webhook_chat = webhook_base_prod();
+    let webhook_disk_url = webhook_disk();
+
+    // 1. Последний ID в чате CONTRACT_4_APPROVAL
+    let id = http_Proc::get_last_id_for_collab(
+        Collab::CONTRACT_4_APPROVAL,
+        Client::new(),
+        webhook_chat.as_str(),
+    )
+    .await
+    .unwrap();
+    println!("\nLAST ID IN CONTRACT_4_APPROVAL: {}\n", id);
+
+    let limit = 1200u32;
+
+    let dialog_id = CHATS_ID
+        .get(&Collab::CONTRACT_4_APPROVAL)
+        .copied()
+        .expect("CONTRACT_4_APPROVAL not found");
+
+    // 2. Тянем сообщения. map_err нужен, потому что pull_messages_raw
+    //    возвращает Box<dyn std::error::Error> (без Send + Sync),
+    //    а ? в anyhow::Result требует Send + Sync + 'static.
+    let json_value = http_Proc::pull_messages_raw(
+        Client::new(),
+        webhook_chat.as_str(),
+        dialog_id,
+        (id + 2) as i64,
+        limit,
+    )
+    .await
+    .map_err(|e| anyhow::anyhow!("pull_messages_raw: {e}"))?;
+
+    let messages = http_Proc::extract_messages_from_json(&json_value);
+    println!("Извлечено {} сообщений", messages.len());
+
+    for msg in messages.iter() {
+        println!("{:?}", msg);
+    }
+
+    // 3. Сохраняем полный дамп (как в исходном тесте)
+    std::fs::write(
+        format!("CONTRACT_4_APPROVAL_last{}_extracted.json", limit),
+        serde_json::to_string_pretty(&messages)?,
+    )?;
+    std::fs::write(
+        format!("CONTRACT_4_APPROVAL_last{}_extracted_FULL.json", limit),
+        serde_json::to_string_pretty(&json_value)?,
+    )?;
+
+    // 4. Фильтр по дате: 27.10.2026 — 11.11.2026 включительно (Москва, +03:00)
+    let start_date = chrono::DateTime::parse_from_rfc3339("2026-10-27T00:00:00+03:00")?;
+    let end_date = chrono::DateTime::parse_from_rfc3339("2026-11-11T23:59:59+03:00")?;
+
+    let filtered: Vec<ExtractedMessage> = messages
+        .into_iter()
+        .filter(|msg| msg.date >= start_date && msg.date <= end_date)
+        .collect();
+
+    println!(
+        "Отфильтровано по дате (27.10 - 11.11): {} сообщений",
+        filtered.len()
+    );
+
+    std::fs::write(
+        "CONTRACT_4_APPROVAL_filtered.json",
+        serde_json::to_string_pretty(&filtered)?,
+    )?;
+
+    // 5. Скачиваем все вложения из отфильтрованных сообщений
+    let dir = std::path::Path::new("downloads_filtered");
+    tokio::fs::create_dir_all(dir).await?;
+
+    let mut downloaded = 0u32;
+    let mut failed = 0u32;
+
+    for msg in &filtered {
+        if msg.attaches.is_empty() {
+            continue;
+        }
+        println!(
+            "Сообщение ID::{} от {} имеет {} вложений",
+            msg.id,
+            msg.date,
+            msg.attaches.len()
+        );
+
+        for &file_id in &msg.attaches {
+            match http_Proc::download_disk_file(
+                webhook_disk_url.as_str(),
+                file_id as u64,
+                dir,
+            )
+            .await
+            {
+                Ok(path) => {
+                    println!("  ✓ Скачан: {}", path.display());
+                    downloaded += 1;
+                }
+                Err(e) => {
+                    eprintln!("  ✗ Ошибка скачивания ID::{}: {}", file_id, e);
+                    failed += 1;
+                }
+            }
+        }
+    }
+
+    println!("\nИтог: скачано {}, ошибок: {}", downloaded, failed);
+    Ok(())
+}
+
+
+
+#[tokio::test]
+#[ignore = "требует реальный webhook и доступ к Bitrix24"]
+async fn test_pull_messages_prod_multi_collab_dump() -> anyhow::Result<()> {
+    let webhook_chat = webhook_base_prod();
+    let webhook_disk_url = webhook_disk();
+
+    // Коллабы для обхода
+    let collabs = vec![
+        Collab::CONTRACT_4_APPROVAL,
+        Collab::CONTRACT_ARCHIVE,
+        Collab::PAYMENTS,
+
+        // добавь нужные
+    ];
+
+    // Фильтр по дате: 27.10.2026 — 11.11.2026 включительно (Москва, +03:00)
+    let start_date = chrono::DateTime::parse_from_rfc3339("2026-10-27T00:00:00+03:00")?;
+    let end_date   = chrono::DateTime::parse_from_rfc3339("2026-11-11T23:59:59+03:00")?;
+
+    // Общая папка для всех вложений
+    let dir = std::path::Path::new("downloads_filtered");
+    tokio::fs::create_dir_all(dir).await?;
+
+    let limit = 1200u32;
+
+    let mut total_messages   = 0usize;
+    let mut total_filtered   = 0usize;
+    let mut total_downloaded = 0u32;
+    let mut total_failed     = 0u32;
+
+    for &collab in &collabs {
+        println!("\n========== COLLAB {:?} ==========", collab);
+
+        let dialog_id = match CHATS_ID.get(&collab).copied() {
+            Some(id) => id,
+            None => {
+                eprintln!("SKIP {:?}: нет в CHATS_ID", collab);
+                continue;
+            }
+        };
+
+        // 1. Последний ID
+        let last_id = match http_Proc::get_last_id_for_collab(
+            collab,
+            Client::new(),
+            webhook_chat.as_str(),
+        )
+        .await
+        {
+            Ok(id) => id,
+            Err(e) => {
+                eprintln!("SKIP {:?}: не удалось получить last_id: {e}", collab);
+                continue;
+            }
+        };
+        println!("last_id = {}", last_id);
+
+        // 2. Забираем сообщения
+        let json_value = match http_Proc::pull_messages_raw(
+            Client::new(),
+            webhook_chat.as_str(),
+            dialog_id,
+            (last_id + 2) as i64,
+            limit,
+        )
+        .await
+        .map_err(|e| anyhow::anyhow!("pull_messages_raw: {e}"))
+        {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("SKIP {:?}: {e}", collab);
+                continue;
+            }
+        };
+
+        let messages = http_Proc::extract_messages_from_json(&json_value);
+        total_messages += messages.len();
+        println!("Извлечено сообщений: {}", messages.len());
+
+        // 3. Фильтр по дате
+        let filtered: Vec<ExtractedMessage> = messages
+            .into_iter()
+            .filter(|msg| msg.date >= start_date && msg.date <= end_date)
+            .collect();
+        total_filtered += filtered.len();
+        println!("Попали в диапазон 27.10 - 11.11: {}", filtered.len());
+
+        // 4. Сохраняем по каждому коллабу отдельный дамп
+        let prefix = format!("{:?}", collab);
+        std::fs::write(
+            format!("{}_last{}_extracted.json", prefix, limit),
+            serde_json::to_string_pretty(&filtered)?,
+        )?;
+        std::fs::write(
+            format!("{}_last{}_extracted_FULL.json", prefix, limit),
+            serde_json::to_string_pretty(&json_value)?,
+        )?;
+
+        // 5. Скачиваем вложения
+        let mut collab_downloaded = 0u32;
+        let mut collab_failed     = 0u32;
+
+        for msg in &filtered {
+            if msg.attaches.is_empty() {
+                continue;
+            }
+            println!(
+                "  msg ID::{} от {} — {} вложений",
+                msg.id,
+                msg.date,
+                msg.attaches.len()
+            );
+
+            for &file_id in &msg.attaches {
+                match http_Proc::download_disk_file(
+                    webhook_disk_url.as_str(),
+                    file_id as u64,
+                    dir,
+                )
+                .await
+                {
+                    Ok(path) => {
+                        println!("    ✓ {}", path.display());
+                        collab_downloaded += 1;
+                    }
+                    Err(e) => {
+                        eprintln!("    ✗ file_id={}: {}", file_id, e);
+                        collab_failed += 1;
+                    }
+                }
+            }
+        }
+
+        total_downloaded += collab_downloaded;
+        total_failed     += collab_failed;
+        println!(
+            "Collab {:?}: скачано {}, ошибок {}",
+            collab, collab_downloaded, collab_failed
+        );
+    }
+
+    println!("\n========== ИТОГО ==========");
+    println!("Коллаб обработано:      {}", collabs.len());
+    println!("Сообщений всего:         {}", total_messages);
+    println!("Попали в диапазон дат:   {}", total_filtered);
+    println!("Файлов скачано:          {}", total_downloaded);
+    println!("Ошибок скачивания:       {}", total_failed);
+    println!("Папка:                   {}", dir.display());
+
+    Ok(())
+}
+
+
+
+
+
+
+#[tokio::test]
+#[ignore = "требует реальный webhook и доступ к Bitrix24"]
+async fn test_pull_messages_prod_multi_collab_dump_today() -> anyhow::Result<()> {
+    let webhook_chat = webhook_base_prod();
+    let webhook_disk_url = webhook_disk();
+
+    // Коллабы для обхода
+    let collabs = vec![
+        Collab::CONTRACT_4_APPROVAL,
+        Collab::CONTRACT_ARCHIVE,
+        Collab::PAYMENTS,
+
+        // добавь нужные
+    ];
+
+    // Фильтр по дате: 27.10.2026 — 11.11.2026 включительно (Москва, +03:00)
+    let start_date = chrono::DateTime::parse_from_rfc3339("2026-11-13T00:00:00+03:00")?;
+    let end_date   = chrono::DateTime::parse_from_rfc3339("2026-11-13T23:59:59+03:00")?;
+
+    // Общая папка для всех вложений
+    let dir = std::path::Path::new("downloads_filtered_today");
+    tokio::fs::create_dir_all(dir).await?;
+
+    let limit = 1200u32;
+
+    let mut total_messages   = 0usize;
+    let mut total_filtered   = 0usize;
+    let mut total_downloaded = 0u32;
+    let mut total_failed     = 0u32;
+
+    for &collab in &collabs {
+        println!("\n========== COLLAB {:?} ==========", collab);
+
+        let dialog_id = match CHATS_ID.get(&collab).copied() {
+            Some(id) => id,
+            None => {
+                eprintln!("SKIP {:?}: нет в CHATS_ID", collab);
+                continue;
+            }
+        };
+
+        // 1. Последний ID
+        let last_id = match http_Proc::get_last_id_for_collab(
+            collab,
+            Client::new(),
+            webhook_chat.as_str(),
+        )
+        .await
+        {
+            Ok(id) => id,
+            Err(e) => {
+                eprintln!("SKIP {:?}: не удалось получить last_id: {e}", collab);
+                continue;
+            }
+        };
+        println!("last_id = {}", last_id);
+
+        // 2. Забираем сообщения
+        let json_value = match http_Proc::pull_messages_raw(
+            Client::new(),
+            webhook_chat.as_str(),
+            dialog_id,
+            (last_id + 2) as i64,
+            limit,
+        )
+        .await
+        .map_err(|e| anyhow::anyhow!("pull_messages_raw: {e}"))
+        {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("SKIP {:?}: {e}", collab);
+                continue;
+            }
+        };
+
+        let messages = http_Proc::extract_messages_from_json(&json_value);
+        total_messages += messages.len();
+        println!("Извлечено сообщений: {}", messages.len());
+
+        // 3. Фильтр по дате
+        let filtered: Vec<ExtractedMessage> = messages
+            .into_iter()
+            .filter(|msg| msg.date >= start_date && msg.date <= end_date)
+            .collect();
+        total_filtered += filtered.len();
+        println!("Попали в диапазон 27.10 - 11.11: {}", filtered.len());
+
+        // 4. Сохраняем по каждому коллабу отдельный дамп
+        let prefix = format!("{:?}", collab);
+        std::fs::write(
+            format!("{}_last{}_extracted.json", prefix, limit),
+            serde_json::to_string_pretty(&filtered)?,
+        )?;
+        std::fs::write(
+            format!("{}_last{}_extracted_FULL.json", prefix, limit),
+            serde_json::to_string_pretty(&json_value)?,
+        )?;
+
+        // 5. Скачиваем вложения
+        let mut collab_downloaded = 0u32;
+        let mut collab_failed     = 0u32;
+
+        for msg in &filtered {
+            if msg.attaches.is_empty() {
+                continue;
+            }
+            println!(
+                "  msg ID::{} от {} — {} вложений",
+                msg.id,
+                msg.date,
+                msg.attaches.len()
+            );
+
+            for &file_id in &msg.attaches {
+                match http_Proc::download_disk_file(
+                    webhook_disk_url.as_str(),
+                    file_id as u64,
+                    dir,
+                )
+                .await
+                {
+                    Ok(path) => {
+                        println!("    ✓ {}", path.display());
+                        collab_downloaded += 1;
+                    }
+                    Err(e) => {
+                        eprintln!("    ✗ file_id={}: {}", file_id, e);
+                        collab_failed += 1;
+                    }
+                }
+            }
+        }
+
+        total_downloaded += collab_downloaded;
+        total_failed     += collab_failed;
+        println!(
+            "Collab {:?}: скачано {}, ошибок {}",
+            collab, collab_downloaded, collab_failed
+        );
+    }
+
+    println!("\n========== ИТОГО ==========");
+    println!("Коллаб обработано:      {}", collabs.len());
+    println!("Сообщений всего:         {}", total_messages);
+    println!("Попали в диапазон дат:   {}", total_filtered);
+    println!("Файлов скачано:          {}", total_downloaded);
+    println!("Ошибок скачивания:       {}", total_failed);
+    println!("Папка:                   {}", dir.display());
+
+    Ok(())
+}
+
+
+
 
     #[tokio::test]
     async fn test_pull_messages_prod_okland2() {
@@ -1454,7 +1988,9 @@ async fn test_get_attached_metadata() {
         uuid: Some("aa2fe320-f7f1-4c3d-9028-75848448ac6d".to_string()), 
         id: 123820, 
         chat_id: 6986 , 
-        attaches: Vec::new()};
+        attaches: Vec::new(),
+        date: chrono::Utc::now().fixed_offset(),
+};
     let stop_flag = Arc::new(AtomicBool::new(false));
     let flag_clone = stop_flag.clone();    
     let msgs = vec![extracted];
@@ -1483,7 +2019,9 @@ async fn test_get_attached_metadata() {
         uuid: Some("aa2fe320-f7f1-4c3d-9028-75848448ac6d".to_string()), 
         id: 123820, 
         chat_id: 6986,
-        attaches: Vec::new() };
+        attaches: Vec::new() ,
+        date: chrono::Utc::now().fixed_offset(),
+    };
     let stop_flag = Arc::new(AtomicBool::new(false));
     let flag_clone = stop_flag.clone();    
     let msgs = vec![extracted];
