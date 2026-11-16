@@ -1201,8 +1201,8 @@ async fn test_pull_messages_prod_multi_collab_dump() -> anyhow::Result<()> {
     ];
 
     // Фильтр по дате: 27.10.2026 — 11.11.2026 включительно (Москва, +03:00)
-    let start_date = chrono::DateTime::parse_from_rfc3339("2026-10-27T00:00:00+03:00")?;
-    let end_date   = chrono::DateTime::parse_from_rfc3339("2026-11-11T23:59:59+03:00")?;
+    let start_date = chrono::DateTime::parse_from_rfc3339("2026-11-13T00:00:00+03:00")?;
+    let end_date   = chrono::DateTime::parse_from_rfc3339("2026-11-16T10:59:59+03:00")?;
 
     // Общая папка для всех вложений
     let dir = std::path::Path::new("downloads_filtered");
